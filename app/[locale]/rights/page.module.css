@@ -1,0 +1,13 @@
+.container {
+  padding: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-align: right;
+  direction: rtl;
+}

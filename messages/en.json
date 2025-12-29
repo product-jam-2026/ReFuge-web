@@ -1,1 +1,17 @@
-{}
+{
+  "rights": {
+    "pageTitle": "Know Your Rights",
+    "items": [
+      {
+        "id": "status",
+        "title": "Legal status in Israel",
+        "body": "Explanation about possible legal status options..."
+      },
+      {
+        "id": "health",
+        "title": "Health & medical coverage",
+        "body": "Information about access to health services..."
+      }
+    ]
+  }
+}
