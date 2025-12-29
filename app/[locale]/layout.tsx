@@ -1,42 +1,53 @@
 import "@/styles/global.css";
-
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import Navbar from "@/lib/components/Navbar";
 import Footer from "@/lib/components/Footer";
+import localFont from 'next/font/local'; // הוספנו את זה
+
+// הגדרת פונט כותרות (Bold)
+const simplerBold = localFont({
+  src: '../../public/fonts/SimplerPro-Bold.otf', // שתי קומות למעלה
+  variable: '--font-header',
+});
+
+// טקסט רץ - semibold
+const simplerSemibold = localFont({
+  src: '../../public/fonts/SimplerPro-Semibold.otf', // שתי קומות למעלה
+  variable: '--font-body',
+});
 
 export const metadata: Metadata = {
-  title: "Digital Product Jam Starter Kit",
-  description:
-    "A starter kit for wiritng code in the Digital Product Jam course.",
+  title: "ReFuge",
+  description: "Assisting refugees with bureaucracy and rights.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({
+  children,
+  params: { locale }
+}: {
+  children: React.ReactNode;
+  params: { locale: string };
+}) {
+  const messages = await getMessages();
+  const dir = (locale === 'he' || locale === 'ar') ? 'rtl' : 'ltr';
+
   return (
-    <html>
+    <html lang={locale} dir={dir}>
       <head>
-        {/* Browser Favicon */}
         <link rel="icon" href="/icons/favicon.png" />
-        {/* Apple Icon */}
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/icons/icon-180.png"
-        />
-        {/* Android Icon */}
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="192x192"
-          href="/icons/icon-192.png"
-        />
         <link rel="manifest" href="/manifest.json" />
-        <script src="https://accounts.google.com/gsi/client" async></script>
       </head>
-      <body>
-        <Navbar />
-        <div>{children}</div>
-        <Footer />
+      {/* הזרקנו את ה-Variables של הפונטים לתוך ה-body */}
+      <body className={`${simplerBold.variable} ${simplerSemibold.variable} antialiased font-body`}>
+        <NextIntlClientProvider messages={messages}>
+          <Navbar />
+          <div className="min-h-[80vh]">
+            {children}
+          </div>
+          <Footer />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
