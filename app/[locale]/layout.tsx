@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import Navbar from "@/lib/components/Navbar";
 import Footer from "@/lib/components/Footer";
 import localFont from 'next/font/local'; // הוספנו את זה
+import Script from "next/script";
 
 // הגדרת פונט כותרות (Bold)
 const simplerBold = localFont({
@@ -48,6 +49,11 @@ export default async function RootLayout({
           </div>
           <Footer />
         </NextIntlClientProvider>
+        <Script
+  src="https://accounts.google.com/gsi/client"
+  strategy="afterInteractive"
+/>
+
       </body>
     </html>
   );
