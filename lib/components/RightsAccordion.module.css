@@ -1,0 +1,36 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  background: #e8f8cf; /* ירקרק עדין כמו בפיגמה */
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.header {
+  width: 100%;
+  border: none;
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font: inherit;
+  cursor: pointer;
+  text-align: right;
+  direction: rtl;
+}
+
+.body {
+  margin-top: 4px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: right;
+  direction: rtl;
+}
+
+.icon {
+  margin-left: 8px;
+}
