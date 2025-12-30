@@ -22,6 +22,15 @@
     "profile": "פרופיל",
     "rights": "זכויות"
   },
+  "FormsPage":{
+    "forms":
+    {
+      "childRegistrationRequest":
+      {
+        "title": "טופס רישום ילד"
+      }
+    }
+  },
   "RightsPage": {
     "title": "מידע בנושא זכויות",
     "filter": "סנן",
