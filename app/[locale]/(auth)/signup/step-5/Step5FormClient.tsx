@@ -52,6 +52,9 @@ function DateWheel({
 
   const iso = partsToIso(p);
 
+  // labels.date קיימת בקבצי השפה, אבל נוסיף fallbackים בטוחים
+  const dateLabels = labels?.date ?? { year: "Year", month: "Month", day: "Day" };
+
   return (
     <div style={{ display: "grid", gap: 6 }}>
       <div style={{ fontSize: 14, opacity: 0.85 }}>{label}</div>
@@ -60,7 +63,7 @@ function DateWheel({
         <select value={p.y} onChange={(e) => setP((s) => ({ ...s, y: e.target.value }))}>
           {years.map((y) => (
             <option key={y || "empty"} value={y}>
-              {y || labels.date.year}
+              {y || dateLabels.year}
             </option>
           ))}
         </select>
@@ -68,7 +71,7 @@ function DateWheel({
         <select value={p.m} onChange={(e) => setP((s) => ({ ...s, m: e.target.value }))}>
           {months.map((m) => (
             <option key={m || "empty"} value={m}>
-              {m || labels.date.month}
+              {m || dateLabels.month}
             </option>
           ))}
         </select>
@@ -76,7 +79,7 @@ function DateWheel({
         <select value={p.d} onChange={(e) => setP((s) => ({ ...s, d: e.target.value }))}>
           {days.map((d) => (
             <option key={d || "empty"} value={d}>
-              {d || labels.date.day}
+              {d || dateLabels.day}
             </option>
           ))}
         </select>
@@ -116,72 +119,77 @@ export default function Step5FormClient({
   saveDraftAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
 }) {
+  const L = labels ?? {};
+
   const [gender, setGender] = useState<Gender>((defaults.gender as Gender) || "");
   const [maritalStatus, setMaritalStatus] = useState<MaritalStatus>(
     (defaults.maritalStatus as MaritalStatus) || ""
   );
 
-  const nationalities = useMemo(
-    () => [
-      { value: "", label: labels.select },
-      { value: "Israeli", label: labels.nationalities.israeli },
-      { value: "Sudanese", label: labels.nationalities.sudanese },
-      { value: "Eritrean", label: labels.nationalities.eritrean },
-    ],
-    [labels]
-  );
+  const nationalities = useMemo(() => {
+    const nat = L.nationalityOptions ?? {};
+    const selectLabel = L.select ?? "Select";
+    return [
+      { value: "", label: selectLabel },
+      { value: "Israeli", label: nat.israeli ?? "Israeli" },
+      { value: "Sudanese", label: nat.sudanese ?? "Sudanese" },
+      { value: "Eritrean", label: nat.eritrean ?? "Eritrean" },
+    ];
+  }, [L]);
 
-  const countries = useMemo(
-    () => [
-      { value: "", label: labels.select },
-      { value: "Israel", label: labels.countries.israel },
-      { value: "Sudan", label: labels.countries.sudan },
-      { value: "Eritrea", label: labels.countries.eritrea },
-    ],
-    [labels]
-  );
+  const countries = useMemo(() => {
+    const c = L.countryOptions ?? {};
+    const selectLabel = L.select ?? "Select";
+    return [
+      { value: "", label: selectLabel },
+      { value: "Israel", label: c.israel ?? "Israel" },
+      { value: "Sudan", label: c.sudan ?? "Sudan" },
+      { value: "Eritrea", label: c.eritrea ?? "Eritrea" },
+    ];
+  }, [L]);
 
-  const maritalOptions = useMemo(
-    () => [
-      { value: "", label: labels.select },
-      { value: "single", label: labels.marital.single },
-      { value: "married", label: labels.marital.married },
-      { value: "divorced", label: labels.marital.divorced },
-      { value: "widowed", label: labels.marital.widowed },
-    ],
-    [labels]
-  );
+  const maritalOptions = useMemo(() => {
+    const m = L.maritalOptions ?? {};
+    const selectLabel = L.select ?? "Select";
+    return [
+      { value: "", label: selectLabel },
+      { value: "single", label: m.single ?? "Single" },
+      { value: "married", label: m.married ?? "Married" },
+      { value: "divorced", label: m.divorced ?? "Divorced" },
+      { value: "widowed", label: m.widowed ?? "Widowed" },
+    ];
+  }, [L]);
 
   return (
     <>
-      <h1 style={{ marginBottom: 4 }}>{labels.title}</h1>
-      <p style={{ marginTop: 0, opacity: 0.8 }}>{labels.subtitle}</p>
+      <h1 style={{ marginBottom: 4 }}>{L.title ?? "Step 5"}</h1>
+      <p style={{ marginTop: 0, opacity: 0.8 }}>{L.subtitle ?? ""}</p>
 
       <form action={saveAndNextAction} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
-        <h3 style={{ marginTop: 6 }}>{labels.sections.partner}</h3>
+        <h3 style={{ marginTop: 6 }}>{L.sections?.partner ?? "Partner / Guardian"}</h3>
 
         <label>
-          {labels.fields.lastName}
+          {L.fields?.lastName ?? "Last name"}
           <input name="lastName" defaultValue={defaults.lastName} style={{ width: "100%", marginTop: 6 }} />
         </label>
 
         <label>
-          {labels.fields.firstName}
+          {L.fields?.firstName ?? "First name"}
           <input name="firstName" defaultValue={defaults.firstName} style={{ width: "100%", marginTop: 6 }} />
         </label>
 
         <label>
-          {labels.fields.oldLastName}
+          {L.fields?.oldLastName ?? "Previous last name"}
           <input name="oldLastName" defaultValue={defaults.oldLastName} style={{ width: "100%", marginTop: 6 }} />
         </label>
 
         <label>
-          {labels.fields.oldFirstName}
+          {L.fields?.oldFirstName ?? "Previous first name"}
           <input name="oldFirstName" defaultValue={defaults.oldFirstName} style={{ width: "100%", marginTop: 6 }} />
         </label>
 
         <div>
-          <div style={{ fontSize: 14, opacity: 0.85 }}>{labels.fields.gender}</div>
+          <div style={{ fontSize: 14, opacity: 0.85 }}>{L.fields?.gender ?? "Gender"}</div>
           <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
             <button
               type="button"
@@ -194,7 +202,7 @@ export default function Step5FormClient({
                 color: gender === "male" ? "white" : "#111",
               }}
             >
-              {labels.genderOptions.male}
+              {L.genderOptions?.male ?? "Male"}
             </button>
             <button
               type="button"
@@ -207,7 +215,7 @@ export default function Step5FormClient({
                 color: gender === "female" ? "white" : "#111",
               }}
             >
-              {labels.genderOptions.female}
+              {L.genderOptions?.female ?? "Female"}
             </button>
           </div>
 
@@ -215,20 +223,11 @@ export default function Step5FormClient({
           <input type="hidden" name="gender" value={gender} />
         </div>
 
-        <DateWheel
-          label={labels.fields.birthDate}
-          name="birthDate"
-          initialIso={defaults.birthDate}
-          labels={labels}
-        />
+        <DateWheel label={L.fields?.birthDate ?? "Birth date"} name="birthDate" initialIso={defaults.birthDate} labels={L} />
 
         <label>
-          {labels.fields.nationality}
-          <select
-            name="nationality"
-            defaultValue={defaults.nationality || ""}
-            style={{ width: "100%", marginTop: 6 }}
-          >
+          {L.fields?.nationality ?? "Nationality"}
+          <select name="nationality" defaultValue={defaults.nationality || ""} style={{ width: "100%", marginTop: 6 }}>
             {nationalities.map((opt) => (
               <option key={opt.value || "empty"} value={opt.value}>
                 {opt.label}
@@ -238,7 +237,7 @@ export default function Step5FormClient({
         </label>
 
         <label>
-          {labels.fields.israeliId}
+          {L.fields?.israeliId ?? "Israeli ID"}
           <input
             name="israeliId"
             inputMode="numeric"
@@ -248,33 +247,29 @@ export default function Step5FormClient({
           />
         </label>
 
-        <h3 style={{ marginTop: 10 }}>{labels.sections.passport}</h3>
+        <h3 style={{ marginTop: 10 }}>{L.sections?.passport ?? "Passport"}</h3>
 
         <label>
-          {labels.fields.passportNumber}
-          <input
-            name="passportNumber"
-            defaultValue={defaults.passportNumber}
-            style={{ width: "100%", marginTop: 6 }}
-          />
+          {L.fields?.passportNumber ?? "Passport number"}
+          <input name="passportNumber" defaultValue={defaults.passportNumber} style={{ width: "100%", marginTop: 6 }} />
         </label>
 
         <DateWheel
-          label={labels.fields.passportIssueDate}
+          label={L.fields?.passportIssueDate ?? "Passport issue date"}
           name="passportIssueDate"
           initialIso={defaults.passportIssueDate}
-          labels={labels}
+          labels={L}
         />
 
         <DateWheel
-          label={labels.fields.passportExpiryDate}
+          label={L.fields?.passportExpiryDate ?? "Passport expiry date"}
           name="passportExpiryDate"
           initialIso={defaults.passportExpiryDate}
-          labels={labels}
+          labels={L}
         />
 
         <label>
-          {labels.fields.passportIssueCountry}
+          {L.fields?.passportIssueCountry ?? "Passport issuing country"}
           <select
             name="passportIssueCountry"
             defaultValue={defaults.passportIssueCountry || ""}
@@ -288,10 +283,10 @@ export default function Step5FormClient({
           </select>
         </label>
 
-        <h3 style={{ marginTop: 10 }}>{labels.sections.status}</h3>
+        <h3 style={{ marginTop: 10 }}>{L.sections?.status ?? "Marital status"}</h3>
 
         <label>
-          {labels.fields.maritalStatus}
+          {L.fields?.maritalStatus ?? "Marital status"}
           <select
             name="maritalStatus"
             value={maritalStatus}
@@ -306,40 +301,25 @@ export default function Step5FormClient({
           </select>
         </label>
 
-        <DateWheel
-          label={labels.fields.statusDate}
-          name="statusDate"
-          initialIso={defaults.statusDate}
-          labels={labels}
-        />
+        <DateWheel label={L.fields?.statusDate ?? "Wedding date"} name="statusDate" initialIso={defaults.statusDate} labels={L} />
 
-        <h3 style={{ marginTop: 10 }}>{labels.sections.contact}</h3>
+        <h3 style={{ marginTop: 10 }}>{L.sections?.contact ?? "Contact"}</h3>
 
         <label>
-          {labels.fields.phone}
-          <input
-            name="phone"
-            inputMode="tel"
-            defaultValue={defaults.phone}
-            style={{ width: "100%", marginTop: 6 }}
-          />
+          {L.fields?.phone ?? "Phone"}
+          <input name="phone" inputMode="tel" defaultValue={defaults.phone} style={{ width: "100%", marginTop: 6 }} />
         </label>
 
         <label>
-          {labels.fields.email}
-          <input
-            name="email"
-            inputMode="email"
-            defaultValue={defaults.email}
-            style={{ width: "100%", marginTop: 6 }}
-          />
+          {L.fields?.email ?? "Email"}
+          <input name="email" inputMode="email" defaultValue={defaults.email} style={{ width: "100%", marginTop: 6 }} />
         </label>
 
         <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
           <button formAction={saveDraftAction} type="submit">
-            {labels.buttons.saveDraft}
+            {L.buttons?.saveDraft ?? "Save draft"}
           </button>
-          <button type="submit">{labels.buttons.saveContinue}</button>
+          <button type="submit">{L.buttons?.saveContinue ?? "Save & Continue"}</button>
         </div>
       </form>
     </>
