@@ -4,7 +4,6 @@ import React, { useMemo, useState } from "react";
 import { fieldMap } from "./fieldMap"; // adjust path
 import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
 
-
 type MaritalStatus =
   | "married"
   | "divorced"
@@ -182,69 +181,73 @@ export default function ChildRegistrationPage() {
     };
   }, [form]);
 
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
 
-async function onSubmit(e: React.FormEvent) {
-  e.preventDefault();
+    // 1) Build the flat "fields" object where keys match fieldMap.ts
+    const fields: Record<string, string> = {
+      formDate: form.formDate,
 
-  // 1) Build the flat "fields" object where keys match fieldMap.ts
-  const fields: Record<string, string> = {
-    formDate: form.formDate,
+      "israeliApplicant.firstName": form.israeliApplicant.firstName,
+      "israeliApplicant.lastName": form.israeliApplicant.lastName,
+      "israeliApplicant.idNumber": form.israeliApplicant.idNumber,
+      "israeliApplicant.address": form.israeliApplicant.address,
+      "israeliApplicant.phoneMobile": form.israeliApplicant.phoneMobile,
+      "israeliApplicant.poBox": form.israeliApplicant.poBox,
 
-    "israeliApplicant.firstName": form.israeliApplicant.firstName,
-    "israeliApplicant.lastName": form.israeliApplicant.lastName,
-    "israeliApplicant.idNumber": form.israeliApplicant.idNumber,
-    "israeliApplicant.address": form.israeliApplicant.address,
-    "israeliApplicant.phoneMobile": form.israeliApplicant.phoneMobile,
-    "israeliApplicant.poBox": form.israeliApplicant.poBox,
+      "foreignParent.firstName": form.foreignParent.firstName,
+      "foreignParent.lastName": form.foreignParent.lastName,
+      "foreignParent.idOrPassportNumber": form.foreignParent.idOrPassportNumber,
+    };
 
-    "foreignParent.firstName": form.foreignParent.firstName,
-    "foreignParent.lastName": form.foreignParent.lastName,
-    "foreignParent.idOrPassportNumber": form.foreignParent.idOrPassportNumber,
-  };
+    // children → fieldMap expects children.child1/2/3.*
+    const kids = form.children.filter(
+      (c) => c.firstName.trim() || c.dateOfBirth.trim() || c.placeOfBirth.trim()
+    );
 
-  // children → fieldMap expects children.child1/2/3.*
-  const kids = form.children.filter(
-    (c) => c.firstName.trim() || c.dateOfBirth.trim() || c.placeOfBirth.trim()
-  );
-
-  for (let i = 0; i < Math.min(3, kids.length); i++) {
-    const idx = i + 1;
-    fields[`children.child${idx}.firstName`] = kids[i]!.firstName;
-    fields[`children.child${idx}.dateOfBirth`] = kids[i]!.dateOfBirth;
-    fields[`children.child${idx}.placeOfBirth`] = kids[i]!.placeOfBirth;
-  }
-
-  // 2) Fetch template PDF + font (from public/)
-  const [tplRes, fontRes] = await Promise.all([
-    fetch("/forms/child-registration-request.pdf"),
-    fetch("/fonts/SimplerPro-Regular.otf"),
-  ]);
-
-  if (!tplRes.ok) throw new Error("Failed to load template PDF");
-  if (!fontRes.ok) throw new Error("Failed to load font");
-
-  const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
-  const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
-
-  // 3) Fill PDF with coordinates from fieldMap.ts
-  const outBytes = await fillFieldsToNewPdfBytesClient(
-    templateBytes,
-    fields,
-    fieldMap,
-    {
-      fontBytes,
-      autoDetectRtl: true,
-      defaultRtlAlignRight: true,
+    for (let i = 0; i < Math.min(3, kids.length); i++) {
+      const idx = i + 1;
+      fields[`children.child${idx}.firstName`] = kids[i]!.firstName;
+      fields[`children.child${idx}.dateOfBirth`] = kids[i]!.dateOfBirth;
+      fields[`children.child${idx}.placeOfBirth`] = kids[i]!.placeOfBirth;
     }
-  );
 
-  // 4) Download the result
-  const fileName = `child_registration_${safePart(form.israeliApplicant.idNumber)}_${new Date()
-    .toISOString()
-    .slice(0, 10)}.pdf`;
+    const status = form.israeliApplicant.maritalStatus;
+    if (status) {
+      fields[`israeliApplicant.maritalStatus.${status}`] = "true"; // any non-empty value works
+    }
 
-  downloadPdf(fileName, outBytes);
-}
+    // 2) Fetch template PDF + font (from public/)
+    const [tplRes, fontRes] = await Promise.all([
+      fetch("/forms/child-registration-request.pdf"),
+      fetch("/fonts/SimplerPro-Regular.otf"),
+    ]);
+
+    if (!tplRes.ok) throw new Error("Failed to load template PDF");
+    if (!fontRes.ok) throw new Error("Failed to load font");
+
+    const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
+    const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
+
+    // 3) Fill PDF with coordinates from fieldMap.ts
+    const outBytes = await fillFieldsToNewPdfBytesClient(
+      templateBytes,
+      fields,
+      fieldMap,
+      {
+        fontBytes,
+        autoDetectRtl: true,
+        defaultRtlAlignRight: true,
+      }
+    );
+
+    // 4) Download the result
+    const fileName = `child_registration_${safePart(
+      form.israeliApplicant.idNumber
+    )}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+    downloadPdf(fileName, outBytes);
+  }
 
   return (
     <main

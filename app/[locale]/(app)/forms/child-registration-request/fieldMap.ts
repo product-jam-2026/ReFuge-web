@@ -7,17 +7,21 @@ export type FieldSpec = {
   pageIndex: number;
   x: number;
   y: number;
-  direction?: Direction;
+
+  // existing:
   width?: number;
   height?: number;
   fontSize?: number;
   lineHeight?: number;
   align?: "left" | "center" | "right";
-  maxFontSize?: number;
-  minFontSize?: number;
+  direction?: "ltr" | "rtl" | "auto";
   clearBackground?: boolean;
-};
 
+  // ✅ new:
+  kind?: "text" | "checkbox";
+  boxSize?: number;      // size of the X for checkbox
+  strokeWidth?: number;  // thickness of the X
+};
 export type FieldMap = Record<string, FieldSpec>;
 
 export const fieldMap: FieldMap = {
@@ -39,6 +43,11 @@ export const fieldMap: FieldMap = {
   "israeliApplicant.idNumber": { pageIndex: 0, x: 350.95, y: 590.03, direction: "ltr", fontSize: 12, clearBackground: false },
   "israeliApplicant.lastName": { pageIndex: 0, x: 375.26, y: 615.72, direction: "rtl", fontSize: 12, clearBackground: false },
   "israeliApplicant.phoneMobile": { pageIndex: 0, x: 320.26, y: 546.03, direction: "ltr", fontSize: 12, clearBackground: false },
-  "israeliApplicant.poBox": { pageIndex: 0, x: 60.85, y: 545.03, direction: "ltr", fontSize: 12, clearBackground: false }
-  
+  "israeliApplicant.poBox": { pageIndex: 0, x: 60.85, y: 545.03, direction: "ltr", fontSize: 12, clearBackground: false },
+  "israeliApplicant.maritalStatus.married": { pageIndex: 0, x: 556.4, y: 421.7, kind: "checkbox", boxSize: 5, strokeWidth: 1.2,},
+  "israeliApplicant.maritalStatus.divorced": { pageIndex: 0, x: 466.2, y: 421.7, kind: "checkbox", boxSize: 5, strokeWidth: 1.2,},
+  "israeliApplicant.maritalStatus.widowed":  { pageIndex: 0, x: 374.1, y: 421.7, kind: "checkbox", boxSize: 5, strokeWidth: 1.2,},
+  "israeliApplicant.maritalStatus.single":   { pageIndex: 0, x: 287.9, y: 421.7, kind: "checkbox", boxSize: 5, strokeWidth: 1.2,},
+  "israeliApplicant.maritalStatus.bigamist": { pageIndex: 0, x: 190.0, y: 421.7, kind: "checkbox", boxSize: 5, strokeWidth: 1.2,}
 };
+  

@@ -2,10 +2,10 @@ import { PDFDocument, rgb, StandardFonts, type PDFFont } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 // import type { FieldMap, FieldSpec } from "./fieldMap"; // adjust import path if needed
 
-import type { FieldMap, FieldSpec } from "@/app/[locale]/(app)/forms/child-registration-request/fieldMap";
-
-
-
+import type {
+  FieldMap,
+  FieldSpec,
+} from "@/app/[locale]/(app)/forms/child-registration-request/fieldMap";
 
 export type FillOptionsClient = {
   /** Provide bytes (fetched in the browser) for Hebrew-capable font */
@@ -97,6 +97,32 @@ export async function fillFieldsToNewPdfBytesClient(
 
       const lineWidth = font.widthOfTextAtSize(line, fittedFontSize);
       const x = computeAlignedX(spec.x, spec.width, align, lineWidth);
+
+      if (spec.kind === "checkbox") {
+        // draw X only if value is "truthy"
+        if (
+          rawValue &&
+          rawValue.trim() !== "" &&
+          rawValue !== "false" &&
+          rawValue !== "0"
+        ) {
+          const size = spec.boxSize ?? 10;
+          const w = spec.strokeWidth ?? 1;
+          const half = size / 2;
+
+          page.drawLine({
+            start: { x: spec.x - half, y: spec.y - half },
+            end: { x: spec.x + half, y: spec.y + half },
+            thickness: w,
+          });
+          page.drawLine({
+            start: { x: spec.x - half, y: spec.y + half },
+            end: { x: spec.x + half, y: spec.y - half },
+            thickness: w,
+          });
+        }
+        continue; // don't do text rendering
+      }
 
       page.drawText(line, {
         x,
