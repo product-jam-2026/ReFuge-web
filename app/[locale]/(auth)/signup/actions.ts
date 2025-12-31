@@ -25,7 +25,6 @@ async function getAuthedSupabase() {
 }
 
 async function upsertProfileIfMissing(supabase: any, user: any) {
-  // יוצר/מעדכן בסיס: id+email אם אין
   await supabase.from("profiles").upsert(
     { id: user.id, email: user.email },
     { onConflict: "id" }
@@ -35,7 +34,7 @@ async function upsertProfileIfMissing(supabase: any, user: any) {
 export async function saveSignupStep(params: {
   locale: string;
   step: number; // 1..6
-  patch: any;   // מה ששומרים לתוך intake.stepX
+  patch: any; // מה ששומרים לתוך intake.stepX
   goNext?: boolean; // אם true -> redirect לשלב הבא
 }) {
   const { supabase, user } = await getAuthedSupabase();
@@ -57,12 +56,13 @@ export async function saveSignupStep(params: {
   const existingIntake = existingData.intake || {};
 
   const computedCurrentStep = params.goNext
-  ? Math.min(params.step + 1, 6)
-  : params.step;
-const nextIntake = mergeDeep(existingIntake, {
-  currentStep: Math.max(existingIntake.currentStep || 1, computedCurrentStep),
-  [`step${params.step}`]: params.patch,
-});
+    ? Math.min(params.step + 1, 6)
+    : params.step;
+
+  const nextIntake = mergeDeep(existingIntake, {
+    currentStep: Math.max(existingIntake.currentStep || 1, computedCurrentStep),
+    [`step${params.step}`]: params.patch,
+  });
 
   const nextData = mergeDeep(existingData, { intake: nextIntake });
 
@@ -80,6 +80,54 @@ const nextIntake = mergeDeep(existingIntake, {
 
   // נשארים באותו דף
   redirect(`/${params.locale}/signup/step-${params.step}?saved=1`);
+}
+
+/**
+ * ✅ מסיים הרשמה בסוף Step6:
+ * 1) שומר intake.step6
+ * 2) מסמן registration_completed=true
+ * 3) מפנה ל-home
+ */
+export async function finishRegistrationStep6(params: {
+  locale: string;
+  patch: any; // הולך ל intake.step6
+}) {
+  const { supabase, user } = await getAuthedSupabase();
+  await upsertProfileIfMissing(supabase, user);
+
+  const { data: profile, error: profErr } = await supabase
+    .from("profiles")
+    .select("data, registration_completed")
+    .eq("id", user.id)
+    .single();
+
+  if (profErr) throw profErr;
+
+  if (profile?.registration_completed) {
+    redirect(`/${params.locale}/home`);
+  }
+
+  const existingData = profile?.data || {};
+  const existingIntake = existingData.intake || {};
+
+  const nextIntake = mergeDeep(existingIntake, {
+    currentStep: 6,
+    step6: params.patch,
+  });
+
+  const nextData = mergeDeep(existingData, { intake: nextIntake });
+
+  const { error: updErr } = await supabase
+    .from("profiles")
+    .update({
+      data: nextData,
+      registration_completed: true,
+    })
+    .eq("id", user.id);
+
+  if (updErr) throw updErr;
+
+  redirect(`/${params.locale}/home`);
 }
 
 export async function completeRegistration(locale: string) {

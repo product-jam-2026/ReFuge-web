@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { completeRegistration, saveSignupStep } from "../actions";
+import { finishRegistrationStep6, saveSignupStep } from "../actions";
 import Step6FormClient from "./Step6FormClient";
 
 import he from "@/messages/he.json";
@@ -50,13 +50,13 @@ export default async function Step6Page({
       israeliId: String(formData.get("childIsraeliId") || ""),
       residenceCountry: String(formData.get("childResidenceCountry") || ""),
       entryDate: String(formData.get("childEntryDate") || ""),
-      // שדות חדשים מהמסך (לא שוברים כלום – רק מוסיפים)
       birthCity: String(formData.get("childBirthCity") || ""),
       residenceCity: String(formData.get("childResidenceCity") || ""),
       arrivalToIsraelDate: String(formData.get("childArrivalToIsraelDate") || ""),
       arrivalToIsraelReason: String(formData.get("childArrivalToIsraelReason") || ""),
     };
 
+    // ✅ שמירת טיוטה רגילה (נשארים ב-step-6?saved=1)
     await saveSignupStep({
       locale: params.locale,
       step: 6,
@@ -82,14 +82,11 @@ export default async function Step6Page({
       arrivalToIsraelReason: String(formData.get("childArrivalToIsraelReason") || ""),
     };
 
-    await saveSignupStep({
+    // ✅ שומר step6 + מסמן completed + מפנה ל-home
+    await finishRegistrationStep6({
       locale: params.locale,
-      step: 6,
       patch: { children: [child] },
-      goNext: false,
     });
-
-    await completeRegistration(params.locale);
   }
 
   return (
