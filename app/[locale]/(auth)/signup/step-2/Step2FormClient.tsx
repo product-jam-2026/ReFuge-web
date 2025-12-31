@@ -24,6 +24,7 @@ export default function Step2FormClient({
   defaults,
   saveDraftAction,
   saveAndNextAction,
+  saveDraftAndBackAction,
 }: {
   labels: any;
   defaults: {
@@ -37,6 +38,7 @@ export default function Step2FormClient({
   };
   saveDraftAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
+  saveDraftAndBackAction: (formData: FormData) => Promise<void>;
 }) {
   const nowYear = new Date().getFullYear();
 
@@ -94,8 +96,8 @@ export default function Step2FormClient({
 
   const visaStartISO = toISO(visaStart);
   const visaEndISO = toISO(visaEnd);
-  const visaRangeBad = Boolean(visaStartISO && visaEndISO) && compareISO(visaEndISO, visaStartISO) < 0;
-
+  const visaRangeBad =
+    Boolean(visaStartISO && visaEndISO) && compareISO(visaEndISO, visaStartISO) < 0;
 
   const availableCities = useMemo(() => {
     const list = (citiesByCountry as any)[country] || [];
@@ -118,7 +120,6 @@ export default function Step2FormClient({
       <form action={saveAndNextAction} style={{ display: "grid", gap: 12, maxWidth: 460 }}>
         <h3 style={{ marginTop: 6 }}>{labels.sections.immigration}</h3>
 
-        {/* Birth country */}
         <label>
           {labels.fields.birthCountry}
           <select
@@ -135,7 +136,6 @@ export default function Step2FormClient({
           </select>
         </label>
 
-        {/* Birth city */}
         <label>
           {labels.fields.birthCity}
           <select
@@ -153,7 +153,6 @@ export default function Step2FormClient({
           </select>
         </label>
 
-        {/* Purpose of stay (stored in residenceAddress to avoid breaking schema) */}
         <label>
           {labels.fields.purposeOfStay}
           <select
@@ -170,7 +169,6 @@ export default function Step2FormClient({
 
         <h3 style={{ marginTop: 10 }}>{labels.sections.visa}</h3>
 
-        {/* Visa type */}
         <label>
           {labels.fields.visaType}
           <select
@@ -186,14 +184,10 @@ export default function Step2FormClient({
           </select>
         </label>
 
-        {/* Visa validity (from/to) */}
         <fieldset style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
           <legend style={{ padding: "0 6px" }}>{labels.fields.visaValidity}</legend>
 
-          {/* From */}
-          <div style={{ marginBottom: 10, fontSize: 12, opacity: 0.85 }}>
-            {labels.date.from}
-          </div>
+          <div style={{ marginBottom: 10, fontSize: 12, opacity: 0.85 }}>{labels.date.from}</div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
             <select
               name="visaStartDate_y"
@@ -202,7 +196,9 @@ export default function Step2FormClient({
             >
               <option value="">{labels.select}</option>
               {yearsVisa.map((y) => (
-                <option key={y} value={y}>{y}</option>
+                <option key={y} value={y}>
+                  {y}
+                </option>
               ))}
             </select>
             <select
@@ -212,7 +208,9 @@ export default function Step2FormClient({
             >
               <option value="">{labels.select}</option>
               {months.map((m) => (
-                <option key={m} value={m}>{m}</option>
+                <option key={m} value={m}>
+                  {m}
+                </option>
               ))}
             </select>
             <select
@@ -222,12 +220,13 @@ export default function Step2FormClient({
             >
               <option value="">{labels.select}</option>
               {days.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <option key={d} value={d}>
+                  {d}
+                </option>
               ))}
             </select>
           </div>
 
-          {/* To */}
           <div style={{ marginTop: 14, marginBottom: 10, fontSize: 12, opacity: 0.85 }}>
             {labels.date.to}
           </div>
@@ -239,7 +238,9 @@ export default function Step2FormClient({
             >
               <option value="">{labels.select}</option>
               {yearsVisa.map((y) => (
-                <option key={y} value={y}>{y}</option>
+                <option key={y} value={y}>
+                  {y}
+                </option>
               ))}
             </select>
             <select
@@ -249,7 +250,9 @@ export default function Step2FormClient({
             >
               <option value="">{labels.select}</option>
               {months.map((m) => (
-                <option key={m} value={m}>{m}</option>
+                <option key={m} value={m}>
+                  {m}
+                </option>
               ))}
             </select>
             <select
@@ -259,7 +262,9 @@ export default function Step2FormClient({
             >
               <option value="">{labels.select}</option>
               {days.map((d) => (
-                <option key={d} value={d}>{d}</option>
+                <option key={d} value={d}>
+                  {d}
+                </option>
               ))}
             </select>
           </div>
@@ -269,7 +274,6 @@ export default function Step2FormClient({
           )}
         </fieldset>
 
-        {/* Entry date */}
         <fieldset style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
           <legend style={{ padding: "0 6px" }}>{labels.fields.entryDate}</legend>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
@@ -282,7 +286,9 @@ export default function Step2FormClient({
               >
                 <option value="">{labels.select}</option>
                 {yearsEntry.map((y) => (
-                  <option key={y} value={y}>{y}</option>
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
                 ))}
               </select>
             </label>
@@ -296,7 +302,9 @@ export default function Step2FormClient({
               >
                 <option value="">{labels.select}</option>
                 {months.map((m) => (
-                  <option key={m} value={m}>{m}</option>
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
                 ))}
               </select>
             </label>
@@ -310,17 +318,25 @@ export default function Step2FormClient({
               >
                 <option value="">{labels.select}</option>
                 {days.map((d) => (
-                  <option key={d} value={d}>{d}</option>
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
                 ))}
               </select>
             </label>
           </div>
         </fieldset>
 
+        {/* ✅ כאן ההוספה היחידה: כפתור חזרה ששומר טיוטה */}
         <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
+          <button formAction={saveDraftAndBackAction} type="submit">
+            {labels?.buttons?.saveDraftBack ?? "Save Draft & Back"}
+          </button>
+
           <button formAction={saveDraftAction} type="submit">
             {labels.buttons.saveDraft}
           </button>
+
           <button type="submit" disabled={visaRangeBad}>
             {labels.buttons.saveContinue}
           </button>
