@@ -13,5 +13,56 @@
         "body": "Information about access to health services..."
       }
     ]
+  },
+  "HomePage": {
+    "greeting": "Good evening, Muhammad",
+    "intro": "All forms are here on the homepage: forms you filled out, drafts, and forms you might need in the future.",
+    "cards": {
+      "allForms": {
+        "title": "Forms",
+        "desc": "All forms related to children, such as registration and child allowance requests."
+      },
+      "myForms": {
+        "title": "My Forms",
+        "desc": "Forms I've submitted in the past, in case you need to print or resend them."
+      },
+      "drafts": {
+        "title": "Drafts",
+        "desc": "Forms you haven't finished filling out – note that completed forms are auto-deleted after a month."
+      }
+    }
+  },
+  "Navigation": {
+    "home": "Home",
+    "profile": "Profile",
+    "rights": "Rights"
+  },
+  "RightsPage": {
+    "title": "Rights Information",
+    "filter": "Filter",
+    "cancelFilter": "Cancel",
+    "items": [
+      {
+        "id": 1,
+        "question": "Employer didn't pay full salary or fired me without notice. Who can I contact?",
+        "answer": "This is illegal. You are entitled to full worker rights. 'Kav LaOved' helps asylum seekers exercise their rights with employers (for free).",
+        "linkText": "Kav LaOved Website"
+      },
+      {
+        "id": 2,
+        "question": "Where can I learn a new profession?",
+        "answer": "There are several organizations offering vocational training..."
+      },
+      {
+        "id": 3,
+        "question": "I have no health insurance and I'm sick (non-emergency). Where to go?",
+        "answer": "Terem clinics or specific clinics accept undocumented individuals..."
+      }
+    ]
+  },
+  "Navbar": {
+    "login": "Login",
+    "forms": "Forms",
+    "rights": "Rights"
   }
 }
