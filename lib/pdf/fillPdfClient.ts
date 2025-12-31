@@ -187,8 +187,13 @@ function fitFontSizeToWidth(
 ) {
   if (!spec.width) return fallback;
 
-  const maxSize = spec.maxFontSize ?? fallback;
-  const minSize = spec.minFontSize ?? 6;
+  // const maxSize = spec.maxFontSize ?? fallback;
+  // const minSize = spec.minFontSize ?? 6;
+
+  const maxSize = 12;
+  const minSize = 6;
+
+
 
   let size = maxSize;
   while (size > minSize) {
