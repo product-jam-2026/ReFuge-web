@@ -195,6 +195,7 @@ async function onSubmit(e: React.FormEvent) {
     "israeliApplicant.idNumber": form.israeliApplicant.idNumber,
     "israeliApplicant.address": form.israeliApplicant.address,
     "israeliApplicant.phoneMobile": form.israeliApplicant.phoneMobile,
+    "israeliApplicant.poBox": form.israeliApplicant.poBox,
 
     "foreignParent.firstName": form.foreignParent.firstName,
     "foreignParent.lastName": form.foreignParent.lastName,
@@ -215,8 +216,7 @@ async function onSubmit(e: React.FormEvent) {
 
   // 2) Fetch template PDF + font (from public/)
   const [tplRes, fontRes] = await Promise.all([
-    // fetch("/forms/child-registration-request/child-registration-request.pdf"),
-    fetch("/refuge/forms/child-registration-request/child-registration-request.pdf"),
+    fetch("/forms/child-registration-request.pdf"),
     fetch("/fonts/SimplerPro-Regular.otf"),
   ]);
 
@@ -255,7 +255,7 @@ async function onSubmit(e: React.FormEvent) {
       </h1>
 
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
-        <Field label="תאריך" required>
+        <Field label="תאריך">
           <input
             type="date"
             value={form.formDate}
@@ -267,7 +267,7 @@ async function onSubmit(e: React.FormEvent) {
 
         <SectionTitle>פרטי המבקש הישראלי</SectionTitle>
 
-        <Field label="שם פרטי" required>
+        <Field label="שם פרטי">
           <input
             value={form.israeliApplicant.firstName}
             onChange={(e) =>
@@ -278,7 +278,7 @@ async function onSubmit(e: React.FormEvent) {
           />
         </Field>
 
-        <Field label="שם משפחה" required>
+        <Field label="שם משפחה">
           <input
             value={form.israeliApplicant.lastName}
             onChange={(e) =>
@@ -289,7 +289,7 @@ async function onSubmit(e: React.FormEvent) {
           />
         </Field>
 
-        <Field label="מספר זהות" required>
+        <Field label="מספר זהות">
           <input
             value={form.israeliApplicant.idNumber}
             onChange={(e) =>
