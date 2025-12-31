@@ -13,5 +13,360 @@
         "body": "Information about access to health services..."
       }
     ]
+  },
+  "HomePage": {
+    "greeting": "Good evening, Muhammad",
+    "intro": "All forms are here on the homepage: forms you filled out, drafts, and forms you might need in the future.",
+    "cards": {
+      "allForms": {
+        "title": "Forms",
+        "desc": "All forms related to children, such as registration and child allowance requests."
+      },
+      "myForms": {
+        "title": "My Forms",
+        "desc": "Forms I've submitted in the past, in case you need to print or resend them."
+      },
+      "drafts": {
+        "title": "Drafts",
+        "desc": "Forms you haven't finished filling out – note that completed forms are auto-deleted after a month."
+      }
+    }
+  },
+  "Navigation": {
+    "home": "Home",
+    "profile": "Profile",
+    "rights": "Rights"
+  },
+  "RightsPage": {
+    "title": "Rights Information",
+    "filter": "Filter",
+    "cancelFilter": "Cancel",
+    "items": [
+      {
+        "id": 1,
+        "question": "Employer didn't pay full salary or fired me without notice. Who can I contact?",
+        "answer": "This is illegal. You are entitled to full worker rights. 'Kav LaOved' helps asylum seekers exercise their rights with employers (for free).",
+        "linkText": "Kav LaOved Website"
+      },
+      {
+        "id": 2,
+        "question": "Where can I learn a new profession?",
+        "answer": "There are several organizations offering vocational training..."
+      },
+      {
+        "id": 3,
+        "question": "I have no health insurance and I'm sick (non-emergency). Where to go?",
+        "answer": "Terem clinics or specific clinics accept undocumented individuals..."
+      }
+    ]
+  },
+  "Navbar": {
+    "login": "Login",
+    "forms": "Forms",
+    "rights": "Rights"
+  },
+  "SignupStep1": {
+    "title": "Step 1 of 6",
+    "subtitle": "Personal details",
+    "draftSaved": "✅ Draft saved",
+    "select": "Select",
+    "selectCountry": "Select a country",
+    "sections": {
+      "passport": "Passport",
+      "contact": "Contact details"
+    },
+    "fields": {
+      "lastName": "Last name",
+      "firstName": "First name",
+      "oldLastName": "Previous last name (optional)",
+      "oldFirstName": "Previous first name (optional)",
+      "gender": "Gender",
+      "birthDate": "Date of birth",
+      "nationality": "Nationality",
+      "israeliId": "Israeli ID number",
+      "passportNumber": "Passport number",
+      "passportIssueDate": "Passport issue date",
+      "passportExpiryDate": "Passport expiry date",
+      "passportIssueCountry": "Passport issue country",
+      "phone": "Phone number",
+      "email": "Email"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "date": {
+      "year": "Year",
+      "month": "Month",
+      "day": "Day"
+    },
+    "nationality": {
+      "israeli": "Israeli",
+      "eritrean": "Eritrean",
+      "sudanese": "Sudanese"
+    },
+    "country": {
+      "israel": "Israel",
+      "eritrea": "Eritrea",
+      "sudan": "Sudan",
+      "ukraine": "Ukraine",
+      "russia": "Russia"
+    },
+    "buttons": {
+      "saveDraft": "Save draft",
+      "saveContinue": "Save & Continue"
+    }
+  },
+  "SignupStep2": {
+    "title": "Step 2 of 6",
+    "subtitle": "Status",
+    "draftSaved": "✅ Draft saved",
+    "select": "Select",
+    "selectCountry": "Select a country",
+    "selectCity": "Select a city",
+    "selectPurpose": "Select a purpose",
+    "selectVisaType": "Select a visa type",
+    "sections": {
+      "immigration": "Immigration",
+      "visa": "Visa"
+    },
+    "fields": {
+      "birthCountry": "Country of birth",
+      "birthCity": "City of birth",
+      "purposeOfStay": "Purpose of stay",
+      "visaType": "Visa type",
+      "visaValidity": "Validity",
+      "entryDate": "Entry date"
+    },
+    "date": {
+      "year": "Year",
+      "month": "Month",
+      "day": "Day",
+      "from": "From",
+      "to": "To"
+    },
+    "errors": {
+      "visaRange": "Visa end date must be after the start date."
+    },
+    "purpose": {
+      "work": "Work",
+      "study": "Study",
+      "asylum": "Asylum request"
+    },
+    "visa": {
+      "tourist": "Tourist",
+      "b1": "B/1 (Work)",
+      "a5": "A/5 (Temporary resident)",
+      "unknown": "Unknown"
+    },
+    "country": {
+      "israel": "Israel",
+      "eritrea": "Eritrea",
+      "sudan": "Sudan",
+      "ukraine": "Ukraine",
+      "russia": "Russia"
+    },
+    "city": {
+      "khKhartoum": "Khartoum",
+      "khOmdurman": "Omdurman",
+      "sdPortSudan": "Port Sudan",
+      "erAsmara": "Asmara",
+      "erKeren": "Keren",
+      "erMassawa": "Massawa",
+      "ilJerusalem": "Jerusalem",
+      "ilTelAviv": "Tel Aviv",
+      "ilHaifa": "Haifa"
+    },
+    "buttons": {
+      "saveDraft": "Save draft",
+      "saveContinue": "Save & Continue"
+    }
+  },
+  "SignupStep3": {
+    "title": "Step 3 of 6",
+    "subtitle": "Life Center",
+    "draftSaved": "✅ Draft saved",
+    "select": "Select",
+    "selectCity": "Select a city",
+    "selectStreet": "Select a street",
+    "sections": {
+      "lifeCenter": "Life center",
+      "address": "Home address",
+      "housing": "Housing",
+      "employment": "Employment",
+      "assets": "Assets"
+    },
+    "fields": {
+      "maritalStatus": "Marital status",
+      "weddingDate": "Wedding date",
+      "city": "City",
+      "street": "Street",
+      "houseNumber": "House number",
+      "entry": "Entrance",
+      "apartment": "Apartment number",
+      "zip": "ZIP code",
+      "housingType": "Choose",
+      "employmentStatus": "Occupation in Israel",
+      "notWorkingReason": "If not working – choose",
+      "assets": "Assets"
+    },
+    "date": {
+      "year": "Year",
+      "month": "Month",
+      "day": "Day"
+    },
+    "marital": {
+      "single": "Single",
+      "married": "Married",
+      "divorced": "Divorced",
+      "widowed": "Widowed"
+    },
+    "housing": {
+      "rented": "Rented apartment",
+      "other": "Other"
+    },
+    "employment": {
+      "selfEmployed": "Self-employed",
+      "employee": "Employee",
+      "notWorking": "Not working"
+    },
+    "assets": {
+      "apartment": "Apartment",
+      "business": "Business",
+      "other": "Other asset"
+    },
+    "buttons": {
+      "saveDraft": "Save draft",
+      "saveContinue": "Save & Continue"
+    }
+  },
+   "SignupStep4": {
+    "title": "Step 4 of 6",
+    "subtitle": "Institutions",
+    "draftSaved": "✅ Draft saved",
+    "select": "Select",
+    "sections": {
+      "health": "Health fund",
+      "bank": "Bank details",
+      "ni": "National Insurance"
+    },
+    "fields": {
+      "healthFund": "Health fund",
+      "bankName": "Bank",
+      "branch": "Branch",
+      "branchNumber": "Branch number",
+      "accountNumber": "Account number",
+      "hasFile": "National Insurance",
+      "fileNumber": "Collection file number",
+      "getsAllowance": "Do you receive (or currently receiving) an allowance from National Insurance?",
+      "allowanceType": "Allowance type",
+      "allowanceFileNumber": "National Insurance allowance file number"
+    },
+    "niOptions": {
+      "yes": "I pay / I have a collection file in National Insurance",
+      "no": "I do not pay / I do not have a collection file in National Insurance"
+    },
+    "allowanceOptions": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "buttons": {
+      "saveDraft": "Save draft",
+      "saveContinue": "Save & Continue"
+    }
+  },
+  "SignupStep5": {
+  "title": "Step 5 of 6",
+  "subtitle": "Partner/Guardian details (as shown in the passport)",
+  "draftSaved": "✅ Draft saved",
+  "select": "Select",
+  "sections": {
+    "partner": "Partner / Guardian",
+    "passport": "Passport",
+    "status": "Marital status",
+    "contact": "Contact"
+  },
+  "fields": {
+    "lastName": "Last name",
+    "firstName": "First name",
+    "oldLastName": "Previous last name (optional)",
+    "oldFirstName": "Previous first name (optional)",
+    "gender": "Gender",
+    "birthDate": "Date of birth",
+    "nationality": "Nationality",
+    "israeliId": "Israeli ID (if exists)",
+    "passportNumber": "Passport number",
+    "passportIssueDate": "Passport issue date",
+    "passportExpiryDate": "Passport expiry date",
+    "passportIssueCountry": "Passport issuing country",
+    "maritalStatus": "Marital status",
+    "statusDate": "Wedding date",
+    "phone": "Phone",
+    "email": "Email"
+  },
+  "genderOptions": {
+    "male": "Male",
+    "female": "Female"
+  },
+  "maritalOptions": {
+    "single": "Single",
+    "married": "Married",
+    "divorced": "Divorced",
+    "widowed": "Widowed"
+  },
+  "date": {
+    "year": "Year",
+    "month": "Month",
+    "day": "Day"
+  },
+  "nationalityOptions": {
+    "israeli": "Israeli",
+    "sudanese": "Sudanese",
+    "eritrean": "Eritrean"
+  },
+  "countryOptions": {
+    "israel": "Israel",
+    "sudan": "Sudan",
+    "eritrea": "Eritrea"
+  },
+  "buttons": {
+    "saveDraft": "Save draft",
+    "saveContinue": "Save & Continue"
   }
+},
+"SignupStep6": {
+  "title": "Step 6 of 6",
+  "subtitle": "Children details",
+  "draftSaved": "✅ Draft saved",
+  "select": "Select",
+  "sections": { "child": "General" },
+  "fields": {
+    "childLastName": "Last name",
+    "childFirstName": "First name",
+    "childGender": "Gender",
+    "childBirthDate": "Date of birth",
+    "childNationality": "Nationality",
+    "childIsraeliId": "Israeli ID",
+    "childResidenceCountry": "Country of birth",
+    "childBirthCity": "City of birth",
+    "childResidenceCity": "City",
+    "childEntryDate": "Entry date to Israel",
+    "childArrivalToIsraelDate": "Aliyah date",
+    "childArrivalToIsraelReason": "Date the child joined National Insurance file"
+  },
+  "genderOptions": { "male": "Male", "female": "Female" },
+  "date": { "year": "Year", "month": "Month", "day": "Day" },
+  "nationalityOptions": { "israeli": "Israeli", "sudanese": "Sudanese", "eritrean": "Eritrean" },
+  "countryOptions": { "israel": "Israel", "sudan": "Sudan", "eritrea": "Eritrea" },
+  "cityOptions": {
+    "jerusalem": "Jerusalem",
+    "telAviv": "Tel Aviv",
+    "haifa": "Haifa",
+    "khartoum": "Khartoum",
+    "omdurman": "Omdurman",
+    "asmara": "Asmara"
+  },
+  "arrivalReasons": { "safety": "Safety", "family": "Family reunification", "other": "Other" },
+  "buttons": { "saveDraft": "Save draft", "finish": "Finish registration" }
+}
 }

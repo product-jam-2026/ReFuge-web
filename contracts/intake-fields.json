@@ -1,0 +1,99 @@
+{
+  "intake": {
+    "step1": {
+      "lastName": "string",
+      "firstName": "string",
+      "oldLastName": "string",
+      "oldFirstName": "string",
+      "gender": "string",
+      "birthDate": "string",
+      "nationality": "string",
+      "israeliId": "string",
+      "passportNumber": "string",
+      "passportIssueDate": "string",
+      "passportExpiryDate": "string",
+      "passportIssueCountry": "string",
+      "phone": "string",
+      "email": "string"
+    },
+    "step2": {
+      "residenceCountry": "string",
+      "residenceCity": "string",
+      "residenceAddress": "string",
+      "visaType": "string",
+      "visaStartDate": "string",
+      "visaEndDate": "string",
+      "entryDate": "string"
+    },
+    "step3": {
+      "maritalStatus": "string",
+      "statusDate": "string",
+      "registeredAddress": {
+        "city": "string",
+        "street": "string",
+        "houseNumber": "string",
+        "entry": "string",
+        "apartment": "string",
+        "zip": "string"
+      },
+      "mailingDifferent": "boolean",
+      "mailingAddress": {
+        "city": "string",
+        "street": "string",
+        "houseNumber": "string",
+        "entry": "string",
+        "apartment": "string",
+        "zip": "string"
+      },
+      "employmentStatus": "string",
+      "notWorkingReason": "string",
+      "occupation": "string"
+    },
+    "step4": {
+      "healthFund": "string",
+      "bank": {
+        "bankName": "string",
+        "branch": "string",
+        "accountNumber": "string"
+      },
+      "nationalInsurance": {
+        "hasFile": "string",
+        "fileNumber": "string",
+        "getsAllowance": "string",
+        "allowanceType": "string",
+        "allowanceFileNumber": "string"
+      }
+    },
+    "step5": {
+      "person": {
+        "lastName": "string",
+        "firstName": "string",
+        "oldLastName": "string",
+        "oldFirstName": "string",
+        "gender": "string",
+        "birthDate": "string",
+        "nationality": "string",
+        "israeliId": "string",
+        "passportNumber": "string"
+      },
+      "maritalStatus": "string",
+      "statusDate": "string",
+      "phone": "string",
+      "email": "string"
+    },
+    "step6": {
+      "children": [
+        {
+          "lastName": "string",
+          "firstName": "string",
+          "gender": "string",
+          "birthDate": "string",
+          "nationality": "string",
+          "israeliId": "string",
+          "residenceCountry": "string",
+          "entryDate": "string"
+        }
+      ]
+    }
+  }
+}

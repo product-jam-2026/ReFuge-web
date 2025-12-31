@@ -1,1 +1,357 @@
-{}
+{
+  "HomePage": {
+    "greeting": "مساء الخير، محمد",
+    "intro": "جميع النماذج موجودة هنا في الصفحة الرئيسية: النماذج التي ملأتها، المسودات، والنماذج التي قد تحتاجها في المستقبل.",
+    "cards": {
+      "allForms": {
+        "title": "النماذج",
+        "desc": "جميع النماذج المتعلقة بالأطفال مثل تسجيل الأطفال وطلبات مخصصات الأولاد."
+      },
+      "myForms": {
+        "title": "نماذجي",
+        "desc": "النماذج التي ملأتها سابقاً في حال رغبت في طباعتها أو إرسالها مجدداً."
+      },
+      "drafts": {
+        "title": "المسودات",
+        "desc": "النماذج التي لم تكمل تعبئتها – انتبه أن النموذج المكتمل يُحذف تلقائياً خلال شهر."
+      }
+    }
+  },
+  "Navigation": {
+    "home": "الرئيسية",
+    "profile": "الملف الشخصي",
+    "rights": "الحقوق"
+  },
+  "RightsPage": {
+    "title": "معلومات حول الحقوق",
+    "filter": "تصفية",
+    "cancelFilter": "إلغاء",
+    "items": [
+      {
+        "id": 1,
+        "question": "صاحب العمل لم يدفع لي راتبي بالكامل أو فصلني بدون إشعار. لمن أتوجه؟",
+        "answer": "هذا غير قانوني. يحق لك الحصول على كامل حقوق العامل. منظمة 'عنوان العامل' (Kav LaOved) تساعد طالبي اللجوء في تحصيل حقوقهم أمام صاحب العمل (مجاناً).",
+        "linkText": "موقع عنوان العامل"
+      },
+      {
+        "id": 2,
+        "question": "أين يمكنني تعلم مهنة جديدة؟",
+        "answer": "توجد عدة منظمات تقدم دورات تدريب مهني..."
+      },
+      {
+        "id": 3,
+        "question": "ليس لدي تأمين صحي وأنا مريض (ليس حالة طارئة). إلى أين أذهب؟",
+        "answer": "عيادات 'تيرم' أو عيادات معينة تستقبل الأشخاص عديمي المكانة..."
+      }
+    ]
+  },
+  "Navbar": {
+    "login": "تسجيل الدخول",
+    "forms": "النماذج",
+    "rights": "الحقوق"
+  },
+  "SignupStep1": {
+    "title": "الخطوة 1 من 6",
+    "subtitle": "تفاصيل شخصية",
+    "draftSaved": "✅ تم حفظ المسودة",
+    "select": "اختر",
+    "selectCountry": "اختر دولة",
+    "sections": {
+      "passport": "جواز السفر",
+      "contact": "تفاصيل التواصل"
+    },
+    "fields": {
+      "lastName": "اسم العائلة",
+      "firstName": "الاسم الأول",
+      "oldLastName": "اسم عائلة سابق (اختياري)",
+      "oldFirstName": "اسم أول سابق (اختياري)",
+      "gender": "الجنس",
+      "birthDate": "تاريخ الميلاد",
+      "nationality": "الجنسية",
+      "israeliId": "رقم الهوية الإسرائيلية",
+      "passportNumber": "رقم جواز السفر",
+      "passportIssueDate": "تاريخ إصدار الجواز",
+      "passportExpiryDate": "تاريخ انتهاء الجواز",
+      "passportIssueCountry": "بلد إصدار الجواز",
+      "phone": "رقم الهاتف",
+      "email": "البريد الإلكتروني"
+    },
+    "gender": {
+      "male": "ذكر",
+      "female": "أنثى"
+    },
+    "date": {
+      "year": "السنة",
+      "month": "الشهر",
+      "day": "اليوم"
+    },
+    "nationality": {
+      "israeli": "إسرائيلية",
+      "eritrean": "إريترية",
+      "sudanese": "سودانية"
+    },
+    "country": {
+      "israel": "إسرائيل",
+      "eritrea": "إريتريا",
+      "sudan": "السودان",
+      "ukraine": "أوكرانيا",
+      "russia": "روسيا"
+    },
+    "buttons": {
+      "saveDraft": "حفظ كمسودة",
+      "saveContinue": "حفظ ومتابعة"
+    }
+  },
+  "SignupStep2": {
+    "title": "الخطوة 2 من 6",
+    "subtitle": "الهجرة والتأشيرة",
+    "draftSaved": "✅ تم حفظ المسودة",
+    "select": "اختر",
+    "selectCountry": "اختر دولة",
+    "selectCity": "اختر مدينة",
+    "selectPurpose": "اختر الهدف",
+    "selectVisaType": "اختر نوع التأشيرة",
+    "sections": {
+      "immigration": "الهجرة",
+      "visa": "التأشيرة"
+    },
+    "fields": {
+      "birthCountry": "بلد الميلاد",
+      "birthCity": "مدينة الميلاد",
+      "purposeOfStay": "هدف الإقامة",
+      "visaType": "نوع التأشيرة",
+      "visaValidity": "المدة",
+      "entryDate": "تاريخ الدخول"
+    },
+    "date": {
+      "year": "السنة",
+      "month": "الشهر",
+      "day": "اليوم",
+      "from": "من تاريخ",
+      "to": "إلى تاريخ"
+    },
+    "errors": {
+      "visaRange": "يجب أن يكون تاريخ انتهاء التأشيرة بعد تاريخ البدء."
+    },
+    "purpose": {
+      "work": "عمل",
+      "study": "دراسة",
+      "asylum": "طلب لجوء"
+    },
+    "visa": {
+      "tourist": "سائح",
+      "b1": "B/1 (عمل)",
+      "a5": "A/5 (إقامة مؤقتة)",
+      "unknown": "غير معروف"
+    },
+    "country": {
+      "israel": "إسرائيل",
+      "eritrea": "إريتريا",
+      "sudan": "السودان",
+      "ukraine": "أوكرانيا",
+      "russia": "روسيا"
+    },
+    "city": {
+      "khKhartoum": "الخرطوم",
+      "khOmdurman": "أم درمان",
+      "sdPortSudan": "بورتسودان",
+      "erAsmara": "أسمرة",
+      "erKeren": "كرن",
+      "erMassawa": "مصوع",
+      "ilJerusalem": "القدس",
+      "ilTelAviv": "تل أبيب",
+      "ilHaifa": "حيفا"
+    },
+    "buttons": {
+      "saveDraft": "حفظ كمسودة",
+      "saveContinue": "حفظ ومتابعة"
+    }
+  },
+  "SignupStep3": {
+    "title": "الخطوة 3 من 6",
+    "subtitle": "مركز الحياة",
+    "draftSaved": "✅ تم حفظ المسودة",
+    "select": "اختر",
+    "selectCity": "اختر مدينة",
+    "selectStreet": "اختر شارعًا",
+    "sections": {
+      "lifeCenter": "مركز الحياة",
+      "address": "عنوان السكن",
+      "housing": "السكن",
+      "employment": "العمل",
+      "assets": "الممتلكات"
+    },
+    "fields": {
+      "maritalStatus": "الحالة الاجتماعية",
+      "weddingDate": "تاريخ الزواج",
+      "city": "المدينة",
+      "street": "الشارع",
+      "houseNumber": "رقم المنزل",
+      "entry": "المدخل",
+      "apartment": "رقم الشقة",
+      "zip": "الرمز البريدي",
+      "housingType": "اختر",
+      "employmentStatus": "العمل داخل إسرائيل",
+      "notWorkingReason": "إذا اخترت لا يعمل – اختر",
+      "assets": "الممتلكات"
+    },
+    "date": {
+      "year": "السنة",
+      "month": "الشهر",
+      "day": "اليوم"
+    },
+    "marital": {
+      "single": "أعزب/عزباء",
+      "married": "متزوج/متزوجة",
+      "divorced": "مطلق/مطلقة",
+      "widowed": "أرمل/أرملة"
+    },
+    "housing": {
+      "rented": "شقة مستأجرة",
+      "other": "أخرى"
+    },
+    "employment": {
+      "selfEmployed": "عمل حر",
+      "employee": "موظف/ة",
+      "notWorking": "لا يعمل/لا تعمل"
+    },
+    "assets": {
+      "apartment": "شقة",
+      "business": "عمل/تجارة",
+      "other": "ممتلكات أخرى"
+    },
+    "buttons": {
+      "saveDraft": "حفظ كمسودة",
+      "saveContinue": "حفظ ومتابعة"
+    }
+  },
+  "SignupStep4": {
+    "title": "الخطوة 4 من 6",
+    "subtitle": "المؤسسات",
+    "draftSaved": "✅ تم حفظ المسودة",
+    "select": "اختر",
+    "sections": {
+      "health": "صندوق المرضى",
+      "bank": "تفاصيل البنك",
+      "ni": "التأمين الوطني"
+    },
+    "fields": {
+      "healthFund": "صندوق المرضى",
+      "bankName": "البنك",
+      "branch": "الفرع",
+      "branchNumber": "رقم الفرع",
+      "accountNumber": "رقم الحساب",
+      "hasFile": "التأمين الوطني",
+      "fileNumber": "رقم ملف الجباية",
+      "getsAllowance": "هل حصلت أو تحصل حاليًا على مخصصات من التأمين الوطني؟",
+      "allowanceType": "نوع المخصصات",
+      "allowanceFileNumber": "رقم ملف المخصصات في التأمين الوطني"
+    },
+    "niOptions": {
+      "yes": "أنا أدفع / لدي ملف جباية في التأمين الوطني",
+      "no": "لا أدفع / ليس لدي ملف جباية في التأمين الوطني"
+    },
+    "allowanceOptions": {
+      "yes": "نعم",
+      "no": "لا"
+    },
+    "buttons": {
+      "saveDraft": "حفظ كمسودة",
+      "saveContinue": "حفظ ومتابعة"
+    }
+  },
+  "SignupStep5": {
+  "title": "الخطوة 5 من 6",
+  "subtitle": "تفاصيل الزوج/الوصي (كما هي في جواز السفر)",
+  "draftSaved": "✅ تم حفظ المسودة",
+  "select": "اختر",
+  "sections": {
+    "partner": "الزوج / الوصي",
+    "passport": "جواز السفر",
+    "status": "الحالة الاجتماعية",
+    "contact": "طرق التواصل"
+  },
+  "fields": {
+    "lastName": "اسم العائلة",
+    "firstName": "الاسم الأول",
+    "oldLastName": "اسم العائلة السابق (اختياري)",
+    "oldFirstName": "الاسم الأول السابق (اختياري)",
+    "gender": "الجنس",
+    "birthDate": "تاريخ الميلاد",
+    "nationality": "الجنسية",
+    "israeliId": "رقم الهوية الإسرائيلية (إن وجد)",
+    "passportNumber": "رقم جواز السفر",
+    "passportIssueDate": "تاريخ إصدار الجواز",
+    "passportExpiryDate": "تاريخ انتهاء الجواز",
+    "passportIssueCountry": "بلد إصدار الجواز",
+    "maritalStatus": "الحالة الاجتماعية",
+    "statusDate": "تاريخ الزواج",
+    "phone": "الهاتف",
+    "email": "البريد الإلكتروني"
+  },
+  "genderOptions": {
+    "male": "ذكر",
+    "female": "أنثى"
+  },
+  "maritalOptions": {
+    "single": "أعزب/عزباء",
+    "married": "متزوج/متزوجة",
+    "divorced": "مطلق/مطلقة",
+    "widowed": "أرمل/أرملة"
+  },
+  "date": {
+    "year": "سنة",
+    "month": "شهر",
+    "day": "يوم"
+  },
+  "nationalityOptions": {
+    "israeli": "إسرائيلية",
+    "sudanese": "سودانية",
+    "eritrean": "إريترية"
+  },
+  "countryOptions": {
+    "israel": "إسرائيل",
+    "sudan": "السودان",
+    "eritrea": "إريتريا"
+  },
+  "buttons": {
+    "saveDraft": "حفظ مسودة",
+    "saveContinue": "حفظ ومتابعة"
+  }
+},
+"SignupStep6": {
+  "title": "الخطوة 6 من 6",
+  "subtitle": "تفاصيل الأطفال",
+  "draftSaved": "✅ تم حفظ المسودة",
+  "select": "اختر",
+  "sections": { "child": "عام" },
+  "fields": {
+    "childLastName": "اسم العائلة",
+    "childFirstName": "الاسم الأول",
+    "childGender": "الجنس",
+    "childBirthDate": "تاريخ الميلاد",
+    "childNationality": "الجنسية",
+    "childIsraeliId": "رقم الهوية الإسرائيلية",
+    "childResidenceCountry": "بلد الولادة",
+    "childBirthCity": "مدينة الولادة",
+    "childResidenceCity": "المدينة",
+    "childEntryDate": "تاريخ الدخول إلى إسرائيل",
+    "childArrivalToIsraelDate": "تاريخ الهجرة إلى إسرائيل",
+    "childArrivalToIsraelReason": "تاريخ انضمام الطفل لملف التأمين الوطني"
+  },
+  "genderOptions": { "male": "ذكر", "female": "أنثى" },
+  "date": { "year": "سنة", "month": "شهر", "day": "يوم" },
+  "nationalityOptions": { "israeli": "إسرائيلية", "sudanese": "سودانية", "eritrean": "إريترية" },
+  "countryOptions": { "israel": "إسرائيل", "sudan": "السودان", "eritrea": "إريتريا" },
+  "cityOptions": {
+    "jerusalem": "القدس",
+    "telAviv": "تل أبيب",
+    "haifa": "حيفا",
+    "khartoum": "الخرطوم",
+    "omdurman": "أم درمان",
+    "asmara": "أسمرة"
+  },
+  "arrivalReasons": { "safety": "الأمان", "family": "لمّ الشمل", "other": "أخرى" },
+  "buttons": { "saveDraft": "حفظ مسودة", "finish": "إنهاء التسجيل" }
+}
+}

@@ -53,5 +53,331 @@
         "answer": "מרפאת טרם או מרפאות מסוימות מקבלות חסרי מעמד..."
       }
     ]
+  },
+"Navbar": {
+    "login": "התחברות",
+    "forms": "טפסים",
+    "rights": "זכויות"
+  },
+  "SignupStep1": {
+    "title": "שלב 1 מתוך 6",
+    "subtitle": "פרטים אישיים",
+    "draftSaved": "✅ הטיוטה נשמרה",
+    "select": "בחר/י",
+    "selectCountry": "בחר/י מדינה",
+    "sections": {
+      "passport": "דרכון",
+      "contact": "פרטי תקשורת"
+    },
+    "fields": {
+      "lastName": "שם משפחה",
+      "firstName": "שם פרטי",
+      "oldLastName": "שם משפחה קודם (אופציונלי)",
+      "oldFirstName": "שם פרטי קודם (אופציונלי)",
+      "gender": "מין",
+      "birthDate": "תאריך לידה",
+      "nationality": "אזרחות",
+      "israeliId": "מספר תעודת זהות ישראלית",
+      "passportNumber": "מספר דרכון",
+      "passportIssueDate": "תאריך הוצאת דרכון",
+      "passportExpiryDate": "תאריך פקיעת דרכון",
+      "passportIssueCountry": "ארץ הוצאת דרכון",
+      "phone": "מספר טלפון",
+      "email": "אימייל"
+    },
+    "gender": {
+      "male": "זכר",
+      "female": "נקבה"
+    },
+    "date": {
+      "year": "שנה",
+      "month": "חודש",
+      "day": "יום"
+    },
+    "nationality": {
+      "israeli": "ישראלית",
+      "eritrean": "אריתריאה",
+      "sudanese": "סודן"
+    },
+    "country": {
+      "israel": "ישראל",
+      "eritrea": "אריתריאה",
+      "sudan": "סודן",
+      "ukraine": "אוקראינה",
+      "russia": "רוסיה"
+    },
+    "buttons": {
+      "saveDraft": "שמירת טיוטה",
+      "saveContinue": "שמור/י והמשך/י"
+    }
+  },
+  "SignupStep2": {
+    "title": "שלב 2 מתוך 6",
+    "subtitle": "מעמד",
+    "draftSaved": "✅ הטיוטה נשמרה",
+    "select": "בחר/י",
+    "selectCountry": "בחר/י ארץ",
+    "selectCity": "בחר/י עיר",
+    "selectPurpose": "בחר/י מטרה",
+    "selectVisaType": "בחר/י סוג אשרה",
+    "sections": {
+      "immigration": "הגירה",
+      "visa": "אשרה"
+    },
+    "fields": {
+      "birthCountry": "ארץ לידה",
+      "birthCity": "עיר לידה",
+      "purposeOfStay": "מטרת שהייה בארץ",
+      "visaType": "סוג אשרה",
+      "visaValidity": "תוקף",
+      "entryDate": "תאריך כניסה לארץ"
+    },
+    "date": {
+      "year": "שנה",
+      "month": "חודש",
+      "day": "יום",
+      "from": "מתאריך",
+      "to": "עד תאריך"
+    },
+    "errors": {
+      "visaRange": "תאריך סיום האשרה חייב להיות אחרי תאריך תחילת האשרה."
+    },
+    "purpose": {
+      "work": "עבודה",
+      "study": "לימודים",
+      "asylum": "בקשת מקלט"
+    },
+    "visa": {
+      "tourist": "תייר",
+      "b1": "ב/1 (עבודה)",
+      "a5": "א/5 (תושב ארעי)",
+      "unknown": "לא ידוע"
+    },
+    "country": {
+      "israel": "ישראל",
+      "eritrea": "אריתריאה",
+      "sudan": "סודן",
+      "ukraine": "אוקראינה",
+      "russia": "רוסיה"
+    },
+    "city": {
+      "khKhartoum": "חרטום",
+      "khOmdurman": "אום דורמן",
+      "sdPortSudan": "פורט סודן",
+      "erAsmara": "אסמרה",
+      "erKeren": "קרן",
+      "erMassawa": "מסאווה",
+      "ilJerusalem": "ירושלים",
+      "ilTelAviv": "תל אביב",
+      "ilHaifa": "חיפה"
+    },
+    "buttons": {
+      "saveDraft": "שמירת טיוטה",
+      "saveContinue": "שמור/י והמשך/י"
+    }
+  },
+  "SignupStep3": {
+    "title": "שלב 3 מתוך 6",
+    "subtitle": "מרכז חיים",
+    "draftSaved": "✅ הטיוטה נשמרה",
+    "select": "בחר/י",
+    "selectCity": "בחר/י עיר",
+    "selectStreet": "בחר/י רחוב",
+    "sections": {
+      "lifeCenter": "מרכז חיים",
+      "address": "כתובת מגורים",
+      "housing": "מגורים",
+      "employment": "תעסוקה",
+      "assets": "רכוש"
+    },
+    "fields": {
+      "maritalStatus": "מצב משפחתי",
+      "weddingDate": "תאריך חתונה",
+      "city": "עיר",
+      "street": "רחוב",
+      "houseNumber": "מספר בית",
+      "entry": "כניסה",
+      "apartment": "מספר דירה",
+      "zip": "מיקוד",
+      "housingType": "בחר",
+      "employmentStatus": "עיסוק בארץ",
+      "notWorkingReason": "במידה וסימנת לא עובד – בחר",
+      "assets": "רכוש"
+    },
+    "date": {
+      "year": "שנה",
+      "month": "חודש",
+      "day": "יום"
+    },
+    "marital": {
+      "single": "רווק/ה",
+      "married": "נשוי/אה",
+      "divorced": "גרוש/ה",
+      "widowed": "אלמן/ה"
+    },
+    "housing": {
+      "rented": "דירה שכורה",
+      "other": "אחר"
+    },
+    "employment": {
+      "selfEmployed": "עצמאי/ת",
+      "employee": "שכיר/ה",
+      "notWorking": "לא עובד/ת"
+    },
+    "assets": {
+      "apartment": "דירה",
+      "business": "עסק",
+      "other": "רכוש אחר"
+    },
+    "buttons": {
+      "saveDraft": "שמירת טיוטה",
+      "saveContinue": "שמור/י והמשך/י"
+    }
+  },
+  "SignupStep4": {
+    "title": "שלב 4 מתוך 6",
+    "subtitle": "מוסדות",
+    "draftSaved": "✅ הטיוטה נשמרה",
+    "select": "בחר",
+    "sections": {
+      "health": "קופת חולים",
+      "bank": "פרטי הבנק",
+      "ni": "ביטוח לאומי"
+    },
+    "fields": {
+      "healthFund": "קופת חולים",
+      "bankName": "בנק",
+      "branch": "סניף",
+      "branchNumber": "מספר סניף",
+      "accountNumber": "מספר חשבון",
+      "hasFile": "ביטוח לאומי",
+      "fileNumber": "מספר תיק גבייה",
+      "getsAllowance": "האם קיבלת או שהינך מקבל כעת קצבה מביטוח לאומי?",
+      "allowanceType": "סוג קצבה",
+      "allowanceFileNumber": "מספר תיק בביטוח לאומי"
+    },
+    "niOptions": {
+      "yes": "אני משלם/ת, יש לי תיק גבייה בביטוח לאומי",
+      "no": "לא משלם/ת, אין לי תיק גבייה בביטוח לאומי"
+    },
+    "allowanceOptions": {
+      "yes": "כן",
+      "no": "לא"
+    },
+    "buttons": {
+      "saveDraft": "שמירת טיוטה",
+      "saveContinue": "שמור והמשך"
+    }
+  },
+  "SignupStep5": {
+  "title": "שלב 5 מתוך 6",
+  "subtitle": "פרטי בן/בת זוג/אפוטרופוס (כפי שרשומים בדרכון)",
+  "draftSaved": "✅ הטיוטה נשמרה",
+  "select": "בחר",
+  "sections": {
+    "partner": "פרטי בן/בת זוג/אפוטרופוס",
+    "passport": "דרכון",
+    "status": "מצב משפחתי",
+    "contact": "דרכי תקשורת"
+  },
+  "fields": {
+    "lastName": "שם משפחה",
+    "firstName": "שם פרטי",
+    "oldLastName": "שם משפחה קודם (במידה וקיים)",
+    "oldFirstName": "שם פרטי קודם (במידה וקיים)",
+    "gender": "מין",
+    "birthDate": "תאריך לידה",
+    "nationality": "אזרחות",
+    "israeliId": "מספר תעודת זהות ישראלית (במידה וקיימת)",
+    "passportNumber": "מספר דרכון",
+    "passportIssueDate": "תאריך הוצאת דרכון",
+    "passportExpiryDate": "תאריך פקיעת דרכון",
+    "passportIssueCountry": "ארץ הוצאת דרכון",
+    "maritalStatus": "מצב משפחתי",
+    "statusDate": "תאריך חתונה",
+    "phone": "טלפון",
+    "email": "אימייל"
+  },
+  "genderOptions": {
+    "male": "זכר",
+    "female": "נקבה"
+  },
+  "maritalOptions": {
+    "single": "רווק/ה",
+    "married": "נשוי/אה",
+    "divorced": "גרוש/ה",
+    "widowed": "אלמן/ה"
+  },
+  "date": {
+    "year": "שנה",
+    "month": "חודש",
+    "day": "יום"
+  },
+  "nationalityOptions": {
+    "israeli": "ישראלית",
+    "sudanese": "סודנית",
+    "eritrean": "אריתריאית"
+  },
+  "countryOptions": {
+    "israel": "ישראל",
+    "sudan": "סודן",
+    "eritrea": "אריתריאה"
+  },
+  "buttons": {
+    "saveDraft": "שמירת טיוטה",
+    "saveContinue": "שמור והמשך"
   }
+},
+"SignupStep6": {
+  "title": "שלב 6 מתוך 6",
+  "subtitle": "פרטי ילדים",
+  "draftSaved": "✅ הטיוטה נשמרה",
+  "select": "בחר",
+  "sections": {
+    "child": "כללי"
+  },
+  "fields": {
+    "childLastName": "שם משפחה",
+    "childFirstName": "שם פרטי",
+    "childGender": "מין",
+    "childBirthDate": "תאריך לידה",
+    "childNationality": "אזרחות",
+    "childIsraeliId": "מספר תעודת זהות ישראלית",
+    "childResidenceCountry": "ארץ לידה",
+    "childBirthCity": "עיר לידה",
+    "childResidenceCity": "עיר",
+    "childEntryDate": "תאריך כניסה לארץ",
+    "childArrivalToIsraelDate": "תאריך עלייה לארץ",
+    "childArrivalToIsraelReason": "תאריך הצטרפות הילד/ה לתיק בביטוח לאומי"
+  },
+  "genderOptions": { "male": "זכר", "female": "נקבה" },
+  "date": { "year": "שנה", "month": "חודש", "day": "יום" },
+  "nationalityOptions": {
+    "israeli": "ישראלית",
+    "sudanese": "סודנית",
+    "eritrean": "אריתריאית"
+  },
+  "countryOptions": {
+    "israel": "ישראל",
+    "sudan": "סודן",
+    "eritrea": "אריתריאה"
+  },
+  "cityOptions": {
+    "jerusalem": "ירושלים",
+    "telAviv": "תל אביב",
+    "haifa": "חיפה",
+    "khartoum": "חרטום",
+    "omdurman": "אום דורמן",
+    "asmara": "אסמרה"
+  },
+  "arrivalReasons": {
+    "safety": "בטחון",
+    "family": "איחוד משפחות",
+    "other": "אחר"
+  },
+  "buttons": {
+    "saveDraft": "שמירת טיוטה",
+    "finish": "סיום הרשמה"
+  }
+}
 }

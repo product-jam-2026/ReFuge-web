@@ -1,36 +1,39 @@
 'use client';
 
+import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import LangSwitcher from './LangSwitcher';
 
-export default function BottomNav() {
-  const t = useTranslations('Navigation');
-  const pathname = usePathname();
-
-  // בדיקה אם הכפתור פעיל (כדי לצבוע אותו)
-  const isActive = (path: string) => pathname.includes(path);
+export default function Navbar() {
+  const t = useTranslations('Navbar');
+  const locale = useLocale(); // שולף את השפה הנוכחית (he / en / ar)
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[#0f172a] text-white p-4 pb-6 rounded-t-3xl shadow-[0_-5px_10px_rgba(0,0,0,0.1)] z-50">
-      <div className="flex justify-between items-center max-w-md mx-auto px-6">
-        
-        {/* כפתור זכויות (שמאל) */}
-        <Link href="/rights" className={`flex flex-col items-center gap-1 ${isActive('/rights') ? 'text-blue-400' : 'text-gray-400'}`}>
-          <span className="text-2xl">⚖️</span> 
-          {/* אפשר להחליף את האימוג'י באייקון SVG בהמשך */}
-        </Link>
-
-        {/* כפתור בית (אמצע) */}
-        <Link href="/home" className={`flex flex-col items-center gap-1 ${isActive('/home') ? 'text-blue-400' : 'text-white'}`}>
-          <span className="text-3xl">🏠</span>
-        </Link>
-
-        {/* כפתור פרופיל (ימין) */}
-        <Link href="/profile" className={`flex flex-col items-center gap-1 ${isActive('/profile') ? 'text-blue-400' : 'text-gray-400'}`}>
-          <span className="text-2xl">👤</span>
+    <nav className="p-4 bg-white shadow-sm flex justify-between items-center px-6">
+      {/* לוגו - מפנה לדף הבית בשפה הנוכחית */}
+      <Link href={`/${locale}`} className="text-xl font-bold text-blue-600">
+        ReFuge
+      </Link>
+      
+      <div className="flex gap-6 items-center font-medium">
+         {/* קישורים דינמיים - מוסיפים את ה-locale לכתובת */}
+        <Link href={`/${locale}/login`} className="hover:text-blue-600 transition-colors">
+          {t('login')}
         </Link>
         
+        <Link href={`/${locale}/forms`} className="hover:text-blue-600 transition-colors">
+          {t('forms')}
+        </Link>
+        
+        <Link href={`/${locale}/rights`} className="hover:text-blue-600 transition-colors">
+          {t('rights')}
+        </Link>
+        
+        {/* קו מפריד קטן בין הלינקים לשפות (אופציונלי) */}
+        <div className="h-4 w-[1px] bg-gray-300 mx-2"></div>
+
+        {/* הרכיב שבנינו */}
+        <LangSwitcher />
       </div>
     </nav>
   );
