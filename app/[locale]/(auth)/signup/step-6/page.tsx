@@ -2,8 +2,25 @@ import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { completeRegistration, saveSignupStep } from "../actions";
+import Step6FormClient from "./Step6FormClient";
 
-export default async function Step6Page({ params, searchParams }: any) {
+import he from "@/messages/he.json";
+import en from "@/messages/en.json";
+import ar from "@/messages/ar.json";
+
+function getDict(locale: string) {
+  if (locale === "he") return he as any;
+  if (locale === "ar") return ar as any;
+  return en as any;
+}
+
+export default async function Step6Page({
+  params,
+  searchParams,
+}: {
+  params: { locale: string };
+  searchParams?: { saved?: string };
+}) {
   const supabase = createClient(cookies());
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect(`/${params.locale}/login`);
@@ -15,8 +32,12 @@ export default async function Step6Page({ params, searchParams }: any) {
     .single();
 
   if (profile?.registration_completed) redirect(`/${params.locale}/home`);
+
   const step6 = profile?.data?.intake?.step6 || {};
   const child0 = step6.children?.[0] || {};
+
+  const dict = getDict(params.locale);
+  const labels = dict?.SignupStep6;
 
   async function saveDraft(formData: FormData) {
     "use server";
@@ -29,6 +50,11 @@ export default async function Step6Page({ params, searchParams }: any) {
       israeliId: String(formData.get("childIsraeliId") || ""),
       residenceCountry: String(formData.get("childResidenceCountry") || ""),
       entryDate: String(formData.get("childEntryDate") || ""),
+      // שדות חדשים מהמסך (לא שוברים כלום – רק מוסיפים)
+      birthCity: String(formData.get("childBirthCity") || ""),
+      residenceCity: String(formData.get("childResidenceCity") || ""),
+      arrivalToIsraelDate: String(formData.get("childArrivalToIsraelDate") || ""),
+      arrivalToIsraelReason: String(formData.get("childArrivalToIsraelReason") || ""),
     };
 
     await saveSignupStep({
@@ -50,6 +76,10 @@ export default async function Step6Page({ params, searchParams }: any) {
       israeliId: String(formData.get("childIsraeliId") || ""),
       residenceCountry: String(formData.get("childResidenceCountry") || ""),
       entryDate: String(formData.get("childEntryDate") || ""),
+      birthCity: String(formData.get("childBirthCity") || ""),
+      residenceCity: String(formData.get("childResidenceCity") || ""),
+      arrivalToIsraelDate: String(formData.get("childArrivalToIsraelDate") || ""),
+      arrivalToIsraelReason: String(formData.get("childArrivalToIsraelReason") || ""),
     };
 
     await saveSignupStep({
@@ -64,25 +94,27 @@ export default async function Step6Page({ params, searchParams }: any) {
 
   return (
     <main style={{ padding: 24 }}>
-      <h1>Sign Up – Step 6</h1>
-      {searchParams?.saved === "1" && <p>✅ Draft saved</p>}
+      {searchParams?.saved === "1" && <p>{labels?.draftSaved}</p>}
 
-      <form action={finish} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
-        <h3>Child (temporary: only one)</h3>
-        <input name="childLastName" placeholder="Last name" defaultValue={child0.lastName || ""} />
-        <input name="childFirstName" placeholder="First name" defaultValue={child0.firstName || ""} />
-        <input name="childGender" placeholder="Gender" defaultValue={child0.gender || ""} />
-        <input name="childBirthDate" placeholder="Birth date (YYYY-MM-DD)" defaultValue={child0.birthDate || ""} />
-        <input name="childNationality" placeholder="Nationality" defaultValue={child0.nationality || ""} />
-        <input name="childIsraeliId" placeholder="Israeli ID" defaultValue={child0.israeliId || ""} />
-        <input name="childResidenceCountry" placeholder="Residence country" defaultValue={child0.residenceCountry || ""} />
-        <input name="childEntryDate" placeholder="Entry date (YYYY-MM-DD)" defaultValue={child0.entryDate || ""} />
-
-        <div style={{ display: "flex", gap: 12 }}>
-          <button formAction={saveDraft} type="submit">Save draft</button>
-          <button type="submit">Finish registration</button>
-        </div>
-      </form>
+      <Step6FormClient
+        labels={labels}
+        defaults={{
+          childLastName: child0.lastName || "",
+          childFirstName: child0.firstName || "",
+          childGender: child0.gender || "",
+          childBirthDate: child0.birthDate || "",
+          childNationality: child0.nationality || "",
+          childIsraeliId: child0.israeliId || "",
+          childResidenceCountry: child0.residenceCountry || "",
+          childEntryDate: child0.entryDate || "",
+          childBirthCity: child0.birthCity || "",
+          childResidenceCity: child0.residenceCity || "",
+          childArrivalToIsraelDate: child0.arrivalToIsraelDate || "",
+          childArrivalToIsraelReason: child0.arrivalToIsraelReason || "",
+        }}
+        saveDraftAction={saveDraft}
+        finishAction={finish}
+      />
     </main>
   );
 }

@@ -2,8 +2,27 @@ import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { saveSignupStep } from "../actions";
+import Step5FormClient from "./Step5FormClient";
 
-export default async function Step5Page({ params, searchParams }: any) {
+// אם אצלכם יש helper קבוע להבאת messages לפי locale – השתמשי בו במקום זה.
+// כאן אני מניח שיש messages JSON תחת /messages
+import he from "@/messages/he.json";
+import en from "@/messages/en.json";
+import ar from "@/messages/ar.json";
+
+function getDict(locale: string) {
+  if (locale === "he") return he as any;
+  if (locale === "ar") return ar as any;
+  return en as any;
+}
+
+export default async function Step5Page({
+  params,
+  searchParams,
+}: {
+  params: { locale: string };
+  searchParams?: { saved?: string };
+}) {
   const supabase = createClient(cookies());
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect(`/${params.locale}/login`);
@@ -15,7 +34,12 @@ export default async function Step5Page({ params, searchParams }: any) {
     .single();
 
   if (profile?.registration_completed) redirect(`/${params.locale}/home`);
+
   const step5 = profile?.data?.intake?.step5 || {};
+  const p = step5.person || {};
+
+  const dict = getDict(params.locale);
+  const labels = dict?.SignupStep5;
 
   async function saveDraft(formData: FormData) {
     "use server";
@@ -30,12 +54,18 @@ export default async function Step5Page({ params, searchParams }: any) {
         nationality: String(formData.get("nationality") || ""),
         israeliId: String(formData.get("israeliId") || ""),
         passportNumber: String(formData.get("passportNumber") || ""),
+        // שימי לב: ב-STEP5 המקורי לא שמרת תאריכי דרכון/מדינה.
+        // אבל במסך זה כן מופיע, אז אנחנו מוסיפים אותם ל-step5.person (לא שוברים שום שם קיים).
+        passportIssueDate: String(formData.get("passportIssueDate") || ""),
+        passportExpiryDate: String(formData.get("passportExpiryDate") || ""),
+        passportIssueCountry: String(formData.get("passportIssueCountry") || ""),
       },
       maritalStatus: String(formData.get("maritalStatus") || ""),
       statusDate: String(formData.get("statusDate") || ""),
       phone: String(formData.get("phone") || ""),
       email: String(formData.get("email") || ""),
     };
+
     await saveSignupStep({ locale: params.locale, step: 5, patch, goNext: false });
   }
 
@@ -52,47 +82,46 @@ export default async function Step5Page({ params, searchParams }: any) {
         nationality: String(formData.get("nationality") || ""),
         israeliId: String(formData.get("israeliId") || ""),
         passportNumber: String(formData.get("passportNumber") || ""),
+        passportIssueDate: String(formData.get("passportIssueDate") || ""),
+        passportExpiryDate: String(formData.get("passportExpiryDate") || ""),
+        passportIssueCountry: String(formData.get("passportIssueCountry") || ""),
       },
       maritalStatus: String(formData.get("maritalStatus") || ""),
       statusDate: String(formData.get("statusDate") || ""),
       phone: String(formData.get("phone") || ""),
       email: String(formData.get("email") || ""),
     };
+
     await saveSignupStep({ locale: params.locale, step: 5, patch, goNext: true });
   }
 
-  const p = step5.person || {};
-
   return (
     <main style={{ padding: 24 }}>
-      <h1>Sign Up – Step 5</h1>
-      {searchParams?.saved === "1" && <p>✅ Draft saved</p>}
+      {searchParams?.saved === "1" && <p>✅ {labels?.draftSaved}</p>}
 
-      <form action={saveAndNext} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
-        <h3>Partner / Guardian</h3>
-        <input name="lastName" placeholder="Last name" defaultValue={p.lastName || ""} />
-        <input name="firstName" placeholder="First name" defaultValue={p.firstName || ""} />
-        <input name="oldLastName" placeholder="Old last name" defaultValue={p.oldLastName || ""} />
-        <input name="oldFirstName" placeholder="Old first name" defaultValue={p.oldFirstName || ""} />
-        <input name="gender" placeholder="Gender" defaultValue={p.gender || ""} />
-        <input name="birthDate" placeholder="Birth date (YYYY-MM-DD)" defaultValue={p.birthDate || ""} />
-        <input name="nationality" placeholder="Nationality" defaultValue={p.nationality || ""} />
-        <input name="israeliId" placeholder="Israeli ID" defaultValue={p.israeliId || ""} />
-        <input name="passportNumber" placeholder="Passport number" defaultValue={p.passportNumber || ""} />
-
-        <h3>Status</h3>
-        <input name="maritalStatus" placeholder="Marital status" defaultValue={step5.maritalStatus || ""} />
-        <input name="statusDate" placeholder="Status date (YYYY-MM-DD)" defaultValue={step5.statusDate || ""} />
-
-        <h3>Contact</h3>
-        <input name="phone" placeholder="Phone" defaultValue={step5.phone || ""} />
-        <input name="email" placeholder="Email" defaultValue={step5.email || ""} />
-
-        <div style={{ display: "flex", gap: 12 }}>
-          <button formAction={saveDraft} type="submit">Save draft</button>
-          <button type="submit">Save & Continue</button>
-        </div>
-      </form>
+      <Step5FormClient
+        labels={labels}
+        defaults={{
+          lastName: p.lastName || "",
+          firstName: p.firstName || "",
+          oldLastName: p.oldLastName || "",
+          oldFirstName: p.oldFirstName || "",
+          gender: p.gender || "",
+          birthDate: p.birthDate || "",
+          nationality: p.nationality || "",
+          israeliId: p.israeliId || "",
+          passportNumber: p.passportNumber || "",
+          passportIssueDate: p.passportIssueDate || "",
+          passportExpiryDate: p.passportExpiryDate || "",
+          passportIssueCountry: p.passportIssueCountry || "",
+          maritalStatus: step5.maritalStatus || "",
+          statusDate: step5.statusDate || "",
+          phone: step5.phone || "",
+          email: step5.email || data.user.email || "",
+        }}
+        saveDraftAction={saveDraft}
+        saveAndNextAction={saveAndNext}
+      />
     </main>
   );
 }

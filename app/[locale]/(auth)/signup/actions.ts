@@ -56,10 +56,13 @@ export async function saveSignupStep(params: {
   const existingData = profile?.data || {};
   const existingIntake = existingData.intake || {};
 
-  const nextIntake = mergeDeep(existingIntake, {
-    currentStep: Math.max(existingIntake.currentStep || 1, params.step),
-    [`step${params.step}`]: params.patch,
-  });
+  const computedCurrentStep = params.goNext
+  ? Math.min(params.step + 1, 6)
+  : params.step;
+const nextIntake = mergeDeep(existingIntake, {
+  currentStep: Math.max(existingIntake.currentStep || 1, computedCurrentStep),
+  [`step${params.step}`]: params.patch,
+});
 
   const nextData = mergeDeep(existingData, { intake: nextIntake });
 
