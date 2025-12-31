@@ -119,7 +119,7 @@ export default function Step5FormClient({
   saveDraftAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
 }) {
-  const L = labels ?? {};
+    const L = useMemo(() => labels ?? {}, [labels]);
 
   const [gender, setGender] = useState<Gender>((defaults.gender as Gender) || "");
   const [maritalStatus, setMaritalStatus] = useState<MaritalStatus>(
