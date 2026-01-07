@@ -1,0 +1,75 @@
+{
+  "intake": {
+    "step1": {
+      "lastName": "כהן",
+      "firstName": "אליס",
+      "oldLastName": "",
+      "oldFirstName": "",
+      "gender": "",
+      "birthDate": "",
+      "nationality": "",
+      "israeliId": "123456789",
+      "passportNumber": "",
+      "passportIssueDate": "",
+      "passportExpiryDate": "",
+      "passportIssueCountry": "",
+      "phone": "050-1234567",
+      "email": "alice@example.com"
+    },
+    "step2": {
+      "residenceCountry": "",
+      "residenceCity": "",
+      "residenceAddress": "ירושלים, יפו 10",
+      "visaType": "",
+      "visaStartDate": "",
+      "visaEndDate": "",
+      "entryDate": ""
+    },
+    "step3": {
+      "maritalStatus": "single",
+      "statusDate": "",
+      "registeredAddress": { "city": "", "street": "", "houseNumber": "", "entry": "", "apartment": "", "zip": "" },
+      "mailingDifferent": false,
+      "mailingAddress": { "city": "", "street": "", "houseNumber": "", "entry": "", "apartment": "", "zip": "" },
+      "employmentStatus": "",
+      "notWorkingReason": "",
+      "occupation": ""
+    },
+    "step4": {
+      "healthFund": "",
+      "bank": { "bankName": "", "branch": "", "accountNumber": "" },
+      "nationalInsurance": { "hasFile": "", "fileNumber": "", "getsAllowance": "", "allowanceType": "", "allowanceFileNumber": "" }
+    },
+    "step5": {
+      "person": {
+        "lastName": "איברהים",
+        "firstName": "מוחמד",
+        "oldLastName": "",
+        "oldFirstName": "",
+        "gender": "",
+        "birthDate": "",
+        "nationality": "",
+        "israeliId": "",
+        "passportNumber": "P1234567"
+      },
+      "maritalStatus": "",
+      "statusDate": "",
+      "phone": "",
+      "email": ""
+    },
+    "step6": {
+      "children": [
+        {
+          "lastName": "",
+          "firstName": "דנה",
+          "gender": "",
+          "birthDate": "2022-01-10",
+          "nationality": "ישראל",
+          "israeliId": "",
+          "residenceCountry": "",
+          "entryDate": ""
+        }
+      ]
+    }
+  }
+}
