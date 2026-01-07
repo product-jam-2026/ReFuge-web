@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { saveSignupStep } from "../actions";
+import { saveDraftAndGoToStep, saveSignupStep } from "../actions";
 import { getTranslations } from "next-intl/server";
 import Step4FormClient from "./Step4FormClient";
 
@@ -20,6 +20,32 @@ function normalizeDigits(v: FormDataEntryValue | null, max = 20) {
     .trim()
     .replace(/[^\d]/g, "")
     .slice(0, max);
+}
+
+/**
+ * ✅ חשוב: מוגדר ברמת הקובץ (מחוץ ל-Component) כדי למנוע "not defined"
+ * בסרבר-אקשנס.
+ */
+function buildPatch(formData: FormData) {
+  return {
+    healthFund: normalizeText(formData.get("healthFund"), 60),
+    bank: {
+      bankName: normalizeText(formData.get("bankName"), 60),
+      branch: normalizeText(formData.get("branch"), 60),
+      // "accountNumber" אצלך הוא גם מספר חשבון, נשמור digits only
+      accountNumber: normalizeDigits(formData.get("accountNumber"), 20),
+    },
+    nationalInsurance: {
+      hasFile: normalizeText(formData.get("hasFile"), 10),
+      fileNumber: normalizeDigits(formData.get("fileNumber"), 20),
+      getsAllowance: normalizeText(formData.get("getsAllowance"), 10),
+      allowanceType: normalizeText(formData.get("allowanceType"), 60),
+      allowanceFileNumber: normalizeDigits(
+        formData.get("allowanceFileNumber"),
+        20
+      ),
+    },
+  };
 }
 
 export default async function Step4Page({
@@ -51,46 +77,35 @@ export default async function Step4Page({
 
   async function saveDraft(formData: FormData) {
     "use server";
-    const patch = {
-      healthFund: normalizeText(formData.get("healthFund"), 60),
-      bank: {
-        bankName: normalizeText(formData.get("bankName"), 60),
-        branch: normalizeText(formData.get("branch"), 60),
-        // "accountNumber" אצלך הוא גם מספר חשבון, נשמור digits only
-        accountNumber: normalizeDigits(formData.get("accountNumber"), 20),
-      },
-      nationalInsurance: {
-        // yes/no (כמו ההיגיון שקיים אצלכם)
-        hasFile: normalizeText(formData.get("hasFile"), 10),
-        fileNumber: normalizeDigits(formData.get("fileNumber"), 20),
-        getsAllowance: normalizeText(formData.get("getsAllowance"), 10),
-        allowanceType: normalizeText(formData.get("allowanceType"), 60),
-        allowanceFileNumber: normalizeDigits(formData.get("allowanceFileNumber"), 20),
-      },
-    };
+    const patch = buildPatch(formData);
+    await saveSignupStep({
+      locale: params.locale,
+      step: 4,
+      patch,
+      goNext: false,
+    });
+  }
 
-    await saveSignupStep({ locale: params.locale, step: 4, patch, goNext: false });
+  async function saveDraftAndBack(formData: FormData) {
+    "use server";
+    const patch = buildPatch(formData);
+    await saveDraftAndGoToStep({
+      locale: params.locale,
+      step: 4,
+      patch,
+      goToStep: 3,
+    });
   }
 
   async function saveAndNext(formData: FormData) {
     "use server";
-    const patch = {
-      healthFund: normalizeText(formData.get("healthFund"), 60),
-      bank: {
-        bankName: normalizeText(formData.get("bankName"), 60),
-        branch: normalizeText(formData.get("branch"), 60),
-        accountNumber: normalizeDigits(formData.get("accountNumber"), 20),
-      },
-      nationalInsurance: {
-        hasFile: normalizeText(formData.get("hasFile"), 10),
-        fileNumber: normalizeDigits(formData.get("fileNumber"), 20),
-        getsAllowance: normalizeText(formData.get("getsAllowance"), 10),
-        allowanceType: normalizeText(formData.get("allowanceType"), 60),
-        allowanceFileNumber: normalizeDigits(formData.get("allowanceFileNumber"), 20),
-      },
-    };
-
-    await saveSignupStep({ locale: params.locale, step: 4, patch, goNext: true });
+    const patch = buildPatch(formData);
+    await saveSignupStep({
+      locale: params.locale,
+      step: 4,
+      patch,
+      goNext: true,
+    });
   }
 
   const labels = {
@@ -126,15 +141,15 @@ export default async function Step4Page({
     buttons: {
       saveDraft: t("buttons.saveDraft"),
       saveContinue: t("buttons.saveContinue"),
+      saveDraftBack: t("buttons.saveDraftBack"),
     },
   };
 
-  // defaults (typed) — כדי למנוע שוב errors כמו שהיה ב-step3
   const defaults: {
     healthFund: string;
     bankName: string;
     branch: string;
-    branchNumber: string; // נשמור במסך, אבל נכניס לתוך branch בפועל (הסבר ב-client)
+    branchNumber: string; // מסך בלבד
     accountNumber: string;
     hasFile: "yes" | "no" | "";
     fileNumber: string;
@@ -145,14 +160,15 @@ export default async function Step4Page({
     healthFund: String(step4.healthFund || ""),
     bankName: String(bank.bankName || ""),
     branch: String(bank.branch || ""),
-    branchNumber: "", // מסך בלבד (אין לך שדה נפרד בסכמה)
+    branchNumber: "",
     accountNumber: String(bank.accountNumber || ""),
-    hasFile: (ni.hasFile === "yes" || ni.hasFile === "no" ? ni.hasFile : "") as "yes" | "no" | "",
+    hasFile: (ni.hasFile === "yes" || ni.hasFile === "no"
+      ? ni.hasFile
+      : "") as "yes" | "no" | "",
     fileNumber: String(ni.fileNumber || ""),
-    getsAllowance: (ni.getsAllowance === "yes" || ni.getsAllowance === "no" ? ni.getsAllowance : "") as
-      | "yes"
-      | "no"
-      | "",
+    getsAllowance: (ni.getsAllowance === "yes" || ni.getsAllowance === "no"
+      ? ni.getsAllowance
+      : "") as "yes" | "no" | "",
     allowanceType: String(ni.allowanceType || ""),
     allowanceFileNumber: String(ni.allowanceFileNumber || ""),
   };
@@ -164,6 +180,7 @@ export default async function Step4Page({
         labels={labels}
         defaults={defaults}
         saveDraftAction={saveDraft}
+        saveDraftAndBackAction={saveDraftAndBack}
         saveAndNextAction={saveAndNext}
       />
     </main>

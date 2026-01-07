@@ -8,6 +8,7 @@ export default function Step4FormClient({
   labels,
   defaults,
   saveDraftAction,
+  saveDraftAndBackAction,
   saveAndNextAction,
 }: {
   labels: any;
@@ -24,6 +25,7 @@ export default function Step4FormClient({
     allowanceFileNumber: string;
   };
   saveDraftAction: (formData: FormData) => Promise<void>;
+  saveDraftAndBackAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
 }) {
   // Health funds (starter list)
@@ -86,7 +88,9 @@ export default function Step4FormClient({
   const [bankName, setBankName] = useState(defaults.bankName || "");
   const [branch, setBranch] = useState(defaults.branch || "");
   const [hasFile, setHasFile] = useState<HasYesNo>(defaults.hasFile || "");
-  const [getsAllowance, setGetsAllowance] = useState<HasYesNo>(defaults.getsAllowance || "");
+  const [getsAllowance, setGetsAllowance] = useState<HasYesNo>(
+    defaults.getsAllowance || ""
+  );
 
   const branchOptions = useMemo(() => {
     const list = (branchesByBank as any)[bankName] || [];
@@ -114,7 +118,11 @@ export default function Step4FormClient({
       <h1 style={{ marginBottom: 4 }}>{labels.title}</h1>
       <p style={{ marginTop: 0, opacity: 0.8 }}>{labels.subtitle}</p>
 
-      <form action={saveAndNextAction} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
+      {/* נשאיר action ברירת מחדל "שמור/י והמשך/י" */}
+      <form
+        action={saveAndNextAction}
+        style={{ display: "grid", gap: 12, maxWidth: 520 }}
+      >
         <h3 style={{ marginTop: 6 }}>{labels.sections.health}</h3>
         <label>
           {labels.fields.healthFund}
@@ -289,6 +297,11 @@ export default function Step4FormClient({
           <button formAction={saveDraftAction} type="submit">
             {labels.buttons.saveDraft}
           </button>
+
+          <button formAction={saveDraftAndBackAction} type="submit">
+            {labels.buttons.saveDraftBack}
+          </button>
+
           <button type="submit">{labels.buttons.saveContinue}</button>
         </div>
       </form>

@@ -22,6 +22,15 @@
     "profile": "פרופיל",
     "rights": "זכויות"
   },
+  "FormsPage":{
+    "forms":
+    {
+      "childRegistrationRequest":
+      {
+        "title": "טופס רישום ילד"
+      }
+    }
+  },
   "RightsPage": {
     "title": "מידע בנושא זכויות",
     "filter": "סנן",
@@ -164,7 +173,8 @@
     },
     "buttons": {
       "saveDraft": "שמירת טיוטה",
-      "saveContinue": "שמור/י והמשך/י"
+      "saveContinue": "שמור/י והמשך/י",
+      "saveDraftBack": "שמור וחזור"
     }
   },
   "SignupStep3": {
@@ -222,7 +232,8 @@
     },
     "buttons": {
       "saveDraft": "שמירת טיוטה",
-      "saveContinue": "שמור/י והמשך/י"
+      "saveContinue": "שמור/י והמשך/י",
+      "saveDraftBack": "שמור וחזור"
     }
   },
   "SignupStep4": {
@@ -257,7 +268,8 @@
     },
     "buttons": {
       "saveDraft": "שמירת טיוטה",
-      "saveContinue": "שמור והמשך"
+      "saveContinue": "שמור/י והמשך/י",
+      "saveDraftBack": "שמור וחזור"
     }
   },
   "SignupStep5": {
@@ -315,8 +327,9 @@
     "eritrea": "אריתריאה"
   },
   "buttons": {
-    "saveDraft": "שמירת טיוטה",
-    "saveContinue": "שמור והמשך"
+      "saveDraft": "שמירת טיוטה",
+      "saveContinue": "שמור/י והמשך/י",
+      "saveDraftBack": "שמור וחזור"
   }
 },
 "SignupStep6": {
@@ -368,7 +381,8 @@
   },
   "buttons": {
     "saveDraft": "שמירת טיוטה",
-    "finish": "סיום הרשמה"
+    "finish": "סיום הרשמה",
+    "saveDraftBack": "שמור וחזור"
   }
 }
 }

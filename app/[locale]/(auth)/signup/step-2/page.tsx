@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { saveSignupStep } from "../actions";
+import { saveSignupStep, saveDraftAndGoToStep } from "../actions";
 import { getTranslations } from "next-intl/server";
 import Step2FormClient from "./Step2FormClient";
 
@@ -90,6 +90,27 @@ export default async function Step2Page({
     await saveSignupStep({ locale: params.locale, step: 2, patch, goNext: false });
   }
 
+  async function saveDraftAndBack(formData: FormData) {
+    "use server";
+    const patch = {
+      residenceCountry: normalizeText(formData.get("residenceCountry"), 60),
+      residenceCity: normalizeText(formData.get("residenceCity"), 60),
+      residenceAddress: normalizeText(formData.get("residenceAddress"), 120),
+
+      visaType: normalizeText(formData.get("visaType"), 60),
+      visaStartDate: buildISODateFromForm(formData, "visaStartDate"),
+      visaEndDate: buildISODateFromForm(formData, "visaEndDate"),
+      entryDate: buildISODateFromForm(formData, "entryDate"),
+    };
+
+    await saveDraftAndGoToStep({
+      locale: params.locale,
+      step: 2,
+      patch,
+      goToStep: 1,
+    });
+  }
+
   async function saveAndNext(formData: FormData) {
     "use server";
     const patch = {
@@ -147,11 +168,12 @@ export default async function Step2Page({
     buttons: {
       saveDraft: t("buttons.saveDraft"),
       saveContinue: t("buttons.saveContinue"),
+      // אם אין לך מפתח תרגום לזה עדיין, אפשר להשאיר טקסט קבוע ב-Form
+      saveDraftBack: t("buttons.saveDraftBack") ?? "Save Draft & Back",
     },
     errors: {
       visaRange: t("errors.visaRange"),
     },
-    // options
     purpose: {
       work: t("purpose.work"),
       study: t("purpose.study"),
@@ -195,6 +217,7 @@ export default async function Step2Page({
         defaults={defaults}
         saveDraftAction={saveDraft}
         saveAndNextAction={saveAndNext}
+        saveDraftAndBackAction={saveDraftAndBack}
       />
     </main>
   );

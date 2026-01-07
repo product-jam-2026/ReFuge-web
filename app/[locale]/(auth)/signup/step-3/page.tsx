@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { saveSignupStep } from "../actions";
+import { saveDraftAndGoToStep, saveSignupStep } from "../actions";
 import { getTranslations } from "next-intl/server";
 import Step3FormClient from "./Step3FormClient";
 
@@ -62,7 +62,8 @@ function buildOccupationJSON(formData: FormData, existingOccupation: any) {
       ? existingOccupation
       : (existingOccupation?.occupationText ?? "");
 
-  const occupationText = normalizeText(formData.get("occupationText"), 120) || existingText || "";
+  const occupationText =
+    normalizeText(formData.get("occupationText"), 120) || existingText || "";
 
   const payload = {
     assets: cleanedAssets,
@@ -107,11 +108,15 @@ export default async function Step3Page({
     occupationText: "",
   };
   try {
-    if (typeof step3.occupation === "string" && step3.occupation.trim().startsWith("{")) {
+    if (
+      typeof step3.occupation === "string" &&
+      step3.occupation.trim().startsWith("{")
+    ) {
       const parsed = JSON.parse(step3.occupation);
       occupationDefaults = {
         assets: Array.isArray(parsed.assets) ? parsed.assets : [],
-        occupationText: typeof parsed.occupationText === "string" ? parsed.occupationText : "",
+        occupationText:
+          typeof parsed.occupationText === "string" ? parsed.occupationText : "",
       };
     } else if (typeof step3.occupation === "string") {
       occupationDefaults = { assets: [], occupationText: step3.occupation };
@@ -162,6 +167,48 @@ export default async function Step3Page({
     await saveSignupStep({ locale: params.locale, step: 3, patch, goNext: false });
   }
 
+  // ✅ חדש: שמירה + חזרה ל-step-2
+  async function saveDraftAndBack(formData: FormData) {
+    "use server";
+
+    const patch = {
+      maritalStatus: normalizeText(formData.get("maritalStatus"), 40),
+      statusDate: buildISODateFromForm(formData, "statusDate"),
+
+      registeredAddress: {
+        city: normalizeText(formData.get("regCity"), 60),
+        street: normalizeText(formData.get("regStreet"), 80),
+        houseNumber: normalizeDigits(formData.get("regHouseNumber"), 10),
+        entry: normalizeText(formData.get("regEntry"), 10),
+        apartment: normalizeDigits(formData.get("regApartment"), 10),
+        zip: normalizeDigits(formData.get("regZip"), 10),
+      },
+
+      mailingDifferent: String(formData.get("housingType") || "") === "other",
+
+      mailingAddress: step3.mailingAddress || {
+        city: "",
+        street: "",
+        houseNumber: "",
+        entry: "",
+        apartment: "",
+        zip: "",
+      },
+
+      employmentStatus: normalizeText(formData.get("employmentStatus"), 40),
+      notWorkingReason: normalizeText(formData.get("notWorkingReason"), 80),
+
+      occupation: buildOccupationJSON(formData, step3.occupation),
+    };
+
+    await saveDraftAndGoToStep({
+      locale: params.locale,
+      step: 3,
+      patch,
+      goToStep: 2,
+    });
+  }
+
   async function saveAndNext(formData: FormData) {
     "use server";
 
@@ -197,6 +244,12 @@ export default async function Step3Page({
 
     await saveSignupStep({ locale: params.locale, step: 3, patch, goNext: true });
   }
+
+  // ✅ לא להשתמש ב ?? כי next-intl יכול להחזיר "שם מפתח"
+  let saveDraftBackLabel = "Save Draft & Back";
+  try {
+    saveDraftBackLabel = t("buttons.saveDraftBack");
+  } catch {}
 
   const labels = {
     title: t("title"),
@@ -262,42 +315,42 @@ export default async function Step3Page({
     buttons: {
       saveDraft: t("buttons.saveDraft"),
       saveContinue: t("buttons.saveContinue"),
+      saveDraftBack: saveDraftBackLabel,
     },
   };
 
-type DateParts = { y: string; m: string; d: string };
-type HousingType = "rented" | "other";
+  type DateParts = { y: string; m: string; d: string };
+  type HousingType = "rented" | "other";
 
-const defaults: {
-  maritalStatus: string;
-  weddingDate: DateParts;
-  regCity: string;
-  regStreet: string;
-  regHouseNumber: string;
-  regEntry: string;
-  regApartment: string;
-  regZip: string;
-  housingType: HousingType;
-  employmentStatus: string;
-  notWorkingReason: string;
-  assets: string[];
-  occupationText: string;
-} = {
-  maritalStatus: String(step3.maritalStatus || ""),
-  weddingDate: wedding,
-  regCity: String(reg.city || ""),
-  regStreet: String(reg.street || ""),
-  regHouseNumber: String(reg.houseNumber || ""),
-  regEntry: String(reg.entry || ""),
-  regApartment: String(reg.apartment || ""),
-  regZip: String(reg.zip || ""),
-  housingType: (step3.mailingDifferent ? "other" : "rented") as HousingType,
-  employmentStatus: String(step3.employmentStatus || ""),
-  notWorkingReason: String(step3.notWorkingReason || ""),
-  assets: Array.isArray(occupationDefaults.assets) ? occupationDefaults.assets : [],
-  occupationText: String(occupationDefaults.occupationText || ""),
-};
-
+  const defaults: {
+    maritalStatus: string;
+    weddingDate: DateParts;
+    regCity: string;
+    regStreet: string;
+    regHouseNumber: string;
+    regEntry: string;
+    regApartment: string;
+    regZip: string;
+    housingType: HousingType;
+    employmentStatus: string;
+    notWorkingReason: string;
+    assets: string[];
+    occupationText: string;
+  } = {
+    maritalStatus: String(step3.maritalStatus || ""),
+    weddingDate: wedding,
+    regCity: String(reg.city || ""),
+    regStreet: String(reg.street || ""),
+    regHouseNumber: String(reg.houseNumber || ""),
+    regEntry: String(reg.entry || ""),
+    regApartment: String(reg.apartment || ""),
+    regZip: String(reg.zip || ""),
+    housingType: (step3.mailingDifferent ? "other" : "rented") as HousingType,
+    employmentStatus: String(step3.employmentStatus || ""),
+    notWorkingReason: String(step3.notWorkingReason || ""),
+    assets: Array.isArray(occupationDefaults.assets) ? occupationDefaults.assets : [],
+    occupationText: String(occupationDefaults.occupationText || ""),
+  };
 
   return (
     <main style={{ padding: 24 }} dir={dir}>
@@ -306,6 +359,7 @@ const defaults: {
         labels={labels}
         defaults={defaults}
         saveDraftAction={saveDraft}
+        saveDraftAndBackAction={saveDraftAndBack}
         saveAndNextAction={saveAndNext}
       />
     </main>

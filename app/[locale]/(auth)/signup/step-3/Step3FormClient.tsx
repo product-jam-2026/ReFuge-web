@@ -12,6 +12,7 @@ export default function Step3FormClient({
   labels,
   defaults,
   saveDraftAction,
+  saveDraftAndBackAction,
   saveAndNextAction,
 }: {
   labels: any;
@@ -31,6 +32,7 @@ export default function Step3FormClient({
     occupationText: string;
   };
   saveDraftAction: (formData: FormData) => Promise<void>;
+  saveDraftAndBackAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
 }) {
   const nowYear = new Date().getFullYear();
@@ -327,9 +329,15 @@ export default function Step3FormClient({
         </fieldset>
 
         <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
+          {/* ✅ חדש: שמירה + חזרה */}
+          <button formAction={saveDraftAndBackAction} type="submit">
+            {labels.buttons?.saveDraftBack ?? "Save Draft & Back"}
+          </button>
+
           <button formAction={saveDraftAction} type="submit">
             {labels.buttons.saveDraft}
           </button>
+
           <button type="submit">{labels.buttons.saveContinue}</button>
         </div>
       </form>

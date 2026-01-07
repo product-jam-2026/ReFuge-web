@@ -8,7 +8,7 @@ type MaritalStatus = "single" | "married" | "divorced" | "widowed" | "";
 type DateParts = { y: string; m: string; d: string };
 
 function pad2(n: string) {
-  return n.length === 1 ? `0${n}` : n;
+  return n.length === "1".length ? `0${n}` : n;
 }
 
 function partsToIso(p: DateParts) {
@@ -52,7 +52,6 @@ function DateWheel({
 
   const iso = partsToIso(p);
 
-  // labels.date קיימת בקבצי השפה, אבל נוסיף fallbackים בטוחים
   const dateLabels = labels?.date ?? { year: "Year", month: "Month", day: "Day" };
 
   return (
@@ -85,7 +84,6 @@ function DateWheel({
         </select>
       </div>
 
-      {/* זה מה שנשמר ל-DB: YYYY-MM-DD */}
       <input type="hidden" name={name} value={iso} />
     </div>
   );
@@ -95,6 +93,7 @@ export default function Step5FormClient({
   labels,
   defaults,
   saveDraftAction,
+  saveDraftAndBackAction,
   saveAndNextAction,
 }: {
   labels: any;
@@ -117,9 +116,10 @@ export default function Step5FormClient({
     email: string;
   };
   saveDraftAction: (formData: FormData) => Promise<void>;
+  saveDraftAndBackAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
 }) {
-    const L = useMemo(() => labels ?? {}, [labels]);
+  const L = useMemo(() => labels ?? {}, [labels]);
 
   const [gender, setGender] = useState<Gender>((defaults.gender as Gender) || "");
   const [maritalStatus, setMaritalStatus] = useState<MaritalStatus>(
@@ -165,7 +165,7 @@ export default function Step5FormClient({
       <h1 style={{ marginBottom: 4 }}>{L.title ?? "Step 5"}</h1>
       <p style={{ marginTop: 0, opacity: 0.8 }}>{L.subtitle ?? ""}</p>
 
-      <form action={saveAndNextAction} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
+      <form action={saveDraftAction} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
         <h3 style={{ marginTop: 6 }}>{L.sections?.partner ?? "Partner / Guardian"}</h3>
 
         <label>
@@ -219,7 +219,6 @@ export default function Step5FormClient({
             </button>
           </div>
 
-          {/* נשמר ל-DB */}
           <input type="hidden" name="gender" value={gender} />
         </div>
 
@@ -319,7 +318,16 @@ export default function Step5FormClient({
           <button formAction={saveDraftAction} type="submit">
             {L.buttons?.saveDraft ?? "Save draft"}
           </button>
-          <button type="submit">{L.buttons?.saveContinue ?? "Save & Continue"}</button>
+
+          {/* ✅ חדש: שמור וחזור */}
+          <button formAction={saveDraftAndBackAction} type="submit">
+            {L.buttons?.saveDraftBack ?? "Save & Back"}
+          </button>
+
+          <button formAction={saveAndNextAction} type="submit">
+  {L.buttons?.saveContinue ?? "Save & Continue"}
+</button>
+
         </div>
       </form>
     </>

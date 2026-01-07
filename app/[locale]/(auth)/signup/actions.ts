@@ -143,3 +143,43 @@ export async function completeRegistration(locale: string) {
 
   redirect(`/${locale}/home`);
 }
+export async function saveDraftAndGoToStep(params: {
+  locale: string;
+  step: number;
+  patch: any;
+  goToStep: number;
+}) {
+  const { supabase, user } = await getAuthedSupabase();
+  await upsertProfileIfMissing(supabase, user);
+
+  const { data: profile, error: profErr } = await supabase
+    .from("profiles")
+    .select("data, registration_completed")
+    .eq("id", user.id)
+    .single();
+
+  if (profErr) throw profErr;
+
+  if (profile?.registration_completed) {
+    redirect(`/${params.locale}/home`);
+  }
+
+  const existingData = profile?.data || {};
+  const existingIntake = existingData.intake || {};
+
+  const nextIntake = mergeDeep(existingIntake, {
+    currentStep: Math.max(existingIntake.currentStep || 1, params.step),
+    [`step${params.step}`]: params.patch,
+  });
+
+  const nextData = mergeDeep(existingData, { intake: nextIntake });
+
+  const { error: updErr } = await supabase
+    .from("profiles")
+    .update({ data: nextData })
+    .eq("id", user.id);
+
+  if (updErr) throw updErr;
+
+  redirect(`/${params.locale}/signup/step-${params.goToStep}`);
+}

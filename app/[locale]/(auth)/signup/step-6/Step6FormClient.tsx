@@ -81,11 +81,13 @@ export default function Step6FormClient({
   labels,
   defaults,
   saveDraftAction,
+  saveDraftAndBackAction,
   finishAction,
 }: {
   labels: any;
   defaults: Record<string, string>;
   saveDraftAction: (formData: FormData) => Promise<void>;
+  saveDraftAndBackAction: (formData: FormData) => Promise<void>;
   finishAction: (formData: FormData) => Promise<void>;
 }) {
   const [gender, setGender] = useState<Gender>((defaults.childGender as Gender) || "");
@@ -101,7 +103,6 @@ export default function Step6FormClient({
     [labels]
   );
 
-  // דוגמה זמנית: ערים תלויות מדינה (כמו שעשינו ב-Step2)
   const citiesByCountry: Record<string, { value: string; label: string }[]> = useMemo(
     () => ({
       "": [{ value: "", label: labels.select }],
@@ -151,7 +152,8 @@ export default function Step6FormClient({
       <h1 style={{ marginBottom: 4 }}>{labels.title}</h1>
       <p style={{ marginTop: 0, opacity: 0.8 }}>{labels.subtitle}</p>
 
-      <form action={finishAction} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
+      {/* ✅ שינוי חשוב: ברירת מחדל = Save Draft */}
+      <form action={saveDraftAction} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
         <h3 style={{ marginTop: 6 }}>{labels.sections.child}</h3>
 
         <label>
@@ -197,12 +199,7 @@ export default function Step6FormClient({
           <input type="hidden" name="childGender" value={gender} />
         </div>
 
-        <DateWheel
-          label={labels.fields.childBirthDate}
-          name="childBirthDate"
-          initialIso={defaults.childBirthDate || ""}
-          labels={labels}
-        />
+        <DateWheel label={labels.fields.childBirthDate} name="childBirthDate" initialIso={defaults.childBirthDate || ""} labels={labels} />
 
         <label>
           {labels.fields.childNationality}
@@ -256,7 +253,6 @@ export default function Step6FormClient({
         <label>
           {labels.fields.childResidenceCity}
           <select name="childResidenceCity" defaultValue={defaults.childResidenceCity || ""} style={{ width: "100%", marginTop: 6 }}>
-            {/* כרגע משתמשים באותה רשימה — בהמשך אפשר לעשות תלוית-מדינה אחרת */}
             {birthCities.map((o) => (
               <option key={o.value || "empty"} value={o.value}>
                 {o.label}
@@ -265,12 +261,7 @@ export default function Step6FormClient({
           </select>
         </label>
 
-        <DateWheel
-          label={labels.fields.childEntryDate}
-          name="childEntryDate"
-          initialIso={defaults.childEntryDate || ""}
-          labels={labels}
-        />
+        <DateWheel label={labels.fields.childEntryDate} name="childEntryDate" initialIso={defaults.childEntryDate || ""} labels={labels} />
 
         <DateWheel
           label={labels.fields.childArrivalToIsraelDate}
@@ -281,11 +272,7 @@ export default function Step6FormClient({
 
         <label>
           {labels.fields.childArrivalToIsraelReason}
-          <select
-            name="childArrivalToIsraelReason"
-            defaultValue={defaults.childArrivalToIsraelReason || ""}
-            style={{ width: "100%", marginTop: 6 }}
-          >
+          <select name="childArrivalToIsraelReason" defaultValue={defaults.childArrivalToIsraelReason || ""} style={{ width: "100%", marginTop: 6 }}>
             {reasons.map((o) => (
               <option key={o.value || "empty"} value={o.value}>
                 {o.label}
@@ -298,7 +285,16 @@ export default function Step6FormClient({
           <button formAction={saveDraftAction} type="submit">
             {labels.buttons.saveDraft}
           </button>
-          <button type="submit">{labels.buttons.finish}</button>
+
+          {/* ✅ חדש: שמור וחזור */}
+          <button formAction={saveDraftAndBackAction} type="submit">
+            {labels.buttons.saveDraftBack}
+          </button>
+
+          {/* ✅ חשוב: finish חייב להיות formAction משלו */}
+          <button formAction={finishAction} type="submit">
+            {labels.buttons.finish}
+          </button>
         </div>
       </form>
     </>

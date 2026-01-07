@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import styles from "./page.module.css";
 import GoogleLoginButton from "./GoogleLoginButton";
-import { sendMagicLink, goToSignUp } from "./actions";
+import { sendMagicLink } from "./actions";
 
 export default function Login({
   searchParams,
@@ -11,6 +13,8 @@ export default function Login({
   searchParams: { message?: string };
 }) {
   const [showEmail, setShowEmail] = useState(false);
+  const router = useRouter();
+  const locale = useLocale();
 
   // אם קיבלת message אחרי שליחה, נוח להשאיר את הטופס פתוח
   useEffect(() => {
@@ -27,7 +31,7 @@ export default function Login({
 
         <GoogleLoginButton />
 
-        <button type="button" onClick={() => goToSignUp()}>
+        <button type="button" onClick={() => router.push(`/${locale}/signup`)}>
           Sign Up
         </button>
 

@@ -164,7 +164,8 @@
     },
     "buttons": {
       "saveDraft": "حفظ كمسودة",
-      "saveContinue": "حفظ ومتابعة"
+      "saveContinue": "حفظ ومتابعة",
+      "saveDraftBack": "حفظ المسودة والعودة"
     }
   },
   "SignupStep3": {
@@ -222,7 +223,8 @@
     },
     "buttons": {
       "saveDraft": "حفظ كمسودة",
-      "saveContinue": "حفظ ومتابعة"
+      "saveContinue": "حفظ ومتابعة",
+      "saveDraftBack": "حفظ المسودة والعودة"
     }
   },
   "SignupStep4": {
@@ -257,7 +259,8 @@
     },
     "buttons": {
       "saveDraft": "حفظ كمسودة",
-      "saveContinue": "حفظ ومتابعة"
+      "saveContinue": "حفظ ومتابعة",
+      "saveDraftBack": "حفظ المسودة والعودة"
     }
   },
   "SignupStep5": {
@@ -315,8 +318,9 @@
     "eritrea": "إريتريا"
   },
   "buttons": {
-    "saveDraft": "حفظ مسودة",
-    "saveContinue": "حفظ ومتابعة"
+      "saveDraft": "حفظ كمسودة",
+      "saveContinue": "حفظ ومتابعة",
+      "saveDraftBack": "حفظ المسودة والعودة"
   }
 },
 "SignupStep6": {
@@ -352,6 +356,6 @@
     "asmara": "أسمرة"
   },
   "arrivalReasons": { "safety": "الأمان", "family": "لمّ الشمل", "other": "أخرى" },
-  "buttons": { "saveDraft": "حفظ مسودة", "finish": "إنهاء التسجيل" }
+  "buttons": { "saveDraft": "حفظ مسودة", "finish": "إنهاء التسجيل", "saveDraftBack": "حفظ المسودة والعودة" }
 }
 }
