@@ -2,10 +2,37 @@ import { PDFDocument, rgb, StandardFonts, type PDFFont } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 // import type { FieldMap, FieldSpec } from "./fieldMap"; // adjust import path if needed
 
-import type {
-  FieldMap,
-  FieldSpec,
-} from "@/app/[locale]/(app)/forms/child-registration-request/fieldMap";
+// import type {
+//   FieldMap,
+//   FieldSpec,
+// } from "@/app/[locale]/(app)/forms/child-registration-request/fieldMap";
+
+export type Direction = "auto" | "ltr" | "rtl";
+
+export type FieldSpec = {
+  pageIndex: number;
+  x: number;
+  y: number;
+
+  width?: number;
+  height?: number;
+  fontSize?: number;
+  lineHeight?: number;
+  align?: "left" | "center" | "right";
+  direction?: Direction;
+  clearBackground?: boolean;
+
+  // Optional: for font fitting
+  maxFontSize?: number;
+  minFontSize?: number;
+
+  // ✅ Checkbox support
+  kind?: "text" | "checkbox";
+  boxSize?: number;
+  strokeWidth?: number;
+};
+
+export type FieldMap = Record<string, FieldSpec>;
 
 export type FillOptionsClient = {
   /** Provide bytes (fetched in the browser) for Hebrew-capable font */
