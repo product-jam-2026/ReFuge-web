@@ -28,8 +28,13 @@
         "title": "טופס רישום ילד"
       },
       "childAllowanceRequest": {
-        "title": "טופס תביעה לקצבת ילדים ולהעברת ילד/ים מתיק לתיק"
+        "title": "טופס תביעה לקצבת ילדים"
+      },
+            "personRegistrationRequest": {
+        "title": "שאלון לרישום נפש"
       }
+
+      
     }
   },
   "RightsPage": {

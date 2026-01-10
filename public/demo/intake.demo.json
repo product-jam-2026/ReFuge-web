@@ -3,71 +3,115 @@
     "step1": {
       "lastName": "כהן",
       "firstName": "אליס",
-      "oldLastName": "",
-      "oldFirstName": "",
-      "gender": "",
-      "birthDate": "",
-      "nationality": "",
+      "oldLastName": "לוי",
+      "oldFirstName": "אליסה",
+      "gender": "female",
+      "birthDate": "1994-06-18",
+      "nationality": "ישראל",
       "israeliId": "123456789",
-      "passportNumber": "",
-      "passportIssueDate": "",
-      "passportExpiryDate": "",
-      "passportIssueCountry": "",
+      "passportNumber": "IL9876543",
+      "passportIssueDate": "2019-03-12",
+      "passportExpiryDate": "2029-03-11",
+      "passportIssueCountry": "ישראל",
       "phone": "050-1234567",
       "email": "alice@example.com"
     },
     "step2": {
-      "residenceCountry": "",
-      "residenceCity": "",
+      "residenceCountry": "ישראל",
+      "residenceCity": "ירושלים",
       "residenceAddress": "ירושלים, יפו 10",
-      "visaType": "",
-      "visaStartDate": "",
-      "visaEndDate": "",
-      "entryDate": ""
+      "visaType": "A5",
+      "visaStartDate": "2023-01-01",
+      "visaEndDate": "2026-12-31",
+      "entryDate": "2021-09-05"
     },
     "step3": {
       "maritalStatus": "single",
-      "statusDate": "",
-      "registeredAddress": { "city": "", "street": "", "houseNumber": "", "entry": "", "apartment": "", "zip": "" },
+      "statusDate": "2020-01-15",
+      "registeredAddress": {
+        "city": "ירושלים",
+        "street": "יפו",
+        "houseNumber": "10",
+        "entry": "ב",
+        "apartment": "12",
+        "zip": "9438301"
+      },
       "mailingDifferent": false,
-      "mailingAddress": { "city": "", "street": "", "houseNumber": "", "entry": "", "apartment": "", "zip": "" },
-      "employmentStatus": "",
-      "notWorkingReason": "",
-      "occupation": ""
+      "mailingAddress": {
+        "city": "ירושלים",
+        "street": "יפו",
+        "houseNumber": "10",
+        "entry": "ב",
+        "apartment": "12",
+        "zip": "9438301"
+      },
+      "employmentStatus": "employed",
+      "notWorkingReason": "n/a",
+      "occupation": "עובדת משרד"
     },
     "step4": {
-      "healthFund": "",
-      "bank": { "bankName": "", "branch": "", "accountNumber": "" },
-      "nationalInsurance": { "hasFile": "", "fileNumber": "", "getsAllowance": "", "allowanceType": "", "allowanceFileNumber": "" }
+      "healthFund": "כללית",
+      "bank": {
+        "bankName": "בנק הפועלים",
+        "branch": "123",
+        "accountNumber": "456789"
+      },
+      "nationalInsurance": {
+        "hasFile": "yes",
+        "fileNumber": "NI-2024-001122",
+        "getsAllowance": "no",
+        "allowanceType": "none",
+        "allowanceFileNumber": "n/a"
+      }
     },
     "step5": {
       "person": {
         "lastName": "איברהים",
         "firstName": "מוחמד",
-        "oldLastName": "",
-        "oldFirstName": "",
-        "gender": "",
-        "birthDate": "",
-        "nationality": "",
-        "israeliId": "",
+        "oldLastName": "חסן",
+        "oldFirstName": "מוחמד",
+        "gender": "male",
+        "birthDate": "1989-11-02",
+        "nationality": "סודן",
+        "israeliId": "987654321",
         "passportNumber": "P1234567"
       },
-      "maritalStatus": "",
-      "statusDate": "",
-      "phone": "",
-      "email": ""
+      "maritalStatus": "single",
+      "statusDate": "2020-01-15",
+      "phone": "052-9876543",
+      "email": "mohammad.ibrahim@example.com"
     },
     "step6": {
       "children": [
         {
-          "lastName": "",
+          "lastName": "כהן",
           "firstName": "דנה",
-          "gender": "",
+          "gender": "female",
           "birthDate": "2022-01-10",
           "nationality": "ישראל",
-          "israeliId": "",
-          "residenceCountry": "",
-          "entryDate": ""
+          "israeliId": "345678901",
+          "residenceCountry": "ישראל",
+          "entryDate": "2022-02-01"
+        },
+        {
+          "lastName": "כהן",
+          "firstName": "דנה",
+          "gender": "female",
+          "birthDate": "2022-01-10",
+          "nationality": "ישראל",
+          "israeliId": "345678901",
+          "residenceCountry": "ישראל",
+          "entryDate": "2022-02-01"
+        },
+        {
+          "lastName": "כהן",
+          "firstName": "דנה",
+          "gender": "female",
+          "birthDate": "2022-01-10",
+          "nationality": "ישראל",
+          "israeliId": "345678901",
+          "residenceCountry": "ישראל",
+          "entryDate": "2022-02-01"
         }
       ]
     }

@@ -36,6 +36,16 @@ export default function FormsPage() {
             {t("forms.childAllowanceRequest.title")}
           </h2>
         </Link>
+
+        {/* טופס 3 */}
+        <Link
+          href="/forms/person-registration-request"
+          className="bg-orange-300 p-6 rounded-2xl shadow-sm text-right hover:opacity-90 transition-opacity"
+        >
+          <h2 className="text-xl font-bold text-orange-900 mb-2">
+            {t("forms.personRegistrationRequest.title")}
+          </h2>
+        </Link>
       </div>
     </main>
   );

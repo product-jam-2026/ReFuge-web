@@ -41,6 +41,10 @@ export type FillOptionsClient = {
   textColor?: { r: number; g: number; b: number };
   autoDetectRtl?: boolean;
   defaultRtlAlignRight?: boolean;
+
+  // ✅ new:
+  dateFormat?: "iso" | "dmy"; // default "iso"
+  isDateField?: (fieldName: string, spec: FieldSpec) => boolean; // optional filter
 };
 
 export async function fillFieldsToNewPdfBytesClient(
@@ -67,12 +71,31 @@ export async function fillFieldsToNewPdfBytesClient(
   const autoDetectRtl = options.autoDetectRtl ?? true;
   const defaultRtlAlignRight = options.defaultRtlAlignRight ?? true;
 
-  for (const [fieldName, rawValue] of Object.entries(fields)) {
+  for (const [fieldName, rawValue0] of Object.entries(fields)) {
     const spec = fieldMap[fieldName];
     if (!spec) {
       // In the client, it’s nicer to skip unknown keys instead of crashing.
       // If you prefer strict, replace with: throw new Error(...)
       continue;
+    }
+
+    // normalize value to string
+    let rawValue = (rawValue0 ?? "").toString();
+
+    // ✅ date formatting (opt-in)
+    // const wantsDMY = (options.dateFormat ?? "iso") === "dmy";
+    // const wantsDMY = (options.dateFormat ?? "dmy") === "dmy";
+
+    const isDate =
+      options.isDateField?.(fieldName, spec) ?? /date/i.test(fieldName);
+
+    // if (isDate && looksLikeIsoDate(rawValue)) {
+    //   rawValue = isoToDMY(rawValue);
+    //   console.log(rawValue);
+    // }
+
+    if (isDate) {
+      rawValue = isoToDMYIfPossible(rawValue);
     }
 
     const page = pdfDoc.getPage(spec.pageIndex);
@@ -166,6 +189,32 @@ export async function fillFieldsToNewPdfBytesClient(
 
 /* ========= Helpers (copied from your fillPdf.ts, no fs) ========= */
 
+function isoToDMYIfPossible(s: string) {
+  const t = (s ?? "").trim();
+
+  // captures: YYYY - M(M) - D(D) and ignores optional time part
+  const m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ].*)?$/);
+  if (!m) return s;
+
+  const [, yyyy, mmRaw, ddRaw] = m;
+  const mm = mmRaw.padStart(2, "0");
+  const dd = ddRaw.padStart(2, "0");
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+// function looksLikeIsoDate(s: string) {
+//   return /^\d{4}-\d{2}-\d{2}$/.test(s.trim());
+// }
+
+// function isoToDMY(iso: string) {
+//   const t = iso.trim();
+//   if (!looksLikeIsoDate(t)) return iso;
+
+//   const [yyyy, mm, dd] = t.split("-");
+//   // keep leading zeros as-is
+//   return `${dd}/${mm}/${yyyy}`;
+// }
+
 function containsHebrew(s: string) {
   return /[\u0590-\u05FF]/.test(s);
 }
@@ -219,8 +268,6 @@ function fitFontSizeToWidth(
 
   const maxSize = 12;
   const minSize = 6;
-
-
 
   let size = maxSize;
   while (size > minSize) {
