@@ -22,13 +22,19 @@
     "profile": "פרופיל",
     "rights": "זכויות"
   },
-  "FormsPage":{
-    "forms":
-    {
-      "childRegistrationRequest":
-      {
+  "FormsPage": {
+    "forms": {
+      "childRegistrationRequest": {
         "title": "טופס רישום ילד"
+      },
+      "childAllowanceRequest": {
+        "title": "טופס תביעה לקצבת ילדים"
+      },
+            "personRegistrationRequest": {
+        "title": "שאלון לרישום נפש"
       }
+
+      
     }
   },
   "RightsPage": {
@@ -54,7 +60,7 @@
       }
     ]
   },
-"Navbar": {
+  "Navbar": {
     "login": "התחברות",
     "forms": "טפסים",
     "rights": "זכויות"
@@ -273,116 +279,116 @@
     }
   },
   "SignupStep5": {
-  "title": "שלב 5 מתוך 6",
-  "subtitle": "פרטי בן/בת זוג/אפוטרופוס (כפי שרשומים בדרכון)",
-  "draftSaved": "✅ הטיוטה נשמרה",
-  "select": "בחר",
-  "sections": {
-    "partner": "פרטי בן/בת זוג/אפוטרופוס",
-    "passport": "דרכון",
-    "status": "מצב משפחתי",
-    "contact": "דרכי תקשורת"
-  },
-  "fields": {
-    "lastName": "שם משפחה",
-    "firstName": "שם פרטי",
-    "oldLastName": "שם משפחה קודם (במידה וקיים)",
-    "oldFirstName": "שם פרטי קודם (במידה וקיים)",
-    "gender": "מין",
-    "birthDate": "תאריך לידה",
-    "nationality": "אזרחות",
-    "israeliId": "מספר תעודת זהות ישראלית (במידה וקיימת)",
-    "passportNumber": "מספר דרכון",
-    "passportIssueDate": "תאריך הוצאת דרכון",
-    "passportExpiryDate": "תאריך פקיעת דרכון",
-    "passportIssueCountry": "ארץ הוצאת דרכון",
-    "maritalStatus": "מצב משפחתי",
-    "statusDate": "תאריך חתונה",
-    "phone": "טלפון",
-    "email": "אימייל"
-  },
-  "genderOptions": {
-    "male": "זכר",
-    "female": "נקבה"
-  },
-  "maritalOptions": {
-    "single": "רווק/ה",
-    "married": "נשוי/אה",
-    "divorced": "גרוש/ה",
-    "widowed": "אלמן/ה"
-  },
-  "date": {
-    "year": "שנה",
-    "month": "חודש",
-    "day": "יום"
-  },
-  "nationalityOptions": {
-    "israeli": "ישראלית",
-    "sudanese": "סודנית",
-    "eritrean": "אריתריאית"
-  },
-  "countryOptions": {
-    "israel": "ישראל",
-    "sudan": "סודן",
-    "eritrea": "אריתריאה"
-  },
-  "buttons": {
+    "title": "שלב 5 מתוך 6",
+    "subtitle": "פרטי בן/בת זוג/אפוטרופוס (כפי שרשומים בדרכון)",
+    "draftSaved": "✅ הטיוטה נשמרה",
+    "select": "בחר",
+    "sections": {
+      "partner": "פרטי בן/בת זוג/אפוטרופוס",
+      "passport": "דרכון",
+      "status": "מצב משפחתי",
+      "contact": "דרכי תקשורת"
+    },
+    "fields": {
+      "lastName": "שם משפחה",
+      "firstName": "שם פרטי",
+      "oldLastName": "שם משפחה קודם (במידה וקיים)",
+      "oldFirstName": "שם פרטי קודם (במידה וקיים)",
+      "gender": "מין",
+      "birthDate": "תאריך לידה",
+      "nationality": "אזרחות",
+      "israeliId": "מספר תעודת זהות ישראלית (במידה וקיימת)",
+      "passportNumber": "מספר דרכון",
+      "passportIssueDate": "תאריך הוצאת דרכון",
+      "passportExpiryDate": "תאריך פקיעת דרכון",
+      "passportIssueCountry": "ארץ הוצאת דרכון",
+      "maritalStatus": "מצב משפחתי",
+      "statusDate": "תאריך חתונה",
+      "phone": "טלפון",
+      "email": "אימייל"
+    },
+    "genderOptions": {
+      "male": "זכר",
+      "female": "נקבה"
+    },
+    "maritalOptions": {
+      "single": "רווק/ה",
+      "married": "נשוי/אה",
+      "divorced": "גרוש/ה",
+      "widowed": "אלמן/ה"
+    },
+    "date": {
+      "year": "שנה",
+      "month": "חודש",
+      "day": "יום"
+    },
+    "nationalityOptions": {
+      "israeli": "ישראלית",
+      "sudanese": "סודנית",
+      "eritrean": "אריתריאית"
+    },
+    "countryOptions": {
+      "israel": "ישראל",
+      "sudan": "סודן",
+      "eritrea": "אריתריאה"
+    },
+    "buttons": {
       "saveDraft": "שמירת טיוטה",
       "saveContinue": "שמור/י והמשך/י",
       "saveDraftBack": "שמור וחזור"
+    }
+  },
+  "SignupStep6": {
+    "title": "שלב 6 מתוך 6",
+    "subtitle": "פרטי ילדים",
+    "draftSaved": "✅ הטיוטה נשמרה",
+    "select": "בחר",
+    "sections": {
+      "child": "כללי"
+    },
+    "fields": {
+      "childLastName": "שם משפחה",
+      "childFirstName": "שם פרטי",
+      "childGender": "מין",
+      "childBirthDate": "תאריך לידה",
+      "childNationality": "אזרחות",
+      "childIsraeliId": "מספר תעודת זהות ישראלית",
+      "childResidenceCountry": "ארץ לידה",
+      "childBirthCity": "עיר לידה",
+      "childResidenceCity": "עיר",
+      "childEntryDate": "תאריך כניסה לארץ",
+      "childArrivalToIsraelDate": "תאריך עלייה לארץ",
+      "childArrivalToIsraelReason": "תאריך הצטרפות הילד/ה לתיק בביטוח לאומי"
+    },
+    "genderOptions": { "male": "זכר", "female": "נקבה" },
+    "date": { "year": "שנה", "month": "חודש", "day": "יום" },
+    "nationalityOptions": {
+      "israeli": "ישראלית",
+      "sudanese": "סודנית",
+      "eritrean": "אריתריאית"
+    },
+    "countryOptions": {
+      "israel": "ישראל",
+      "sudan": "סודן",
+      "eritrea": "אריתריאה"
+    },
+    "cityOptions": {
+      "jerusalem": "ירושלים",
+      "telAviv": "תל אביב",
+      "haifa": "חיפה",
+      "khartoum": "חרטום",
+      "omdurman": "אום דורמן",
+      "asmara": "אסמרה"
+    },
+    "arrivalReasons": {
+      "safety": "בטחון",
+      "family": "איחוד משפחות",
+      "other": "אחר"
+    },
+    "buttons": {
+      "saveDraft": "שמירת טיוטה",
+      "finish": "סיום הרשמה",
+      "saveDraftBack": "שמור וחזור"
+    }
   }
-},
-"SignupStep6": {
-  "title": "שלב 6 מתוך 6",
-  "subtitle": "פרטי ילדים",
-  "draftSaved": "✅ הטיוטה נשמרה",
-  "select": "בחר",
-  "sections": {
-    "child": "כללי"
-  },
-  "fields": {
-    "childLastName": "שם משפחה",
-    "childFirstName": "שם פרטי",
-    "childGender": "מין",
-    "childBirthDate": "תאריך לידה",
-    "childNationality": "אזרחות",
-    "childIsraeliId": "מספר תעודת זהות ישראלית",
-    "childResidenceCountry": "ארץ לידה",
-    "childBirthCity": "עיר לידה",
-    "childResidenceCity": "עיר",
-    "childEntryDate": "תאריך כניסה לארץ",
-    "childArrivalToIsraelDate": "תאריך עלייה לארץ",
-    "childArrivalToIsraelReason": "תאריך הצטרפות הילד/ה לתיק בביטוח לאומי"
-  },
-  "genderOptions": { "male": "זכר", "female": "נקבה" },
-  "date": { "year": "שנה", "month": "חודש", "day": "יום" },
-  "nationalityOptions": {
-    "israeli": "ישראלית",
-    "sudanese": "סודנית",
-    "eritrean": "אריתריאית"
-  },
-  "countryOptions": {
-    "israel": "ישראל",
-    "sudan": "סודן",
-    "eritrea": "אריתריאה"
-  },
-  "cityOptions": {
-    "jerusalem": "ירושלים",
-    "telAviv": "תל אביב",
-    "haifa": "חיפה",
-    "khartoum": "חרטום",
-    "omdurman": "אום דורמן",
-    "asmara": "אסמרה"
-  },
-  "arrivalReasons": {
-    "safety": "בטחון",
-    "family": "איחוד משפחות",
-    "other": "אחר"
-  },
-  "buttons": {
-    "saveDraft": "שמירת טיוטה",
-    "finish": "סיום הרשמה",
-    "saveDraftBack": "שמור וחזור"
-  }
-}
 }
