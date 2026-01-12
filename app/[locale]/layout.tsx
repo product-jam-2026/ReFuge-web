@@ -1,22 +1,19 @@
 import "@/styles/global.css";
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import type { Metadata } from "next";
-import Navbar from "@/lib/components/Navbar";
-import Footer from "@/lib/components/Footer";
-import localFont from 'next/font/local'; // הוספנו את זה
+import localFont from "next/font/local";
 import Script from "next/script";
 
-// הגדרת פונט כותרות (Bold)
-const simplerBold = localFont({
-  src: '../../public/fonts/SimplerPro-Bold.otf', // שתי קומות למעלה
-  variable: '--font-header',
-});
-
-// טקסט רץ - semibold
-const simplerSemibold = localFont({
-  src: '../../public/fonts/SimplerPro-Semibold.otf', // שתי קומות למעלה
-  variable: '--font-body',
+// ✅ Font family: SimplerPro (same for HE + AR)
+const simplerPro = localFont({
+  src: [
+    { path: "../../public/fonts/SimplerPro-Regular.otf", weight: "400", style: "normal" },
+    { path: "../../public/fonts/SimplerPro-Semibold.otf", weight: "600", style: "normal" },
+    { path: "../../public/fonts/SimplerPro-Bold.otf", weight: "700", style: "normal" },
+  ],
+  variable: "--font-simpler",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,13 +23,13 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({
   children,
-  params: { locale }
+  params: { locale },
 }: {
   children: React.ReactNode;
   params: { locale: string };
 }) {
   const messages = await getMessages();
-  const dir = (locale === 'he' || locale === 'ar') ? 'rtl' : 'ltr';
+  const dir = locale === "en" ? "ltr" : "rtl";
 
   return (
     <html lang={locale} dir={dir}>
@@ -40,20 +37,14 @@ export default async function RootLayout({
         <link rel="icon" href="/icons/favicon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      {/* הזרקנו את ה-Variables של הפונטים לתוך ה-body */}
-      <body className={`${simplerBold.variable} ${simplerSemibold.variable} antialiased font-body`}>
-        <NextIntlClientProvider messages={messages}>
-          <Navbar />
-          <div className="min-h-[80vh]">
-            {children}
-          </div>
-          <Footer />
-        </NextIntlClientProvider>
-        <Script
-  src="https://accounts.google.com/gsi/client"
-  strategy="afterInteractive"
-/>
 
+      {/* ✅ apply font variable on body */}
+      <body className={`${simplerPro.variable} antialiased`}>
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
+
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
       </body>
     </html>
   );

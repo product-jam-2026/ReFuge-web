@@ -1,346 +1,497 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, CSSProperties } from "react";
+import styles from "./step3.module.css";
 
-type DateParts = { y: string; m: string; d: string };
-
-function pad2(n: number) {
-  return String(n).padStart(2, "0");
+// --- Visual Helpers ---
+interface BiProps {
+  ar: string;
+  he: string;
+  className?: string;
+  style?: CSSProperties;
 }
 
+function BiInline({ ar, he, className, style }: BiProps) {
+  return (
+    <div className={`${styles.biLine} ${className || ""}`} style={style}>
+      <span className={styles.biAr}>{ar}</span>
+      <span className={styles.biHe}>{he}</span>
+    </div>
+  );
+}
+
+function BiStack({ ar, he, className, style }: BiProps) {
+  return (
+    <div className={`${styles.biStack} ${className || ""}`} style={style}>
+      <div className={styles.biAr}>{ar}</div>
+      <div className={styles.biHe}>{he}</div>
+    </div>
+  );
+}
+
+// --- GeoNames Fetcher ---
+type CityOpt = { id: number; ar: string; he: string; label: string };
+
+async function fetchCities(query: string): Promise<CityOpt[]> {
+  const username = process.env.NEXT_PUBLIC_GEONAMES_USERNAME || "demo";
+  const country = "IL"; 
+  if (query.trim().length < 2) return [];
+
+  const base = "https://secure.geonames.org/searchJSON";
+  const url = `${base}?country=${country}&name_startsWith=${encodeURIComponent(query)}&maxRows=5&username=${username}&lang=en`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.geonames) return [];
+    return data.geonames.map((item: any) => ({
+      id: item.geonameId,
+      ar: item.alternateNames?.find((n:any) => n.lang === 'ar')?.name || item.name,
+      he: item.alternateNames?.find((n:any) => n.lang === 'he')?.name || item.name,
+      label: item.name 
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// ✅ התיקון כאן: הוספנו את saveDraftAndBackAction לטיפוסים
+type Props = {
+  locale: string;
+  saved: boolean;
+  defaults: any;
+  saveDraftAction: (formData: FormData) => Promise<void>;
+  saveAndNextAction: (formData: FormData) => Promise<void>;
+  saveDraftAndBackAction: (formData: FormData) => Promise<void>;
+};
+
 export default function Step3FormClient({
-  labels,
+  saved,
   defaults,
   saveDraftAction,
-  saveDraftAndBackAction,
   saveAndNextAction,
-}: {
-  labels: any;
-  defaults: {
-    maritalStatus: string;
-    weddingDate: DateParts;
-    regCity: string;
-    regStreet: string;
-    regHouseNumber: string;
-    regEntry: string;
-    regApartment: string;
-    regZip: string;
-    housingType: "rented" | "other";
-    employmentStatus: string;
-    notWorkingReason: string;
-    assets: string[];
-    occupationText: string;
+  saveDraftAndBackAction, // ✅ וגם כאן
+}: Props) {
+  // Screens: 
+  // 0: Intro
+  // 1: Marital Status
+  // 2: Residence Address (+ Mailing Toggle)
+  // 3: Mailing Address (Only if toggle is true)
+  // 4: Employment
+  // 5: Assets
+  const [screen, setScreen] = useState(0);
+
+  // --- Logic State ---
+  const [maritalStatus, setMaritalStatus] = useState(defaults.maritalStatus || "");
+  const isMarried = maritalStatus === "married";
+
+  const [mailingDifferent, setMailingDifferent] = useState(defaults.mailingDifferent || false);
+  const [empStatus, setEmpStatus] = useState(defaults.employmentStatus || "");
+  const [assets, setAssets] = useState<string[]>(defaults.assets || []);
+
+  const toggleAsset = (val: string) => {
+    setAssets(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   };
-  saveDraftAction: (formData: FormData) => Promise<void>;
-  saveDraftAndBackAction: (formData: FormData) => Promise<void>;
-  saveAndNextAction: (formData: FormData) => Promise<void>;
-}) {
-  const nowYear = new Date().getFullYear();
-  const years = useMemo(() => Array.from({ length: 80 }, (_, i) => String(nowYear - i)), [nowYear]);
-  const months = useMemo(() => Array.from({ length: 12 }, (_, i) => pad2(i + 1)), []);
-  const days = useMemo(() => Array.from({ length: 31 }, (_, i) => pad2(i + 1)), []);
 
-  // Cities in Israel (starter list)
-  const cityOptions = useMemo(
-    () => [
-      { value: "", label: labels.selectCity },
-      { value: "Jerusalem", label: "Jerusalem" },
-      { value: "Tel Aviv", label: "Tel Aviv" },
-      { value: "Haifa", label: "Haifa" },
-      { value: "Beer Sheva", label: "Beer Sheva" },
-    ],
-    [labels]
-  );
+  // Cities
+  const [regCityText, setRegCityText] = useState(defaults.regCity || "");
+  const [regCityOpts, setRegCityOpts] = useState<CityOpt[]>([]);
+  const [mailCityText, setMailCityText] = useState(defaults.mailingAddress?.city || "");
+  const [mailCityOpts, setMailCityOpts] = useState<CityOpt[]>([]);
 
-  // Streets per city (starter list; expand later)
-  const streetsByCity = useMemo(
-    () => ({
-      Jerusalem: [
-        { value: "Jaffa", label: "Jaffa" },
-        { value: "King George", label: "King George" },
-        { value: "Ben Yehuda", label: "Ben Yehuda" },
-      ],
-      "Tel Aviv": [
-        { value: "Dizengoff", label: "Dizengoff" },
-        { value: "Ibn Gabirol", label: "Ibn Gabirol" },
-        { value: "Rothschild", label: "Rothschild" },
-      ],
-      Haifa: [
-        { value: "Herzl", label: "Herzl" },
-        { value: "Hahistadrut", label: "Hahistadrut" },
-        { value: "Ben Gurion", label: "Ben Gurion" },
-      ],
-      "Beer Sheva": [
-        { value: "Rager", label: "Rager" },
-        { value: "Hen", label: "Hen" },
-        { value: "HaAtzmaut", label: "HaAtzmaut" },
-      ],
-    }),
-    []
-  );
+  useEffect(() => {
+    if(regCityText.length < 2) return;
+    const t = setTimeout(async () => {
+      const res = await fetchCities(regCityText);
+      setRegCityOpts(res.map(c => ({...c, label: `${c.ar} ${c.he}`})));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [regCityText]);
 
-  const [city, setCity] = useState<string>(defaults.regCity || "");
-  const [street, setStreet] = useState<string>(defaults.regStreet || "");
-  const [employmentStatus, setEmploymentStatus] = useState<string>(defaults.employmentStatus || "");
+  useEffect(() => {
+    if(mailCityText.length < 2) return;
+    const t = setTimeout(async () => {
+      const res = await fetchCities(mailCityText);
+      setMailCityOpts(res.map(c => ({...c, label: `${c.ar} ${c.he}`})));
+    }, 400);
+    return () => clearTimeout(t);
+  }, [mailCityText]);
 
-  const availableStreets = useMemo(() => {
-    const list = (streetsByCity as any)[city] || [];
-    return [{ value: "", label: labels.selectStreet }, ...list];
-  }, [city, streetsByCity, labels]);
+  // --- Navigation Logic ---
+  const progress = useMemo(() => {
+    if (screen === 0) return 0;
+    return Math.round((screen / 5) * 100);
+  }, [screen]);
 
-  function onCityChange(next: string) {
-    setCity(next);
-    const list = ((streetsByCity as any)[next] || []).map((s: any) => s.value);
-    if (next && list.length > 0 && !list.includes(street)) setStreet("");
-    if (!next) setStreet("");
-  }
+  const goNext = () => {
+    if (screen === 2 && !mailingDifferent) {
+      // If on Address screen and mailing is same -> Skip Mailing screen (3) -> Go to 4
+      setScreen(4);
+    } else {
+      setScreen(s => Math.min(5, s + 1));
+    }
+  };
 
-  const showNotWorking = employmentStatus === "notWorking";
+  const goBack = () => {
+    if (screen === 4 && !mailingDifferent) {
+      // If on Employment and mailing was same -> Skip Mailing screen (3) -> Go to 2
+      setScreen(2);
+    } else {
+      setScreen(s => Math.max(0, s - 1));
+    }
+  };
 
   return (
-    <>
-      <h1 style={{ marginBottom: 4 }}>{labels.title}</h1>
-      <p style={{ marginTop: 0, opacity: 0.8 }}>{labels.subtitle}</p>
-
-      <form action={saveAndNextAction} style={{ display: "grid", gap: 12, maxWidth: 520 }}>
-        <h3 style={{ marginTop: 6 }}>{labels.sections.lifeCenter}</h3>
-
-        <label>
-          {labels.fields.maritalStatus}
-          <select
-            name="maritalStatus"
-            defaultValue={defaults.maritalStatus || ""}
-            style={{ width: "100%", marginTop: 6 }}
-          >
-            <option value="">{labels.select}</option>
-            <option value="single">{labels.marital.single}</option>
-            <option value="married">{labels.marital.married}</option>
-            <option value="divorced">{labels.marital.divorced}</option>
-            <option value="widowed">{labels.marital.widowed}</option>
-          </select>
-        </label>
-
-        {/* Wedding date (statusDate) */}
-        <fieldset style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
-          <legend style={{ padding: "0 6px" }}>{labels.fields.weddingDate}</legend>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-            <label style={{ fontSize: 12, opacity: 0.85 }}>
-              {labels.date.year}
-              <select
-                name="statusDate_y"
-                defaultValue={defaults.weddingDate.y}
-                style={{ width: "100%", marginTop: 6 }}
-              >
-                <option value="">{labels.select}</option>
-                {years.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </label>
-            <label style={{ fontSize: 12, opacity: 0.85 }}>
-              {labels.date.month}
-              <select
-                name="statusDate_m"
-                defaultValue={defaults.weddingDate.m}
-                style={{ width: "100%", marginTop: 6 }}
-              >
-                <option value="">{labels.select}</option>
-                {months.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </label>
-            <label style={{ fontSize: 12, opacity: 0.85 }}>
-              {labels.date.day}
-              <select
-                name="statusDate_d"
-                defaultValue={defaults.weddingDate.d}
-                style={{ width: "100%", marginTop: 6 }}
-              >
-                <option value="">{labels.select}</option>
-                {days.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </label>
+    <div className={styles.wrap}>
+      
+      {/* Intro Screen (0) */}
+      {screen === 0 && (
+        <div className={styles.introFull}>
+          <div className={styles.introContent}>
+            <div className={styles.introTop}>
+              <BiInline ar="المرحلة 3 من 7" he="שלב 3 מתוך 7" className={styles.introStep} />
+            </div>
+            <div className={styles.introMain}>
+              <BiInline ar="مركز الحياة" he="מרכז חיים" className={styles.introH1} />
+            </div>
+            <div className={styles.introText}>
+              <BiStack 
+                ar="مكان سكنك وحياتك. نسأل عن عنوان السكن، الشغل، والحالة العائلية." 
+                he="מקום המגורים והחיים שלך. נשאל על כתובת המגורים, העבודה, והמצב המשפחתי." 
+              />
+              <div className={styles.introMeta}>
+                <BiInline ar="الوقت المتوقع: 6 دقيقة" he="זמן משוער: 6 דקות" />
+              </div>
+            </div>
+            <button type="button" className="btnPrimary" style={{background: '#0b2a4a'}} onClick={goNext}>
+              <BiInline ar="ابدأ" he="התחל" />
+            </button>
           </div>
-        </fieldset>
+        </div>
+      )}
 
-        <h3 style={{ marginTop: 10 }}>{labels.sections.address}</h3>
+      {/* Form Container (Screens 1-5) */}
+      <form className={screen > 0 ? styles.form : styles.screenHide} action={saveAndNextAction}>
+        
+        {/* Header (Back, Title, Progress) */}
+        <button type="button" className={styles.backBtn} onClick={goBack}>➜</button>
 
-        <label>
-          {labels.fields.city}
-          <select
-            name="regCity"
-            value={city}
-            onChange={(e) => onCityChange(e.target.value)}
-            style={{ width: "100%", marginTop: 6 }}
-          >
-            {cityOptions.map((opt: any) => (
-              <option key={opt.value || "empty"} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          {labels.fields.street}
-          <select
-            name="regStreet"
-            value={street}
-            onChange={(e) => setStreet(e.target.value)}
-            style={{ width: "100%", marginTop: 6 }}
-            disabled={!city}
-          >
-            {availableStreets.map((opt: any) => (
-              <option key={opt.value || "empty"} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          <label>
-            {labels.fields.houseNumber}
-            <input
-              name="regHouseNumber"
-              inputMode="numeric"
-              pattern="\d*"
-              defaultValue={defaults.regHouseNumber || ""}
-              style={{ width: "100%", marginTop: 6 }}
-            />
-          </label>
-          <label>
-            {labels.fields.entry}
-            <input
-              name="regEntry"
-              defaultValue={defaults.regEntry || ""}
-              style={{ width: "100%", marginTop: 6 }}
-            />
-          </label>
-          <label>
-            {labels.fields.apartment}
-            <input
-              name="regApartment"
-              inputMode="numeric"
-              pattern="\d*"
-              defaultValue={defaults.regApartment || ""}
-              style={{ width: "100%", marginTop: 6 }}
-            />
-          </label>
+        <div className={styles.headerArea}>
+          <div className={styles.topMeta}>
+            <BiInline ar="المرحلة 3 من 7" he="שלב 3 מתוך 7" className={styles.stepMeta} />
+            <div className={styles.progressTrack}>
+              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+          <div className={styles.titleBlock}>
+            <BiInline ar="مركز الحياة" he="מרכז חיים" className={styles.h1} />
+          </div>
+          {saved && (
+            <div className={styles.savedNote}>
+              <BiInline ar="تم حفظ المسودة" he="הטיוטה נשמרה" />
+            </div>
+          )}
         </div>
 
-        <label>
-          {labels.fields.zip}
-          <input
-            name="regZip"
-            inputMode="numeric"
-            pattern="\d*"
-            defaultValue={defaults.regZip || ""}
-            style={{ width: "100%", marginTop: 6 }}
-          />
-        </label>
+        {/* --- Screen 1: Marital Status --- */}
+        <div className={screen === 1 ? styles.screenShow : styles.screenHide}>
+           <div className={styles.titleBlock}>
+             <BiInline ar="الحالة الاجتماعية" he="מצב משפחתי" className={styles.label} style={{fontSize: 18}} />
+           </div>
+           
+           <div className={styles.field}>
+              <label><BiInline ar="اختر" he="בחר" className={styles.label} /></label>
+              <div className={styles.selectWrapper}>
+                <select 
+                  name="maritalStatus" 
+                  value={maritalStatus} 
+                  onChange={e => setMaritalStatus(e.target.value)}
+                  className={styles.inputControl}
+                >
+                  <option value="" disabled hidden>اختر / בחר</option>
+                  <option value="single">أعزب/ة / רווק/ה</option>
+                  <option value="married">متزوج/ة / נשוי/ה</option>
+                  <option value="divorced">مطلق/ة / גרוש/ה</option>
+                  <option value="widowed">أرمل/ة / אלמן/ה</option>
+                </select>
+              </div>
+           </div>
 
-        <h3 style={{ marginTop: 10 }}>{labels.sections.housing}</h3>
+           {isMarried && (
+              <div className={styles.field}>
+                <label><BiInline ar="تاريخ ميلاد الزوج/ة" he="תאריך לידה (בן/בת הזוג)" className={styles.label} /></label>
+                <input type="date" name="statusDate" defaultValue={defaults.statusDate} className={styles.inputControl} />
+              </div>
+           )}
 
-        {/* housingType -> maps to mailingDifferent in server */}
-        <label>
-          {labels.fields.housingType}
-          <select
-            name="housingType"
-            defaultValue={defaults.housingType}
-            style={{ width: "100%", marginTop: 6 }}
-          >
-            <option value="rented">{labels.housing.rented}</option>
-            <option value="other">{labels.housing.other}</option>
-          </select>
-        </label>
-
-        <h3 style={{ marginTop: 10 }}>{labels.sections.employment}</h3>
-
-        <label>
-          {labels.fields.employmentStatus}
-          <select
-            name="employmentStatus"
-            value={employmentStatus}
-            onChange={(e) => setEmploymentStatus(e.target.value)}
-            style={{ width: "100%", marginTop: 6 }}
-          >
-            <option value="">{labels.select}</option>
-            <option value="selfEmployed">{labels.employment.selfEmployed}</option>
-            <option value="employee">{labels.employment.employee}</option>
-            <option value="notWorking">{labels.employment.notWorking}</option>
-          </select>
-        </label>
-
-        {/* Not working reason (currently empty list => keep as select with blank option) */}
-        <label>
-          {labels.fields.notWorkingReason}
-          <select
-            name="notWorkingReason"
-            defaultValue={defaults.notWorkingReason || ""}
-            style={{ width: "100%", marginTop: 6 }}
-            disabled={!showNotWorking}
-          >
-            <option value="">{labels.select}</option>
-            {/* כרגע ריק בכוונה */}
-          </select>
-        </label>
-
-        {/* optional free text - stored inside occupation json to not lose info */}
-        <input type="hidden" name="occupationText" value={defaults.occupationText || ""} />
-
-        <h3 style={{ marginTop: 10 }}>{labels.sections.assets}</h3>
-
-        <fieldset style={{ border: "1px solid #ddd", borderRadius: 10, padding: 12 }}>
-          <legend style={{ padding: "0 6px" }}>{labels.fields.assets}</legend>
-
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="checkbox"
-              name="assets"
-              value="apartment"
-              defaultChecked={defaults.assets.includes("apartment")}
-            />
-            {labels.assetsOptions.apartment}
-          </label>
-
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="checkbox"
-              name="assets"
-              value="business"
-              defaultChecked={defaults.assets.includes("business")}
-            />
-            {labels.assetsOptions.business}
-          </label>
-
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              type="checkbox"
-              name="assets"
-              value="other"
-              defaultChecked={defaults.assets.includes("other")}
-            />
-            {labels.assetsOptions.other}
-          </label>
-        </fieldset>
-
-        <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-          {/* ✅ חדש: שמירה + חזרה */}
-          <button formAction={saveDraftAndBackAction} type="submit">
-            {labels.buttons?.saveDraftBack ?? "Save Draft & Back"}
-          </button>
-
-          <button formAction={saveDraftAction} type="submit">
-            {labels.buttons.saveDraft}
-          </button>
-
-          <button type="submit">{labels.buttons.saveContinue}</button>
+           <div className={styles.actions}>
+              <button type="button" className="btnPrimary" onClick={goNext}>
+                <BiInline ar="التالي" he="המשך" />
+              </button>
+              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+              </button>
+           </div>
         </div>
+
+        {/* --- Screen 2: Residence Address --- */}
+        <div className={screen === 2 ? styles.screenShow : styles.screenHide}>
+            <div className={styles.titleBlock}>
+               <BiInline ar="عنوان السكن" he="כתובת מגורים" className={styles.label} style={{fontSize: 18}} />
+               <div className={styles.subtitle}><BiInline ar="المسجل في وزارة الداخلية" he="הרשומה במשרד הפנים" /></div>
+            </div>
+
+            <div className={styles.field}>
+              <label><BiInline ar="مدينة" he="עיר" className={styles.label} /></label>
+              <input 
+                list="regCities" 
+                name="regCity" 
+                value={regCityText}
+                onChange={e => setRegCityText(e.target.value)}
+                className={styles.inputControl}
+                placeholder="اختر / בחר"
+              />
+              <datalist id="regCities">
+                {regCityOpts.map(c => <option key={c.id} value={c.label} />)}
+              </datalist>
+            </div>
+
+            <div className={styles.field}>
+              <label><BiInline ar="شارع" he="רחוב" className={styles.label} /></label>
+              <input name="regStreet" defaultValue={defaults.regStreet} className={styles.inputControl} />
+            </div>
+
+            <div className={styles.field}>
+              <div className={styles.gridRow}>
+                 <div>
+                   <label><BiInline ar="منزل" he="בית" className={styles.label} /></label>
+                   <input name="regHouseNumber" defaultValue={defaults.regHouseNumber} className={styles.inputControl} />
+                 </div>
+                 <div>
+                   <label><BiInline ar="دخول" he="כניסה" className={styles.label} /></label>
+                   <input name="regEntry" defaultValue={defaults.regEntry} className={styles.inputControl} />
+                 </div>
+                 <div>
+                   <label><BiInline ar="شقة" he="דירה" className={styles.label} /></label>
+                   <input name="regApartment" defaultValue={defaults.regApartment} className={styles.inputControl} />
+                 </div>
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <label><BiInline ar="الرمز البريدي" he="מיקוד" className={styles.label} /></label>
+              <input name="regZip" defaultValue={defaults.regZip} className={styles.inputControl} inputMode="numeric" />
+            </div>
+
+            <div className={styles.field}>
+                <label><BiInline ar="شقة مستأجرة / بملكية" he="דירה שכורה / בבעלות" className={styles.label} /></label>
+                <div className={styles.selectWrapper}>
+                  <select name="housingType" defaultValue={defaults.housingType} className={styles.inputControl}>
+                     <option value="rented">شقة مستأجرة / דירה שכורה</option>
+                     <option value="owned">شقة بملكية / דירה בבעלות</option>
+                     <option value="other">آخر / אחר</option>
+                  </select>
+                </div>
+            </div>
+
+            {/* Mailing Address Question */}
+            <div className={styles.toggleSection}>
+                <label className={styles.checkboxLabel}>
+                  <BiInline ar="عنوان المراسلات مختلف؟" he="כתובת למכתבים שונה?" />
+                  <input 
+                    type="checkbox" 
+                    checked={mailingDifferent} 
+                    onChange={(e) => setMailingDifferent(e.target.checked)} 
+                  />
+                  <input type="hidden" name="mailingDifferent" value={mailingDifferent ? "true" : "false"} />
+                </label>
+            </div>
+
+            <div className={styles.actions}>
+              <button type="button" className="btnPrimary" onClick={goNext}>
+                <BiInline ar="التالي" he="המשך" />
+              </button>
+              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+              </button>
+           </div>
+        </div>
+
+        {/* --- Screen 3: Mailing Address (Optional) --- */}
+        <div className={screen === 3 ? styles.screenShow : styles.screenHide}>
+            <div className={styles.titleBlock}>
+               <BiInline ar="عنوان المراسلات" he="כתובת למכתבים" className={styles.label} style={{fontSize: 18}} />
+            </div>
+
+            <div className={styles.field}>
+              <label><BiInline ar="مدينة" he="עיר" className={styles.label} /></label>
+              <input 
+                list="mailCities" 
+                name="mailCity" 
+                value={mailCityText}
+                onChange={e => setMailCityText(e.target.value)}
+                className={styles.inputControl}
+              />
+              <datalist id="mailCities">
+                {mailCityOpts.map(c => <option key={c.id} value={c.label} />)}
+              </datalist>
+            </div>
+
+            <div className={styles.field}>
+              <label><BiInline ar="شارع" he="רחוב" className={styles.label} /></label>
+              <input name="mailStreet" defaultValue={defaults.mailingAddress?.street} className={styles.inputControl} />
+            </div>
+            
+            {/* Same grid for Mailing */}
+            <div className={styles.field}>
+              <div className={styles.gridRow}>
+                 <div>
+                   <label><BiInline ar="منزل" he="בית" className={styles.label} /></label>
+                   <input name="mailHouseNumber" className={styles.inputControl} />
+                 </div>
+                 <div>
+                   <label><BiInline ar="دخول" he="כניסה" className={styles.label} /></label>
+                   <input name="mailEntry" className={styles.inputControl} />
+                 </div>
+                 <div>
+                   <label><BiInline ar="شقة" he="דירה" className={styles.label} /></label>
+                   <input name="mailApartment" className={styles.inputControl} />
+                 </div>
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <label><BiInline ar="الرمز البريدي" he="מיקוד" className={styles.label} /></label>
+              <input name="mailZip" className={styles.inputControl} inputMode="numeric" />
+            </div>
+
+            <div className={styles.actions}>
+              <button type="button" className="btnPrimary" onClick={goNext}>
+                <BiInline ar="التالي" he="המשך" />
+              </button>
+              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+              </button>
+           </div>
+        </div>
+
+        {/* --- Screen 4: Employment --- */}
+        <div className={screen === 4 ? styles.screenShow : styles.screenHide}>
+             <div className={styles.titleBlock}>
+                 <BiInline ar="العمل" he="תעסוקה" className={styles.label} style={{fontSize: 18}} />
+                 <div className={styles.subtitle}><BiInline ar="مهنة في البلاد" he="עיסוק בארץ" /></div>
+             </div>
+
+             <div className={styles.field}>
+                  <label><BiInline ar="الوضع" he="סטטוס" className={styles.label} /></label>
+                  <div className={styles.selectWrapper}>
+                    <select 
+                      name="employmentStatus" 
+                      value={empStatus} 
+                      onChange={e => setEmpStatus(e.target.value)} 
+                      className={styles.inputControl}
+                    >
+                      <option value="" disabled hidden>اختر / בחר</option>
+                      <option value="selfEmployed">مستقل / עצמאי</option>
+                      <option value="employee">موظف / שכיר</option>
+                      <option value="notWorking">لا يعمل / לא עובד</option>
+                    </select>
+                  </div>
+             </div>
+
+             {/* Logic for Employee */}
+             {empStatus === 'employee' && (
+                 <>
+                   <div className={styles.field}>
+                     <label><BiInline ar="اسم صاحب العمل" he="שם המעסיק" className={styles.label} /></label>
+                     <input name="employerName" defaultValue={defaults.employerName} className={styles.inputControl} />
+                   </div>
+                   <div className={styles.field}>
+                     <label><BiInline ar="عنوان صاحب العمل" he="כתובת המעסיק" className={styles.label} /></label>
+                     <input name="workAddress" defaultValue={defaults.workAddress} className={styles.inputControl} />
+                   </div>
+                   <div className={styles.field}>
+                     <label><BiInline ar="تاريخ بدء العمل" he="תאריך תחילת העבודה" className={styles.label} /></label>
+                     <input type="date" name="workStartDate" defaultValue={defaults.workStartDate} className={styles.inputControl} />
+                   </div>
+                 </>
+             )}
+
+             {/* Logic for Self Employed */}
+             {empStatus === 'selfEmployed' && (
+                 <>
+                   <div className={styles.field}>
+                      <label><BiInline ar="اسم المصلحة" he="שם העסק" className={styles.label} /></label>
+                      <input name="businessName" defaultValue={defaults.employerName} className={styles.inputControl} />
+                   </div>
+                   <div className={styles.field}>
+                      <label><BiInline ar="عنوان المصلحة" he="כתובת העסק" className={styles.label} /></label>
+                      <input name="workAddress" defaultValue={defaults.workAddress} className={styles.inputControl} />
+                   </div>
+                   <div className={styles.field}>
+                      <label><BiInline ar="تاريخ الافتتاح" he="תאריך פתיחה" className={styles.label} /></label>
+                      <input type="date" name="workStartDate" defaultValue={defaults.workStartDate} className={styles.inputControl} />
+                   </div>
+                 </>
+             )}
+
+             <div className={styles.actions}>
+              <button type="button" className="btnPrimary" onClick={goNext}>
+                <BiInline ar="التالي" he="המשך" />
+              </button>
+              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+              </button>
+           </div>
+        </div>
+
+        {/* --- Screen 5: Assets --- */}
+        <div className={screen === 5 ? styles.screenShow : styles.screenHide}>
+            <div className={styles.titleBlock}>
+                 <BiInline ar="ممتلكات" he="רכוש" className={styles.label} style={{fontSize: 18}} />
+                 <div className={styles.subtitle}><BiInline ar="إذا كنت تملك أحد ما يلي" he="האם בבעלותך אחד מהבאים" /></div>
+            </div>
+
+            <div className={styles.field}>
+                 <div className={styles.assetsList}>
+                    {[
+                      { val: 'business', ar: 'عمل', he: 'עסק' },
+                      { val: 'apartment', ar: 'شقة', he: 'דירה' },
+                      { val: 'other', ar: 'ممتلكات أخرى', he: 'רכוש אחר' },
+                    ].map(item => (
+                      <label 
+                        key={item.val} 
+                        className={`${styles.assetItem} ${assets.includes(item.val) ? styles.checked : ''}`}
+                      >
+                         <BiInline ar={item.ar} he={item.he} className={styles.assetLabel} />
+                         <input 
+                           type="checkbox" 
+                           name="assets" 
+                           value={item.val} 
+                           checked={assets.includes(item.val)}
+                           onChange={() => toggleAsset(item.val)}
+                         />
+                      </label>
+                    ))}
+                 </div>
+            </div>
+
+            <div className={styles.actions}>
+                <button type="submit" className="btnPrimary">
+                  <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
+                </button>
+                <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+                  <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+                </button>
+                {/* כאן אפשר להוסיף כפתור שמור וחזור אם נדרש, ולקשר ל-saveDraftAndBackAction */}
+                <button type="submit" formAction={saveDraftAndBackAction} className="btnSecondary" style={{border: 'none', fontSize: '13px', color: '#666'}}>
+                  <BiInline ar="حفظ والعودة" he="שמור וחזור" />
+                </button>
+            </div>
+        </div>
+
       </form>
-    </>
+
+    </div>
   );
 }

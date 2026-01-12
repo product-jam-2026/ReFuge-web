@@ -1,0 +1,273 @@
+.wrap {
+  width: 100%;
+  position: relative;
+}
+
+/* ===== Intro (orange full screen) ===== */
+.introFull {
+  min-height: 100svh;
+  background: var(--c-orange);
+  display: flex;
+  align-items: flex-end;
+  padding: 26px 18px;
+}
+
+.introContent {
+  width: 100%;
+  color: #fff;
+  text-align: center;
+}
+
+.introTop {
+  margin-bottom: 12px;
+}
+
+.introStep .biAr,
+.introStep .biHe {
+  color: rgba(255,255,255,0.95);
+  font-family: var(--font-family-body);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.introMain {
+  margin-bottom: 12px;
+}
+
+.introH1 .biAr,
+.introH1 .biHe {
+  color: #fff;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.introText {
+  margin: 14px 0 18px;
+  font-size: 13px;
+  line-height: 1.55;
+  opacity: 0.98;
+}
+
+.introMeta {
+  margin-top: 12px;
+  opacity: 0.95;
+}
+
+/* ===== Header area (white screens) ===== */
+.headerArea {
+  padding: 18px 18px 8px;
+}
+
+.topMeta {
+  margin-bottom: 12px;
+}
+
+.stepMeta {
+  font-size: 12px;
+  color: var(--c-muted);
+  margin-bottom: 8px;
+}
+
+.progressTrack {
+  height: 6px;
+  width: 100%;
+  background: rgba(240, 122, 58, 0.35);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--c-orange);
+  border-radius: 999px;
+}
+
+/* back arrow */
+.backBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  background: #fff;
+  color: var(--c-blue-2);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* ===== Bilingual ===== */
+.biLine {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.biStack {
+  display: block;
+}
+
+.biAr,
+.biHe {
+  font-family: var(--font-family-heading);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: var(--c-blue-2);
+}
+
+.titleBlock {
+  text-align: center;
+  margin: 6px 0 14px;
+}
+
+.h1 .biAr,
+.h1 .biHe {
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.subtitle .biAr,
+.subtitle .biHe {
+  font-family: var(--font-family-body);
+  font-weight: 600;
+  color: rgba(11, 42, 74, 0.7);
+}
+
+/* saved note */
+.savedNote {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #1f6f3d;
+  background: #e9f7ef;
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+/* ===== Form screens ===== */
+.form {
+  padding-bottom: 18px;
+}
+
+.screenShow {
+  display: block;
+  padding: 0 18px 0;
+}
+
+.screenHide {
+  display: none;
+}
+
+.sectionHead {
+  margin: 10px 0 10px;
+  text-align: right;
+}
+
+.sectionTitle .biAr,
+.sectionTitle .biHe {
+  font-size: 14px;
+  font-weight: 900;
+  color: rgba(11, 42, 74, 0.7);
+}
+
+.field {
+  margin-bottom: 12px;
+}
+
+.label .biLine {
+  justify-content: flex-end;
+}
+
+.label .biAr,
+.label .biHe {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(11, 42, 74, 0.55);
+}
+
+/* gender pills */
+.genderRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pillRadio {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* שיהיה קומפקטי */
+  gap: 10px;
+  background: #fff;
+}
+
+.pillRadio span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+}
+
+.pillRadio input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--c-blue-2);
+}
+
+
+/* date field */
+.dateWrap {
+  position: relative;
+}
+
+.dateInput {
+  width: 100%;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  padding: 10px 14px;
+  background: #fff;
+  color: var(--c-text);
+}
+
+.datePlaceholder {
+  pointer-events: none;
+  position: absolute;
+  inset-inline-start: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(11, 42, 74, 0.35);
+  font-size: 14px;
+}
+
+/* bottom actions */
+.actions {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  padding-bottom: 6px;
+}
+
+.dateInput.isEmpty {
+  color: transparent; /* מסתיר את הטקסט של הדפדפן */
+  caret-color: transparent;
+}
+
+.dateInput.isEmpty::-webkit-datetime-edit {
+  color: transparent;
+}

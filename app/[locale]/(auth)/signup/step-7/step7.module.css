@@ -1,0 +1,249 @@
+/* step7.module.css */
+.wrap {
+  width: 100%;
+  position: relative;
+}
+
+/* Animations */
+.screenShow {
+  display: block;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* --- Intro (Orange) --- */
+.introFull {
+  min-height: 100svh;
+  background: var(--c-orange);
+  display: flex;
+  align-items: flex-end;
+  padding: 30px 24px;
+}
+
+.introContent {
+  width: 100%;
+  color: #fff;
+  text-align: center;
+}
+
+.introTop {
+  margin-bottom: 20px;
+}
+
+.introStep .biAr,
+.introStep .biHe {
+  color: rgba(255,255,255,0.9);
+  font-family: var(--font-family-body);
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.introMain {
+  margin-bottom: 16px;
+}
+
+.introH1 .biAr,
+.introH1 .biHe {
+  color: #fff;
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.introText {
+  margin: 20px 0 30px;
+  font-size: 15px;
+  line-height: 1.6;
+  opacity: 0.95;
+  color: #fff;
+}
+
+.introMeta {
+  margin-top: 16px;
+  font-weight: 600;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* --- Header --- */
+.headerArea {
+  padding: 24px 20px 10px;
+}
+
+.topMeta {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stepMeta {
+  font-size: 13px;
+  color: var(--c-muted);
+  font-weight: 600;
+}
+
+.progressTrack {
+  height: 6px;
+  width: 100%;
+  background: rgba(240, 122, 58, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--c-orange);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.backBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--c-border);
+  background: #fff;
+  color: var(--c-blue-2);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  z-index: 10;
+}
+
+/* --- Typography Helpers --- */
+.biLine {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.biStack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.biAr,
+.biHe {
+  font-family: var(--font-family-heading);
+}
+
+.titleBlock {
+  text-align: center;
+  margin: 10px 0 24px;
+}
+
+.h1 .biAr,
+.h1 .biHe {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--c-blue-2);
+}
+
+.savedNote {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+/* --- File Upload Styling --- */
+.form {
+  padding-bottom: 30px;
+}
+
+.field {
+  margin: 0 20px 24px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.label .biLine {
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.label .biAr,
+.label .biHe {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-blue-2);
+}
+
+/* The visual button for file upload */
+.fileInputLabel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 52px;
+  padding: 0 20px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--c-muted);
+}
+
+.fileInputLabel:hover {
+  border-color: var(--c-orange);
+  background: #fdfdfd;
+}
+
+.plusIcon {
+  font-size: 24px;
+  font-weight: 300;
+  color: var(--c-blue-2);
+  margin-left: 10px; /* רווח מהשם */
+}
+
+/* Hide real input */
+.hiddenInput {
+  display: none;
+}
+
+/* If file is selected */
+.fileSelected {
+  border-color: var(--c-blue-2);
+  color: var(--c-blue-2);
+  font-weight: 600;
+  background: #f0f9ff;
+}
+
+.fileName {
+  font-size: 14px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: ltr;
+  text-align: left;
+}
+
+.actions {
+  margin: 40px 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

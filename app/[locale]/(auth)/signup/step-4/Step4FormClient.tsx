@@ -1,22 +1,43 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, CSSProperties } from "react";
+import styles from "./step4.module.css";
+
+// --- Visual Helpers ---
+interface BiProps {
+  ar: string;
+  he: string;
+  className?: string;
+  style?: CSSProperties;
+}
+
+function BiInline({ ar, he, className, style }: BiProps) {
+  return (
+    <div className={`${styles.biLine} ${className || ""}`} style={style}>
+      <span className={styles.biAr}>{ar}</span>
+      <span className={styles.biHe}>{he}</span>
+    </div>
+  );
+}
+
+function BiStack({ ar, he, className, style }: BiProps) {
+  return (
+    <div className={`${styles.biStack} ${className || ""}`} style={style}>
+      <div className={styles.biAr}>{ar}</div>
+      <div className={styles.biHe}>{he}</div>
+    </div>
+  );
+}
 
 type HasYesNo = "yes" | "no" | "";
 
-export default function Step4FormClient({
-  labels,
-  defaults,
-  saveDraftAction,
-  saveDraftAndBackAction,
-  saveAndNextAction,
-}: {
-  labels: any;
+type Props = {
+  locale: string;
+  saved: boolean;
   defaults: {
     healthFund: string;
     bankName: string;
     branch: string;
-    branchNumber: string; // מסך בלבד
     accountNumber: string;
     hasFile: HasYesNo;
     fileNumber: string;
@@ -25,286 +46,304 @@ export default function Step4FormClient({
     allowanceFileNumber: string;
   };
   saveDraftAction: (formData: FormData) => Promise<void>;
-  saveDraftAndBackAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
-}) {
-  // Health funds (starter list)
-  const healthFunds = useMemo(
-    () => [
-      { value: "", label: labels.select },
-      { value: "Clalit", label: "Clalit" },
-      { value: "Maccabi", label: "Maccabi" },
-      { value: "Meuhedet", label: "Meuhedet" },
-      { value: "Leumit", label: "Leumit" },
-    ],
-    [labels]
-  );
+  saveDraftAndBackAction: (formData: FormData) => Promise<void>;
+};
 
-  // Banks + branches (starter list - extend later)
-  const banks = useMemo(
-    () => [
-      { value: "", label: labels.select },
-      { value: "Bank Hapoalim", label: "Bank Hapoalim" },
-      { value: "Bank Leumi", label: "Bank Leumi" },
-      { value: "Discount Bank", label: "Discount Bank" },
-      { value: "Mizrahi-Tefahot", label: "Mizrahi-Tefahot" },
-    ],
-    [labels]
-  );
+export default function Step4FormClient({
+  saved,
+  defaults,
+  saveDraftAction,
+  saveAndNextAction,
+  saveDraftAndBackAction,
+}: Props) {
+  // Screens: 0=Intro, 1=Health, 2=Bank, 3=National Insurance
+  const [screen, setScreen] = useState(0);
 
-  const branchesByBank = useMemo(
-    () => ({
-      "Bank Hapoalim": [
-        { value: "Jerusalem - 123", label: "Jerusalem (123)" },
-        { value: "Tel Aviv - 456", label: "Tel Aviv (456)" },
-      ],
-      "Bank Leumi": [
-        { value: "Jerusalem - 701", label: "Jerusalem (701)" },
-        { value: "Haifa - 311", label: "Haifa (311)" },
-      ],
-      "Discount Bank": [
-        { value: "Tel Aviv - 901", label: "Tel Aviv (901)" },
-        { value: "Beer Sheva - 144", label: "Beer Sheva (144)" },
-      ],
-      "Mizrahi-Tefahot": [
-        { value: "Jerusalem - 212", label: "Jerusalem (212)" },
-        { value: "Haifa - 818", label: "Haifa (818)" },
-      ],
-    }),
-    []
-  );
+  // --- Logic State ---
+  const [hasFile, setHasFile] = useState<HasYesNo>(defaults.hasFile || "");
+  const [getsAllowance, setGetsAllowance] = useState<HasYesNo>(defaults.getsAllowance || "");
 
-  const allowanceTypes = useMemo(
-    () => [
-      { value: "", label: labels.select },
-      { value: "Income support", label: "Income support" },
-      { value: "Disability", label: "Disability" },
-      { value: "Child allowance", label: "Child allowance" },
-      { value: "Other", label: "Other" },
-    ],
-    [labels]
-  );
-
+  // Bank Logic
   const [bankName, setBankName] = useState(defaults.bankName || "");
   const [branch, setBranch] = useState(defaults.branch || "");
-  const [hasFile, setHasFile] = useState<HasYesNo>(defaults.hasFile || "");
-  const [getsAllowance, setGetsAllowance] = useState<HasYesNo>(
-    defaults.getsAllowance || ""
-  );
 
-  const branchOptions = useMemo(() => {
-    const list = (branchesByBank as any)[bankName] || [];
-    return [{ value: "", label: labels.select }, ...list];
-  }, [bankName, branchesByBank, labels]);
+  // Lists (Hardcoded for UI demo, expand as needed)
+  const healthFunds = [
+    { val: "clalit", ar: "כללית", he: "כללית" },
+    { val: "maccabi", ar: "מכבי", he: "מכבי" },
+    { val: "meuhedet", ar: "מאוחדת", he: "מאוחדת" },
+    { val: "leumit", ar: "לאומית", he: "לאומית" },
+  ];
 
-  function onBankChange(next: string) {
-    setBankName(next);
-    const list = ((branchesByBank as any)[next] || []).map((b: any) => b.value);
-    if (next && list.length > 0 && !list.includes(branch)) setBranch("");
-    if (!next) setBranch("");
-  }
+  const banks = [
+    { val: "hapoalim", ar: "בנק הפועלים", he: "בנק הפועלים" },
+    { val: "leumi", ar: "בנק לאומי", he: "בנק לאומי" },
+    { val: "discount", ar: "בנק דיסקונט", he: "בנק דיסקונט" },
+    { val: "mizrahi", ar: "מזרחי טפחות", he: "מזרחי טפחות" },
+  ];
 
-  // נוחות: אם בוחרים branch כמו "Jerusalem - 123", נציג את ה"מספר סניף" אוטומטית
-  const derivedBranchNumber = useMemo(() => {
-    const m = String(branch || "").match(/(\d{2,6})\s*$/);
-    return m ? m[1] : "";
-  }, [branch]);
+  const branches = [
+    { val: "001", ar: "סניף ראשי (001)", he: "סניף ראשי (001)" },
+    { val: "123", ar: "סניף מרכז (123)", he: "סניף מרכז (123)" },
+  ];
 
-  const showNiFileNumber = hasFile === "yes";
-  const showAllowanceFields = getsAllowance === "yes";
+  const allowanceTypes = [
+    { val: "income_support", ar: "הבטחת הכנסה", he: "הבטחת הכנסה" },
+    { val: "disability", ar: "נכות", he: "נכות" },
+    { val: "child", ar: "קצבת ילדים", he: "קצבת ילדים" },
+  ];
+
+  // --- Navigation ---
+  const progress = useMemo(() => {
+    if (screen === 0) return 0;
+    return Math.round((screen / 3) * 100);
+  }, [screen]);
+
+  const goNext = () => setScreen((s) => Math.min(3, s + 1));
+  const goBack = () => setScreen((s) => Math.max(0, s - 1));
 
   return (
-    <>
-      <h1 style={{ marginBottom: 4 }}>{labels.title}</h1>
-      <p style={{ marginTop: 0, opacity: 0.8 }}>{labels.subtitle}</p>
-
-      {/* נשאיר action ברירת מחדל "שמור/י והמשך/י" */}
-      <form
-        action={saveAndNextAction}
-        style={{ display: "grid", gap: 12, maxWidth: 520 }}
-      >
-        <h3 style={{ marginTop: 6 }}>{labels.sections.health}</h3>
-        <label>
-          {labels.fields.healthFund}
-          <select
-            name="healthFund"
-            defaultValue={defaults.healthFund || ""}
-            style={{ width: "100%", marginTop: 6 }}
-          >
-            {healthFunds.map((opt) => (
-              <option key={opt.value || "empty"} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <h3 style={{ marginTop: 10 }}>{labels.sections.bank}</h3>
-
-        <label>
-          {labels.fields.bankName}
-          <select
-            name="bankName"
-            value={bankName}
-            onChange={(e) => onBankChange(e.target.value)}
-            style={{ width: "100%", marginTop: 6 }}
-          >
-            {banks.map((opt) => (
-              <option key={opt.value || "empty"} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          {labels.fields.branch}
-          <select
-            name="branch"
-            value={branch}
-            onChange={(e) => setBranch(e.target.value)}
-            disabled={!bankName}
-            style={{ width: "100%", marginTop: 6 }}
-          >
-            {branchOptions.map((opt: any) => (
-              <option key={opt.value || "empty"} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {/* "מספר סניף" — אין לך שדה נפרד בסכמה. כרגע:
-            1) מציגים derivedBranchNumber לקריאה בלבד
-            2) אם תרצי בעתיד שדה נפרד, נוסיף ל-DB ואז נכתוב ל-patch
-        */}
-        <label>
-          {labels.fields.branchNumber}
-          <input
-            value={derivedBranchNumber}
-            readOnly
-            style={{ width: "100%", marginTop: 6, opacity: 0.85 }}
-            placeholder="—"
-          />
-        </label>
-
-        <label>
-          {labels.fields.accountNumber}
-          <input
-            name="accountNumber"
-            inputMode="numeric"
-            pattern="\d*"
-            defaultValue={defaults.accountNumber || ""}
-            style={{ width: "100%", marginTop: 6 }}
-          />
-        </label>
-
-        <h3 style={{ marginTop: 10 }}>{labels.sections.ni}</h3>
-
-        <label>
-          {labels.fields.hasFile}
-          <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <input
-                type="radio"
-                name="hasFile"
-                value="yes"
-                defaultChecked={defaults.hasFile === "yes"}
-                onChange={() => setHasFile("yes")}
+    <div className={styles.wrap}>
+      
+      {/* Intro Screen (0) */}
+      {screen === 0 && (
+        <div className={styles.introFull}>
+          <div className={styles.introContent}>
+            <div className={styles.introTop}>
+              <BiInline ar="المرحلة 4 من 7" he="שלב 4 מתוך 7" className={styles.introStep} />
+            </div>
+            <div className={styles.introMain}>
+              <BiInline ar="جهات رسمية" he="מוסדות" className={styles.introH1} />
+            </div>
+            <div className={styles.introText}>
+              <BiStack 
+                ar="صندوق المرضى، البنك، والتأمين الوطني." 
+                he="קופת חולים, בנק וביטוח לאומי." 
               />
-              {labels.niOptions.yes}
-            </label>
-            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <input
-                type="radio"
-                name="hasFile"
-                value="no"
-                defaultChecked={defaults.hasFile === "no"}
-                onChange={() => setHasFile("no")}
-              />
-              {labels.niOptions.no}
-            </label>
+              <div className={styles.introMeta}>
+                <BiInline ar="الوقت المتوقع: 5 دقائق" he="זמן משוער: 5 דקות" />
+              </div>
+            </div>
+            <button type="button" className="btnPrimary" style={{background: '#0b2a4a'}} onClick={goNext}>
+              <BiInline ar="ابدأ" he="התחל" />
+            </button>
           </div>
-        </label>
-
-        <label>
-          {labels.fields.fileNumber}
-          <input
-            name="fileNumber"
-            inputMode="numeric"
-            pattern="\d*"
-            defaultValue={defaults.fileNumber || ""}
-            disabled={!showNiFileNumber}
-            style={{ width: "100%", marginTop: 6 }}
-          />
-        </label>
-
-        <label>
-          {labels.fields.getsAllowance}
-          <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <input
-                type="radio"
-                name="getsAllowance"
-                value="yes"
-                defaultChecked={defaults.getsAllowance === "yes"}
-                onChange={() => setGetsAllowance("yes")}
-              />
-              {labels.allowanceOptions.yes}
-            </label>
-            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <input
-                type="radio"
-                name="getsAllowance"
-                value="no"
-                defaultChecked={defaults.getsAllowance === "no"}
-                onChange={() => setGetsAllowance("no")}
-              />
-              {labels.allowanceOptions.no}
-            </label>
-          </div>
-        </label>
-
-        <label>
-          {labels.fields.allowanceType}
-          <select
-            name="allowanceType"
-            defaultValue={defaults.allowanceType || ""}
-            disabled={!showAllowanceFields}
-            style={{ width: "100%", marginTop: 6 }}
-          >
-            {allowanceTypes.map((opt) => (
-              <option key={opt.value || "empty"} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          {labels.fields.allowanceFileNumber}
-          <input
-            name="allowanceFileNumber"
-            inputMode="numeric"
-            pattern="\d*"
-            defaultValue={defaults.allowanceFileNumber || ""}
-            disabled={!showAllowanceFields}
-            style={{ width: "100%", marginTop: 6 }}
-          />
-        </label>
-
-        <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
-          <button formAction={saveDraftAction} type="submit">
-            {labels.buttons.saveDraft}
-          </button>
-
-          <button formAction={saveDraftAndBackAction} type="submit">
-            {labels.buttons.saveDraftBack}
-          </button>
-
-          <button type="submit">{labels.buttons.saveContinue}</button>
         </div>
+      )}
+
+      {/* Form Container */}
+      <form className={screen > 0 ? styles.form : styles.screenHide} action={saveAndNextAction}>
+        
+        {/* Header */}
+        <button type="button" className={styles.backBtn} onClick={goBack}>➜</button>
+
+        <div className={styles.headerArea}>
+          <div className={styles.topMeta}>
+            <BiInline ar="المرحلة 4 من 7" he="שלב 4 מתוך 7" className={styles.stepMeta} />
+            <div className={styles.progressTrack}>
+              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+          <div className={styles.titleBlock}>
+            <BiInline ar="جهات رسمية" he="מוסדות" className={styles.h1} />
+          </div>
+          {saved && (
+            <div className={styles.savedNote}>
+              <BiInline ar="تم حفظ المسودة" he="הטיוטה נשמרה" />
+            </div>
+          )}
+        </div>
+
+        {/* --- Screen 1: Health Fund --- */}
+        <div className={screen === 1 ? styles.screenShow : styles.screenHide}>
+           <div className={styles.titleBlock}>
+             <BiInline ar="صندوق المرضى" he="קופת חולים" className={styles.label} style={{fontSize: 18}} />
+           </div>
+           
+           <div className={styles.field}>
+              <label><BiInline ar="اختر" he="בחר" className={styles.label} /></label>
+              <div className={styles.selectWrapper}>
+                <select name="healthFund" defaultValue={defaults.healthFund} className={styles.inputControl}>
+                  <option value="" disabled hidden>اختر / בחר</option>
+                  {healthFunds.map(h => (
+                    <option key={h.val} value={h.val}>{h.ar} / {h.he}</option>
+                  ))}
+                </select>
+              </div>
+           </div>
+
+           <div className={styles.actions}>
+              <button type="button" className="btnPrimary" onClick={goNext}>
+                <BiInline ar="التالي" he="המשך" />
+              </button>
+              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+              </button>
+           </div>
+        </div>
+
+        {/* --- Screen 2: Bank Details --- */}
+        <div className={screen === 2 ? styles.screenShow : styles.screenHide}>
+            <div className={styles.titleBlock}>
+               <BiInline ar="تفاصيل حساب بنكي" he="פרטי חשבון בנק" className={styles.label} style={{fontSize: 18}} />
+            </div>
+
+            <div className={styles.field}>
+              <label><BiInline ar="بنك" he="בנק" className={styles.label} /></label>
+              <div className={styles.selectWrapper}>
+                <select 
+                  name="bankName" 
+                  value={bankName} 
+                  onChange={e => setBankName(e.target.value)}
+                  className={styles.inputControl}
+                >
+                  <option value="" disabled hidden>اختر / בחר</option>
+                  {banks.map(b => (
+                    <option key={b.val} value={b.val}>{b.ar} / {b.he}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <label><BiInline ar="اسم ورقم الفرع" he="שם ומספר סניף" className={styles.label} /></label>
+              <div className={styles.selectWrapper}>
+                <select 
+                  name="branch" 
+                  value={branch} 
+                  onChange={e => setBranch(e.target.value)}
+                  className={styles.inputControl}
+                  disabled={!bankName}
+                >
+                  <option value="" disabled hidden>اختر / בחר</option>
+                  {branches.map(b => (
+                    <option key={b.val} value={b.val}>{b.ar} / {b.he}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className={styles.field}>
+              <label><BiInline ar="رقم الحساب" he="מספר חשבון" className={styles.label} /></label>
+              <input 
+                name="accountNumber" 
+                defaultValue={defaults.accountNumber} 
+                className={styles.inputControl} 
+                inputMode="numeric" 
+              />
+            </div>
+
+            <div className={styles.actions}>
+              <button type="button" className="btnPrimary" onClick={goNext}>
+                <BiInline ar="التالي" he="המשך" />
+              </button>
+              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+              </button>
+           </div>
+        </div>
+
+        {/* --- Screen 3: National Insurance --- */}
+        <div className={screen === 3 ? styles.screenShow : styles.screenHide}>
+            <div className={styles.titleBlock}>
+               <BiInline ar="التأمين الوطني" he="ביטוח לאומי" className={styles.label} style={{fontSize: 18}} />
+            </div>
+
+            {/* Q1: File Exists? */}
+            <div className={styles.field}>
+              <label>
+                <BiInline ar="هل أنت بدفع أو دفعت قبل هيك تأمين وطني؟" he="האם את.ה משלמ.ת / שילמת בעבר ביטוח לאומי?" className={styles.label} />
+              </label>
+              <div className={styles.toggleRow}>
+                <button 
+                  type="button" 
+                  className={styles.toggleBtn} 
+                  data-active={hasFile === 'yes'}
+                  onClick={() => setHasFile('yes')}
+                >
+                  <BiInline ar="نعم" he="כן" />
+                </button>
+                <button 
+                  type="button" 
+                  className={styles.toggleBtn} 
+                  data-active={hasFile === 'no'}
+                  onClick={() => setHasFile('no')}
+                >
+                  <BiInline ar="لا" he="לא" />
+                </button>
+                <input type="hidden" name="hasFile" value={hasFile} />
+              </div>
+            </div>
+
+            {hasFile === 'yes' && (
+              <div className={styles.field} style={{animation: 'fadeIn 0.3s'}}>
+                <label><BiInline ar="رقم ملف التحصيل" he="מספר תיק גבייה" className={styles.label} /></label>
+                <input name="fileNumber" defaultValue={defaults.fileNumber} className={styles.inputControl} />
+              </div>
+            )}
+
+            {/* Q2: Allowance? */}
+            <div className={styles.field}>
+              <label>
+                <BiInline ar="هل استلمت أو عم تستلم معاش من التأمين الوطني؟" he="האם קיבלת או שהינך מקבל כעת קצבה מביטוח לאומי?" className={styles.label} />
+              </label>
+              <div className={styles.toggleRow}>
+                <button 
+                  type="button" 
+                  className={styles.toggleBtn} 
+                  data-active={getsAllowance === 'yes'}
+                  onClick={() => setGetsAllowance('yes')}
+                >
+                  <BiInline ar="نعم" he="כן" />
+                </button>
+                <button 
+                  type="button" 
+                  className={styles.toggleBtn} 
+                  data-active={getsAllowance === 'no'}
+                  onClick={() => setGetsAllowance('no')}
+                >
+                  <BiInline ar="لا" he="לא" />
+                </button>
+                <input type="hidden" name="getsAllowance" value={getsAllowance} />
+              </div>
+            </div>
+
+            {getsAllowance === 'yes' && (
+              <div style={{animation: 'fadeIn 0.3s'}}>
+                <div className={styles.field}>
+                  <label><BiInline ar="نوع المعاش" he="סוג הקצבה" className={styles.label} /></label>
+                  <div className={styles.selectWrapper}>
+                    <select name="allowanceType" defaultValue={defaults.allowanceType} className={styles.inputControl}>
+                      <option value="" disabled hidden>اختر / בחר</option>
+                      {allowanceTypes.map(t => (
+                        <option key={t.val} value={t.val}>{t.ar} / {t.he}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className={styles.field}>
+                  <label><BiInline ar="رقم الملف في التأمين الوطني" he="מספר תיק בביטוח לאומי" className={styles.label} /></label>
+                  <input name="allowanceFileNumber" defaultValue={defaults.allowanceFileNumber} className={styles.inputControl} />
+                </div>
+              </div>
+            )}
+
+            <div className={styles.actions}>
+              <button type="submit" className="btnPrimary">
+                <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
+              </button>
+              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+              </button>
+              <button type="submit" formAction={saveDraftAndBackAction} className="btnSecondary" style={{border: 'none', color: 'var(--c-muted)', fontSize: 13}}>
+                  <BiInline ar="حفظ والعودة" he="שמור וחזור" />
+              </button>
+           </div>
+        </div>
+
       </form>
-    </>
+
+    </div>
   );
 }
