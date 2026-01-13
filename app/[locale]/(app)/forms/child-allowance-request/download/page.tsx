@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 
 function bytesToBlobUrl(pdfBytes: Uint8Array) {
   const safeBytes = new Uint8Array(pdfBytes); // copies
@@ -76,6 +77,7 @@ function base64ToUint8(base64: string) {
 export default function DownloadChildAllowancePdfPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const locale = useLocale();
 
   const key = useMemo(() => searchParams.get("key") || "", [searchParams]);
   const [fileName, setFileName] = useState<string>("");
@@ -116,12 +118,12 @@ export default function DownloadChildAllowancePdfPage() {
         </div>
       ) : (
         <>
-    <div style={{ marginBottom: 12, opacity: 0.8 }}>
-      שם קובץ: <span style={{ direction: "ltr" }}>{fileName}</span>
-    </div>
+          <div style={{ marginBottom: 12, opacity: 0.8 }}>
+            שם קובץ: <span style={{ direction: "ltr" }}>{fileName}</span>
+          </div>
 
-    {/* Optional email input */}
-    <div style={{ display: "grid", gap: 6, marginBottom: 12 }}>
+          {/* Optional email input */}
+          {/* <div style={{ display: "grid", gap: 6, marginBottom: 12 }}>
       <label style={{ display: "grid", gap: 6 }}>
         <span>שליחה באימייל (כתובת יעד)</span>
         <input
@@ -139,83 +141,85 @@ export default function DownloadChildAllowancePdfPage() {
           inputMode="email"
         />
       </label>
-    </div>
+    </div> */}
 
-    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-      {/* Download */}
-      <button
-        onClick={() => {
-          const bytes = base64ToUint8(bytesBase64);
-          downloadPdf(fileName, bytes);
-          sessionStorage.removeItem(key);
-        }}
-        style={{
-          padding: "12px 14px",
-          borderRadius: 12,
-          border: "none",
-          fontSize: 16,
-          cursor: "pointer",
-        }}
-      >
-        Download PDF
-      </button>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {/* Download */}
+            <button
+              onClick={() => {
+                const bytes = base64ToUint8(bytesBase64);
+                downloadPdf(fileName, bytes);
+                sessionStorage.removeItem(key);
+              }}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "none",
+                fontSize: 16,
+                cursor: "pointer",
+              }}
+            >
+              Download PDF
+            </button>
 
-      {/* Print */}
-      <button
-        onClick={() => {
-          const bytes = base64ToUint8(bytesBase64);
-          printPdf(bytes);
-        }}
-        style={{
-          padding: "12px 14px",
-          borderRadius: 12,
-          border: "1px solid #ccc",
-          background: "transparent",
-          fontSize: 16,
-          cursor: "pointer",
-        }}
-      >
-        Print
-      </button>
+            {/* Print */}
+            <button
+              onClick={() => {
+                const bytes = base64ToUint8(bytesBase64);
+                printPdf(bytes);
+              }}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #ccc",
+                background: "transparent",
+                fontSize: 16,
+                cursor: "pointer",
+              }}
+            >
+              Print
+            </button>
 
-      {/* Email (mailto, no attachment) */}
-      <button
-        onClick={() => {
-          const subject = `PDF: ${fileName}`;
-          const body =
-            "מצורף הקובץ PDF.\n\n" +
-            "שימו לב: לא ניתן לצרף קובץ ל-mailto אוטומטית מהדפדפן.\n" +
-            "אפשר להוריד את ה-PDF ולצרף ידנית למייל.";
-          openMailto(emailTo || "", subject, body);
-        }}
-        style={{
-          padding: "12px 14px",
-          borderRadius: 12,
-          border: "1px solid #ccc",
-          background: "transparent",
-          fontSize: 16,
-          cursor: "pointer",
-        }}
-      >
-        Send by Email
-      </button>
+            {/* Email (mailto, no attachment) */}
+            <button
+              onClick={() => {
+                const subject = `PDF: ${fileName}`;
+                const body =
+                  "מצורף הקובץ PDF.\n\n" +
+                  "שימו לב: לא ניתן לצרף קובץ ל-mailto אוטומטית מהדפדפן.\n" +
+                  "אפשר להוריד את ה-PDF ולצרף ידנית למייל.";
+                openMailto(emailTo || "", subject, body);
+              }}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #ccc",
+                background: "transparent",
+                fontSize: 16,
+                cursor: "pointer",
+              }}
+            >
+              Send by Email
+            </button>
 
-      {/* Back */}
-      <button
-        onClick={() => router.back()}
-        style={{
-          padding: "12px 14px",
-          borderRadius: 12,
-          border: "1px solid #ccc",
-          background: "transparent",
-          fontSize: 16,
-          cursor: "pointer",
-        }}
-      >
-        חזרה
-      </button>
-    </div>
-  </>
+            {/* Back */}
+
+            <button
+              type="button"
+              onClick={() => router.push(`/${locale}/home`)}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #ccc",
+                background: "transparent",
+                fontSize: 16,
+                cursor: "pointer",
+              }}
+            >
+              חזרה לדף הבית
+            </button>
+          </div>
+        </>
       )}
     </main>
   );
