@@ -2,7 +2,6 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { useState } from 'react';
-import LangSwitcher from '@/lib/components/LangSwitcher';
 import { useTextToSpeech } from '@/lib/hooks/useTextToSpeech';
 
 export default function RightsPage() {
@@ -39,8 +38,7 @@ export default function RightsPage() {
       
       {/* כותרת ושפות */}
       <header className="flex justify-between items-center mb-6">
-        <LangSwitcher />
-        <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
+      <h1 className="text-xl font-bold text-gray-900">{t('title')}</h1>
       </header>
 
       {/* כפתור סינון */}

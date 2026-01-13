@@ -5,6 +5,7 @@
 /* 1) Tokens */
 :root{
   --font-family-app: var(--font-simpler), system-ui, sans-serif;
+  --font-family-heading: var(--font-simpler), system-ui, sans-serif;
 }
 
 html, body, button, input, select, textarea{
@@ -36,6 +37,7 @@ html, body, button, input, select, textarea{
 
   /* Typography (these variables come from next/font/local in layout.tsx) */
   --font-family-app: var(--font-simpler), system-ui, sans-serif;
+  --font-family-heading: var(--font-simpler), system-ui, sans-serif;
   /* Mobile shell */
   --app-max-width: 430px;
 }
@@ -59,6 +61,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 
@@ -91,21 +94,19 @@ a {
   max-width: var(--app-max-width);
   min-height: 100dvh;
   background: var(--c-surface);
-  border: 1px solid var(--c-border);
+  border: 0;                 /* ✅ אין מסגרת */
   border-radius: var(--r-lg);
   overflow: hidden;
-
-  /* Safe areas (notch / home indicator) */
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
-
-  /* Mobile-like feel on desktop */
   box-shadow: 0 10px 30px rgba(0,0,0,0.06);
 }
+
 
 /* content area inside frame */
 .page {
   padding: 20px 18px;
+  overflow-x: hidden;
 }
 
 /* Make media behave nicely */
@@ -208,6 +209,25 @@ button:focus {
   .page { padding: 16px 14px; }
 }
 
+/* Remove the desktop "frame" on smaller devices */
+@media (max-width: 768px) {
+  body {
+    background: var(--c-surface);
+  }
+
+  .appShell {
+    padding: 0;
+  }
+
+  .appFrame {
+    max-width: 100%;
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    box-shadow: none;
+  }
+}
+
 /* 10) Respect RTL/LTR without relying on Tailwind */
 [dir="rtl"] {
   direction: rtl;
@@ -224,4 +244,178 @@ button:focus {
 .btnSecondary .biAr,
 .btnSecondary .biHe {
   color: var(--c-orange) !important;
+}
+
+/* =========================
+   Floating language button
+   ========================= */
+.langFab {
+  position: fixed;
+  top: 85px;
+  inset-inline-end: 18px; /* end = ימין ב-LTR, שמאל ב-RTL */
+  z-index: 9999;
+
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+
+  background: var(--c-surface);
+  border: 1px solid rgba(11, 42, 74, 0.35);
+  color: var(--c-blue-2);
+
+  font-weight: 700;
+  font-size: 14px;
+
+  /* box-shadow: 0 10px 20px rgba(0,0,0,0.06); */
+  cursor: pointer;
+}
+
+.langFab:active {
+  transform: translateY(1px);
+}
+
+/* =========================
+   Dashboard styles
+   ========================= */
+.dashboardHero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  align-items: start;
+  margin-top: 60px; /* כדי לא להתנגש בכפתור השפה */
+}
+
+.dashboardTitle {
+  font-family: var(--font-family-heading);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 42px;
+  color: #000;
+  text-align: right;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.dashboardSubtitle {
+  margin-top: 12px;
+  font-size: 16px;
+  line-height: 21px;
+  letter-spacing: -0.32px;
+  color: #000;
+  opacity: 0.8;
+  text-align: right;
+  white-space: pre-line;
+  max-width: 353px;
+}
+
+.dashboardIllustration {
+  justify-self: end;
+  margin-top: 6px;
+  width: clamp(180px, 45vw, 280px);
+}
+
+.dashboardIllustration img {
+  width: 65%;
+  height: auto;
+}
+
+[dir="rtl"] .dashboardIllustration {
+  justify-self: start;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 170px);
+  gap: 18px 13px;
+  margin-top: 26px;
+  justify-content: space-between;
+  max-width: 353px;
+  margin-inline: auto;
+}
+.cardWide {
+  grid-column: 1 / -1; /* תופס את כל הרוחב */
+  width: 100%;
+}
+
+.cardWide.cardBtn {
+  width: 100%;
+  height: auto;
+  min-height: 108px;
+}
+
+.cardBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  width: 170px;
+  height: 108px;
+  min-height: 108px;
+  border-radius: 26px;
+  padding: 33px 20px;
+  border: none;
+  padding-inline: 18px; /* במקום 20px למשל */
+  text-decoration: none;
+  cursor: pointer;
+  text-align: right;
+  gap: 0.5px;
+}
+
+.cardBtnTitle {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 23px;
+  margin: 0;
+  color: #011429;
+  text-align: right;
+}
+
+.cardBtnDesc {
+  margin-top: 0;
+  font-size: 16px;
+  line-height: 21px;
+  letter-spacing: -0.32px;
+  opacity: 1;
+  color: #011429;
+  text-align: right;
+}
+.cardBtnTitle,
+.cardBtnDesc {
+  text-align: right;
+  width: 100%;
+}
+
+
+/* צבעים לכרטיסים */
+.cardBlueLight { background: #c0deff; color: var(--c-text); }
+.cardOrange { background: var(--c-orange); color: #0b1b2b; }
+.cardBlue { background: #8fb2ff; color: #0b1b2b; } /* כמו בדיזיין שלך (אפשר לשנות לטוקן אם תרצי) */
+.cardGreen { background: var(--c-mint); color: #0b1b2b; }
+
+/* כפתור "בקרוב" */
+.cardDisabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 360px) {
+  .dashboardTitle { font-size: 38px; }
+  .cardsGrid { grid-template-columns: 1fr; }
+  .dashboardIllustration { width: min(200px, 68vw); }
+}
+
+/* Allow horizontal scroll only on very narrow screens */
+@media (max-width: 340px) {
+  .cardsGrid {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .cardBtn {
+    min-width: 220px;
+    scroll-snap-align: start;
+  }
 }

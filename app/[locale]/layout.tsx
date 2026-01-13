@@ -4,8 +4,8 @@ import { getMessages } from "next-intl/server";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
+import LangSwitcher from "@/lib/components/LangSwitcher"; // ✅ הוספה
 
-// ✅ Font family: SimplerPro (same for HE + AR)
 const simplerPro = localFont({
   src: [
     { path: "../../public/fonts/SimplerPro-Regular.otf", weight: "400", style: "normal" },
@@ -32,15 +32,15 @@ export default async function RootLayout({
   const dir = locale === "en" ? "ltr" : "rtl";
 
   return (
-    <html lang={locale} dir={dir}>
+    <html lang={locale} dir={dir} className={simplerPro.variable}>
       <head>
         <link rel="icon" href="/icons/favicon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
 
-      {/* ✅ apply font variable on body */}
-      <body className={`${simplerPro.variable} antialiased`}>
+      <body className={`${simplerPro.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
+          <LangSwitcher /> {/* ✅ תמיד צף */}
           {children}
         </NextIntlClientProvider>
 
