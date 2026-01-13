@@ -1,21 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
+import { cookies } from 'next/headers';
 
+// ✅ אצלך supabase יושב בשורש הפרויקט (לא בתוך lib)
+// אם אצלך זה באמת בתוך lib — תשני בהתאם, אבל לפי המבנה ששלחת זה בשורש.
 import { createClient } from '../../../../lib/supabase/server';
-
-// שעה לפי אזור זמן ישראל (כדי שברכה תתאים גם אם השרת לא באותה שעה)
-function getHourInTimeZone(timeZone = 'Asia/Jerusalem') {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    hour12: false,
-    timeZone,
-  }).formatToParts(new Date());
-
-  const hourStr = parts.find((p) => p.type === 'hour')?.value ?? '12';
-  return Number(hourStr);
-}
 
 function getGreetingKey(hour: number) {
   if (hour >= 5 && hour <= 11) return 'morning';
@@ -24,22 +14,18 @@ function getGreetingKey(hour: number) {
   return 'night';
 }
 
-export default async function HomePage({
-  params,
-}: {
-  params: { locale: string };
-}) {
-  const { locale } = params;
-  const t = await getTranslations('HomePage');
+export default async function DashboardPage() {
+  const t = await getTranslations('Dashboard');
 
   const supabase = createClient(cookies());
 
-  // מצב פיתוח: גם בלי התחברות
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // מצב פיתוח: גם בלי התחברות
   let firstName = t('fallbackName');
+
   let dbError: string | null = null;
 
   if (user) {
@@ -57,13 +43,9 @@ export default async function HomePage({
       firstName;
   }
 
-  const hour = getHourInTimeZone('Asia/Jerusalem');
-  const greeting = t(`greetings.${getGreetingKey(hour)}`);
-
-  // לינקים עם locale
-  const hrefProfile = `/${locale}/profile`;
-  const hrefForms = `/${locale}/forms`;
-  const hrefRights = `/${locale}/rights`;
+  const hour = new Date().getHours();
+  const greetingKey = getGreetingKey(hour);
+  const greeting = t(`greetings.${greetingKey}`);
 
   return (
     <div className="appShell">
@@ -81,41 +63,34 @@ export default async function HomePage({
               <Image
                 src="/illustrations/family.svg"
                 alt=""
-                width={240}
-                height={240}
+                width={220}
+                height={220}
                 priority
               />
             </div>
           </section>
 
           <section className="cardsGrid">
-            {/* שורה 1 - ימין: אזור אישי */}
-            <Link href={hrefProfile} className="cardBtn cardOrange">
+            {/* קישורים יחסיים כדי לשמור על /he או /ar */}
+            <Link href="profile" className="cardBtn cardBlueLight">
               <div className="cardBtnTitle">{t('cards.profile.title')}</div>
               <div className="cardBtnDesc">{t('cards.profile.desc')}</div>
             </Link>
 
-            {/* שורה 1 - שמאל: הטפסים שלי (בקרוב) */}
-            <button
-              type="button"
-              className="cardBtn cardBlueLight cardDisabled"
-              disabled
-            >
-              <div className="cardBtnTitle">{t('cards.myForms.title')}</div>
-              <div className="cardBtnDesc">{t('cards.myForms.desc')}</div>
-            </button>
-
-            {/* שורה 2 - רחב: טפסים למילוי */}
-            <Link href={hrefForms} className="cardBtn cardBlue cardWide">
+            <Link href="forms" className="cardBtn cardOrange">
               <div className="cardBtnTitle">{t('cards.forms.title')}</div>
               <div className="cardBtnDesc">{t('cards.forms.desc')}</div>
             </Link>
 
-            {/* שורה 3 - רחב: זכויות */}
-            <Link href={hrefRights} className="cardBtn cardGreen cardWide">
+            <Link href="rights" className="cardBtn cardBlue">
               <div className="cardBtnTitle">{t('cards.rights.title')}</div>
               <div className="cardBtnDesc">{t('cards.rights.desc')}</div>
             </Link>
+
+            <button type="button" className="cardBtn cardGreen cardDisabled" disabled>
+              <div className="cardBtnTitle">{t('cards.myForms.title')}</div>
+              <div className="cardBtnDesc">{t('cards.myForms.desc')}</div>
+            </button>
           </section>
 
           {process.env.NODE_ENV !== 'production' && dbError && (
