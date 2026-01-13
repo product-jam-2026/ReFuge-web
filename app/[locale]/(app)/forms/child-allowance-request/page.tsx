@@ -5,6 +5,7 @@ import demo from "@/public/demo/intake.demo.json";
 import { fieldMap } from "./fieldMap";
 import { intakeToPdfFields } from "./intakeToPdfFields";
 import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
+import { useRouter } from "next/navigation";
 
 type IntakeRecord = typeof demo;
 
@@ -47,26 +48,27 @@ function downloadJson(filename: string, data: unknown) {
   URL.revokeObjectURL(url);
 }
 
-function downloadPdf(filename: string, pdfBytes: Uint8Array) {
-  const blob = new Blob([pdfBytes], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
+// function downloadPdf(filename: string, pdfBytes: Uint8Array) {
+//   const blob = new Blob([pdfBytes], { type: "application/pdf" });
+//   const url = URL.createObjectURL(blob);
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+//   const a = document.createElement("a");
+//   a.href = url;
+//   a.download = filename;
+//   document.body.appendChild(a);
+//   a.click();
+//   a.remove();
 
-  URL.revokeObjectURL(url);
-}
+//   URL.revokeObjectURL(url);
+// }
 
 function safePart(s: string) {
   return (
     (s ?? "")
       .toString()
       .trim()
-      .replace(/[^\p{L}\p{N}_-]+/gu, "_")
+      // .replace(/[^\p{L}\p{N}_-]+/gu, "_")
+      .replace(/[^a-zA-Z0-9_-]+/g, "_")
       .slice(0, 40) || "unknown"
   );
 }
@@ -89,6 +91,7 @@ function emptyChildExtras(): ExtrasState["children"][number] {
 export default function ChildAllowanceRequestPage() {
   const [draft, setDraft] = useState<IntakeRecord | null>(null);
   const [extras, setExtras] = useState<ExtrasState | null>(null);
+  const router = useRouter();
 
   // Hydrate ON PAGE LOAD from demo JSON
   useEffect(() => {
@@ -202,6 +205,18 @@ export default function ChildAllowanceRequestPage() {
     return cleaned;
   }, [draft]);
 
+  function uint8ToBase64(u8: Uint8Array) {
+    // chunked to avoid call stack / memory issues
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < u8.length; i += chunkSize) {
+      binary += String.fromCharCode(
+        ...Array.from(u8.subarray(i, i + chunkSize))
+      );
+    }
+    return btoa(binary);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!payload || !extras) return;
@@ -218,8 +233,10 @@ export default function ChildAllowanceRequestPage() {
       "father.emailPostfix": extras.father.emailPostfix ?? "",
 
       "allowanceRequester.phoneHome": extras.allowanceRequester.phoneHome ?? "",
-      "allowanceRequester.emailPrefix": extras.allowanceRequester.emailPrefix ?? "",
-      "allowanceRequester.emailPostfix": extras.allowanceRequester.emailPostfix ?? "",
+      "allowanceRequester.emailPrefix":
+        extras.allowanceRequester.emailPrefix ?? "",
+      "allowanceRequester.emailPostfix":
+        extras.allowanceRequester.emailPostfix ?? "",
 
       "bankAccount.owner1": extras.bankAccount.owner1 ?? "",
       "bankAccount.owner2": extras.bankAccount.owner2 ?? "",
@@ -264,7 +281,21 @@ export default function ChildAllowanceRequestPage() {
       s1.israeliId || s1.passportNumber || s1.lastName || "unknown"
     )}_${new Date().toISOString().slice(0, 10)}.pdf`;
 
-    downloadPdf(fileName, outBytes);
+    // downloadPdf(fileName, outBytes);
+
+    // ✅ Store + redirect (instead of downloading here)
+    const key = `pdf_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    sessionStorage.setItem(
+      key,
+      JSON.stringify({
+        fileName,
+        bytesBase64: uint8ToBase64(outBytes),
+      })
+    );
+
+    router.push(
+      `/forms/child-allowance-request/download?key=${encodeURIComponent(key)}`
+    );
   }
 
   if (!draft || !payload || !extras) {
@@ -342,7 +373,9 @@ export default function ChildAllowanceRequestPage() {
           />
         </Field>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
+        >
           <Field label="מספר בית">
             <input
               value={draft.intake.step3.registeredAddress.houseNumber}
@@ -416,7 +449,9 @@ export default function ChildAllowanceRequestPage() {
             value={extras.father.phoneHome}
             onChange={(e) =>
               setExtras((p) =>
-                p ? { ...p, father: { ...p.father, phoneHome: e.target.value } } : p
+                p
+                  ? { ...p, father: { ...p.father, phoneHome: e.target.value } }
+                  : p
               )
             }
             style={inputStyle}
@@ -424,7 +459,9 @@ export default function ChildAllowanceRequestPage() {
           />
         </Field>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
+        >
           <Field label="אימייל (לפני @) (PDF בלבד)">
             <input
               value={extras.father.emailPrefix}
@@ -462,7 +499,9 @@ export default function ChildAllowanceRequestPage() {
           </Field>
         </div>
 
-        <SectionTitle>פרטי מבקש הקצבה (DB: step5 + step3 mailing/registered)</SectionTitle>
+        <SectionTitle>
+          פרטי מבקש הקצבה (DB: step5 + step3 mailing/registered)
+        </SectionTitle>
 
         <Field label="שם פרטי (DB: step5.person.firstName)">
           <input
@@ -487,7 +526,9 @@ export default function ChildAllowanceRequestPage() {
         <Field label="מספר זהות (DB: step5.person.israeliId)">
           <input
             value={draft.intake.step5.person.israeliId}
-            onChange={(e) => update("intake.step5.person.israeliId", e.target.value)}
+            onChange={(e) =>
+              update("intake.step5.person.israeliId", e.target.value)
+            }
             style={inputStyle}
           />
         </Field>
@@ -522,7 +563,9 @@ export default function ChildAllowanceRequestPage() {
           />
         </Field>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
+        >
           <Field label="אימייל (לפני @) (PDF בלבד)">
             <input
               value={extras.allowanceRequester.emailPrefix}
@@ -605,12 +648,16 @@ export default function ChildAllowanceRequestPage() {
         <Field label="שם הבנק (DB: step4.bank.bankName)">
           <input
             value={draft.intake.step4.bank.bankName}
-            onChange={(e) => update("intake.step4.bank.bankName", e.target.value)}
+            onChange={(e) =>
+              update("intake.step4.bank.bankName", e.target.value)
+            }
             style={inputStyle}
           />
         </Field>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
+        >
           <Field label="שם סניף (PDF בלבד)">
             <input
               value={extras.bankAccount.branchName}
@@ -664,7 +711,9 @@ export default function ChildAllowanceRequestPage() {
           />
         </Field>
 
-        <SectionTitle>פרטי הילדים (DB: step6.children) — ה-PDF תומך עד 3</SectionTitle>
+        <SectionTitle>
+          פרטי הילדים (DB: step6.children) — ה-PDF תומך עד 3
+        </SectionTitle>
 
         {kids.map((child, i) => (
           <div
@@ -730,7 +779,8 @@ export default function ChildAllowanceRequestPage() {
                   setExtras((p) => {
                     if (!p) return p;
                     const next = structuredClone(p);
-                    if (!next.children[i]) next.children[i] = emptyChildExtras();
+                    if (!next.children[i])
+                      next.children[i] = emptyChildExtras();
                     next.children[i]!.firstEntryDate = e.target.value;
                     return next;
                   })
@@ -747,7 +797,8 @@ export default function ChildAllowanceRequestPage() {
                   setExtras((p) => {
                     if (!p) return p;
                     const next = structuredClone(p);
-                    if (!next.children[i]) next.children[i] = emptyChildExtras();
+                    if (!next.children[i])
+                      next.children[i] = emptyChildExtras();
                     next.children[i]!.fileJoinDate = e.target.value;
                     return next;
                   })
@@ -758,13 +809,18 @@ export default function ChildAllowanceRequestPage() {
 
             {i >= 2 ? (
               <div style={{ fontSize: 12, opacity: 0.75 }}>
-                שים לב: ה-PDF תומך עד 3 ילדים. ילדים נוספים יוצגו כאן ב-UI, אבל לא ייכנסו ל-PDF.
+                שים לב: ה-PDF תומך עד 3 ילדים. ילדים נוספים יוצגו כאן ב-UI, אבל
+                לא ייכנסו ל-PDF.
               </div>
             ) : null}
           </div>
         ))}
 
-        <button type="button" onClick={addChildRow} style={secondaryButtonStyle}>
+        <button
+          type="button"
+          onClick={addChildRow}
+          style={secondaryButtonStyle}
+        >
           + הוסף ילד/ה נוסף/ת
         </button>
 
