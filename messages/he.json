@@ -390,5 +390,29 @@
       "finish": "סיום הרשמה",
       "saveDraftBack": "שמור וחזור"
     }
+  }, 
+  "ProfilePage": {
+    "title": "אזור אישי",
+    "notLoggedIn": "על מנת לצפות בפרטים האישיים יש להתחבר למערכת",
+    "empty": "לא הוזן",
+
+    "buttons": {
+      "language": "עברית",
+      "back": "חזרה"
+    },
+
+    "fields": {
+      "fullName": "שם מלא",
+      "phone": "טלפון",
+      "email": "כתובת מייל",
+      "address": "כתובת מגורים",
+      "contactMethods": "דרכי יצירת קשר"
+    },
+
+    "actions": {
+      "savedForms": "מסמכים שהעלאתי",
+      "editIntake": "עריכת שאלון כניסה"
+    }
   }
 }
+

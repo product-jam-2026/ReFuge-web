@@ -357,5 +357,28 @@
   },
   "arrivalReasons": { "safety": "الأمان", "family": "لمّ الشمل", "other": "أخرى" },
   "buttons": { "saveDraft": "حفظ مسودة", "finish": "إنهاء التسجيل", "saveDraftBack": "حفظ المسودة والعودة" }
-}
+},
+  "ProfilePage": {
+    "title": "المنطقة الشخصية",
+    "notLoggedIn": "للاطلاع على التفاصيل الشخصية، يرجى تسجيل الدخول",
+    "empty": "غير متوفر",
+
+    "buttons": {
+      "language": "العربية",
+      "back": "رجوع"
+    },
+
+    "fields": {
+      "fullName": "الاسم الكامل",
+      "phone": "رقم الهاتف",
+      "email": "البريد الإلكتروني",
+      "address": "عنوان السكن",
+      "contactMethods": "طرق التواصل"
+    },
+
+    "actions": {
+      "savedForms": "الملفات التي رفعتها",
+      "editIntake": "تعديل استبيان الدخول"
+    }
+  }
 }
