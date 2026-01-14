@@ -1,0 +1,99 @@
+{
+  "intake": {
+    "step1": {
+      "lastName": "",
+      "firstName": "",
+      "oldLastName": "",
+      "oldFirstName": "",
+      "gender": "",
+      "birthDate": "",
+      "nationality": "",
+      "israeliId": "",
+      "passportNumber": "",
+      "passportIssueDate": "",
+      "passportExpiryDate": "",
+      "passportIssueCountry": "",
+      "phone": "",
+      "email": ""
+    },
+    "step2": {
+      "residenceCountry": "",
+      "residenceCity": "",
+      "residenceAddress": "",
+      "visaType": "",
+      "visaStartDate": "",
+      "visaEndDate": "",
+      "entryDate": ""
+    },
+    "step3": {
+      "maritalStatus": "",
+      "statusDate": "",
+      "registeredAddress": {
+        "city": "",
+        "street": "",
+        "houseNumber": "",
+        "entry": "",
+        "apartment": "",
+        "zip": ""
+      },
+      "mailingDifferent": false,
+      "mailingAddress": {
+        "city": "",
+        "street": "",
+        "houseNumber": "",
+        "entry": "",
+        "apartment": "",
+        "zip": ""
+      },
+      "employmentStatus": "",
+      "notWorkingReason": "",
+      "occupation": ""
+    },
+    "step4": {
+      "healthFund": "",
+      "bank": {
+        "bankName": "",
+        "branch": "",
+        "accountNumber": ""
+      },
+      "nationalInsurance": {
+        "hasFile": "",
+        "fileNumber": "",
+        "getsAllowance": "",
+        "allowanceType": "",
+        "allowanceFileNumber": ""
+      }
+    },
+    "step5": {
+      "person": {
+        "lastName": "",
+        "firstName": "",
+        "oldLastName": "",
+        "oldFirstName": "",
+        "gender": "",
+        "birthDate": "",
+        "nationality": "",
+        "israeliId": "",
+        "passportNumber": ""
+      },
+      "maritalStatus": "",
+      "statusDate": "",
+      "phone": "",
+      "email": ""
+    },
+    "step6": {
+      "children": [
+        {
+          "lastName": "",
+          "firstName": "",
+          "gender": "",
+          "birthDate": "",
+          "nationality": "",
+          "israeliId": "",
+          "residenceCountry": "",
+          "entryDate": ""
+        }
+      ]
+    }
+  }
+}
