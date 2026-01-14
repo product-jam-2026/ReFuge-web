@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import demo from "@/public/demo/intake.demo.json";
 import { fieldMap } from "./fieldMap";
 import { intakeToPdfFields } from "./intakeToPdfFields";
 import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
 import { useRouter } from "next/navigation";
+import emptyIntakeTemplate from "@/public/demo/intake.empty.json";
+
 
 type IntakeRecord = typeof demo;
 
@@ -32,6 +34,8 @@ type ExtrasState = {
   }>;
 };
 
+type SubmitMode = "draft" | "final";
+
 function downloadJson(filename: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: "application/json;charset=utf-8",
@@ -48,26 +52,11 @@ function downloadJson(filename: string, data: unknown) {
   URL.revokeObjectURL(url);
 }
 
-// function downloadPdf(filename: string, pdfBytes: Uint8Array) {
-//   const blob = new Blob([pdfBytes], { type: "application/pdf" });
-//   const url = URL.createObjectURL(blob);
-
-//   const a = document.createElement("a");
-//   a.href = url;
-//   a.download = filename;
-//   document.body.appendChild(a);
-//   a.click();
-//   a.remove();
-
-//   URL.revokeObjectURL(url);
-// }
-
 function safePart(s: string) {
   return (
     (s ?? "")
       .toString()
       .trim()
-      // .replace(/[^\p{L}\p{N}_-]+/gu, "_")
       .replace(/[^a-zA-Z0-9_-]+/g, "_")
       .slice(0, 40) || "unknown"
   );
@@ -88,9 +77,92 @@ function emptyChildExtras(): ExtrasState["children"][number] {
   return { firstEntryDate: "", fileJoinDate: "" };
 }
 
+function pickFieldMapKeys(
+  fields: Record<string, string>,
+  map: typeof fieldMap
+) {
+  const out: Record<string, string> = {};
+  for (const k of Object.keys(map)) {
+    out[k] = fields[k] ?? "";
+  }
+  return out;
+}
+
+function deriveExtrasFromIntake(d: IntakeRecord): ExtrasState {
+  const fatherEmail = splitEmail(d.intake.step1.email);
+  const reqEmail = splitEmail(d.intake.step5.email);
+
+  const owners = {
+    owner1: fullName(d.intake.step1.firstName, d.intake.step1.lastName),
+    owner2: fullName(d.intake.step5.person.firstName, d.intake.step5.person.lastName),
+  };
+
+  const kids = d.intake.step6.children ?? [];
+  const kidsExtras = kids.map((k) => ({
+    firstEntryDate: k.entryDate ?? "",
+    fileJoinDate: "",
+  }));
+
+  while (kidsExtras.length < 3) kidsExtras.push(emptyChildExtras());
+
+  return {
+    father: {
+      phoneHome: "",
+      emailPrefix: fatherEmail.prefix,
+      emailPostfix: fatherEmail.postfix,
+    },
+    allowanceRequester: {
+      phoneHome: "",
+      emailPrefix: reqEmail.prefix,
+      emailPostfix: reqEmail.postfix,
+    },
+    bankAccount: {
+      branchName: "",
+      branchNumber: d.intake.step4.bank.branch ?? "",
+      owner1: owners.owner1,
+      owner2: owners.owner2,
+    },
+    children: kidsExtras,
+  };
+}
+
+
+function setDeep(obj: any, path: string, value: any) {
+  const parts = path.split(".");
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i++) {
+    if (cur[parts[i]] == null) cur[parts[i]] = {};
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+
+
+function downloadDraftJson(
+  filename: string,
+  fieldsByPdfKey: Record<string, string>
+) {
+  const blob = new Blob([JSON.stringify(fieldsByPdfKey, null, 2)], {
+    type: "application/json;charset=utf-8",
+  });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+}
+
 export default function ChildAllowanceRequestPage() {
   const [draft, setDraft] = useState<IntakeRecord | null>(null);
   const [extras, setExtras] = useState<ExtrasState | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
   const router = useRouter();
 
   // Hydrate ON PAGE LOAD from demo JSON
@@ -217,85 +289,269 @@ export default function ChildAllowanceRequestPage() {
     return btoa(binary);
   }
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!payload || !extras) return;
-
+  function buildMergedFields(p: IntakeRecord, ex: ExtrasState) {
     // Base mapping from DB intake -> PDF fields
-    const baseFields = intakeToPdfFields(payload as any);
+    const baseFields = intakeToPdfFields(p as any);
 
     // Overlay "extras" (PDF-only fields / split email / missing DB fields)
     const mergedFields: Record<string, string> = {
       ...baseFields,
 
-      "father.phoneHome": extras.father.phoneHome ?? "",
-      "father.emailPrefix": extras.father.emailPrefix ?? "",
-      "father.emailPostfix": extras.father.emailPostfix ?? "",
+      "father.phoneHome": ex.father.phoneHome ?? "",
+      "father.emailPrefix": ex.father.emailPrefix ?? "",
+      "father.emailPostfix": ex.father.emailPostfix ?? "",
 
-      "allowanceRequester.phoneHome": extras.allowanceRequester.phoneHome ?? "",
-      "allowanceRequester.emailPrefix":
-        extras.allowanceRequester.emailPrefix ?? "",
+      "allowanceRequester.phoneHome": ex.allowanceRequester.phoneHome ?? "",
+      "allowanceRequester.emailPrefix": ex.allowanceRequester.emailPrefix ?? "",
       "allowanceRequester.emailPostfix":
-        extras.allowanceRequester.emailPostfix ?? "",
+        ex.allowanceRequester.emailPostfix ?? "",
 
-      "bankAccount.owner1": extras.bankAccount.owner1 ?? "",
-      "bankAccount.owner2": extras.bankAccount.owner2 ?? "",
-      "bankAccount.branchName": extras.bankAccount.branchName ?? "",
-      "bankAccount.branchNumber": extras.bankAccount.branchNumber ?? "",
+      "bankAccount.owner1": ex.bankAccount.owner1 ?? "",
+      "bankAccount.owner2": ex.bankAccount.owner2 ?? "",
+      "bankAccount.branchName": ex.bankAccount.branchName ?? "",
+      "bankAccount.branchNumber": ex.bankAccount.branchNumber ?? "",
     };
 
     // children extras (PDF supports up to 3)
     for (let i = 0; i < 3; i++) {
       const idx = i + 1;
       mergedFields[`child${idx}.firstEntryDate`] =
-        extras.children[i]?.firstEntryDate ?? "";
+        ex.children[i]?.firstEntryDate ?? "";
       mergedFields[`child${idx}.fileJoinDate`] =
-        extras.children[i]?.fileJoinDate ?? "";
+        ex.children[i]?.fileJoinDate ?? "";
     }
 
-    // Fetch template PDF + font
-    const [tplRes, fontRes] = await Promise.all([
-      fetch("/forms/child-allowance-request.pdf"),
-      fetch("/fonts/SimplerPro-Regular.otf"),
-    ]);
+    return mergedFields;
+  }
 
-    if (!tplRes.ok) throw new Error("Failed to load template PDF");
-    if (!fontRes.ok) throw new Error("Failed to load font");
 
-    const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
-    const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
+const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const outBytes = await fillFieldsToNewPdfBytesClient(
-      templateBytes,
-      mergedFields,
-      fieldMap,
-      {
-        fontBytes,
-        autoDetectRtl: true,
-        defaultRtlAlignRight: true,
+function openDraftPicker() {
+  fileInputRef.current?.click();
+}
+
+function applyPdfDraftToForm(fieldsByPdfKey: Record<string, string>) {
+  // start from current payload if exists, else demo
+  // const nextDraft = structuredClone((payload ?? demo) as IntakeRecord);
+
+  const nextDraft = structuredClone((emptyIntakeTemplate) as IntakeRecord);
+
+  const nextExtras = deriveExtrasFromIntake(nextDraft);
+
+  // Ensure we have up to 3 children rows if draft contains child fields
+  const maxChildIdx =
+    [1, 2, 3].findLast((i) =>
+      Object.keys(fieldsByPdfKey).some((k) => k.startsWith(`child${i}.`))
+    ) ?? 0;
+
+  while ((nextDraft.intake.step6.children?.length ?? 0) < maxChildIdx) {
+    nextDraft.intake.step6.children.push({
+      lastName: "",
+      firstName: "",
+      gender: "",
+      birthDate: "",
+      nationality: "",
+      israeliId: "",
+      residenceCountry: "",
+      entryDate: "",
+    });
+  }
+  while (nextExtras.children.length < 3) nextExtras.children.push(emptyChildExtras());
+
+  // ---- Map FieldMap keys -> your state (draft + extras) ----
+  // Father
+  if ("father.firstName" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step1.firstName", fieldsByPdfKey["father.firstName"] ?? "");
+  if ("father.familyName" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step1.lastName", fieldsByPdfKey["father.familyName"] ?? "");
+  if ("father.idNumber" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step1.israeliId", fieldsByPdfKey["father.idNumber"] ?? "");
+  if ("father.birthDate" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step1.birthDate", fieldsByPdfKey["father.birthDate"] ?? "");
+  if ("father.entryDate" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step2.entryDate", fieldsByPdfKey["father.entryDate"] ?? "");
+  if ("father.phoneMobile" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step1.phone", fieldsByPdfKey["father.phoneMobile"] ?? "");
+
+  // Father address (note: your intake uses registeredAddress.entry/apartment/zip)
+  if ("father.address.street" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step3.registeredAddress.street", fieldsByPdfKey["father.address.street"] ?? "");
+  if ("father.address.houseNumber" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step3.registeredAddress.houseNumber", fieldsByPdfKey["father.address.houseNumber"] ?? "");
+  if ("father.address.houseEntranceNumber" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step3.registeredAddress.entry", fieldsByPdfKey["father.address.houseEntranceNumber"] ?? "");
+  if ("father.address.apartmentNumber" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step3.registeredAddress.apartment", fieldsByPdfKey["father.address.apartmentNumber"] ?? "");
+  if ("father.address.city" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step3.registeredAddress.city", fieldsByPdfKey["father.address.city"] ?? "");
+  if ("father.address.zipcode" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step3.registeredAddress.zip", fieldsByPdfKey["father.address.zipcode"] ?? "");
+
+  // Father extras
+  if ("father.phoneHome" in fieldsByPdfKey) nextExtras.father.phoneHome = fieldsByPdfKey["father.phoneHome"] ?? "";
+  if ("father.emailPrefix" in fieldsByPdfKey) nextExtras.father.emailPrefix = fieldsByPdfKey["father.emailPrefix"] ?? "";
+  if ("father.emailPostfix" in fieldsByPdfKey) nextExtras.father.emailPostfix = fieldsByPdfKey["father.emailPostfix"] ?? "";
+
+  // Allowance requester
+  if ("allowanceRequester.firstName" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step5.person.firstName", fieldsByPdfKey["allowanceRequester.firstName"] ?? "");
+  if ("allowanceRequester.lastName" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step5.person.lastName", fieldsByPdfKey["allowanceRequester.lastName"] ?? "");
+  if ("allowanceRequester.idNumber" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step5.person.israeliId", fieldsByPdfKey["allowanceRequester.idNumber"] ?? "");
+  if ("allowanceRequester.phoneMobile" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step5.phone", fieldsByPdfKey["allowanceRequester.phoneMobile"] ?? "");
+
+  // Allowance requester extras
+  if ("allowanceRequester.phoneHome" in fieldsByPdfKey)
+    nextExtras.allowanceRequester.phoneHome = fieldsByPdfKey["allowanceRequester.phoneHome"] ?? "";
+  if ("allowanceRequester.emailPrefix" in fieldsByPdfKey)
+    nextExtras.allowanceRequester.emailPrefix = fieldsByPdfKey["allowanceRequester.emailPrefix"] ?? "";
+  if ("allowanceRequester.emailPostfix" in fieldsByPdfKey)
+    nextExtras.allowanceRequester.emailPostfix = fieldsByPdfKey["allowanceRequester.emailPostfix"] ?? "";
+
+  // Bank
+  if ("bankAccount.bankName" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step4.bank.bankName", fieldsByPdfKey["bankAccount.bankName"] ?? "");
+  if ("bankAccount.accountNumber" in fieldsByPdfKey)
+    setDeep(nextDraft, "intake.step4.bank.accountNumber", fieldsByPdfKey["bankAccount.accountNumber"] ?? "");
+
+  if ("bankAccount.owner1" in fieldsByPdfKey) nextExtras.bankAccount.owner1 = fieldsByPdfKey["bankAccount.owner1"] ?? "";
+  if ("bankAccount.owner2" in fieldsByPdfKey) nextExtras.bankAccount.owner2 = fieldsByPdfKey["bankAccount.owner2"] ?? "";
+  if ("bankAccount.branchName" in fieldsByPdfKey) nextExtras.bankAccount.branchName = fieldsByPdfKey["bankAccount.branchName"] ?? "";
+  if ("bankAccount.branchNumber" in fieldsByPdfKey) nextExtras.bankAccount.branchNumber = fieldsByPdfKey["bankAccount.branchNumber"] ?? "";
+
+  // Children (1..3)
+  for (let i = 1; i <= 3; i++) {
+    const idx = i - 1;
+    const child = nextDraft.intake.step6.children[idx];
+    if (!child) continue;
+
+    const idK = `child${i}.idNumber`;
+    const fnK = `child${i}.firstName`;
+    const lnK = `child${i}.lastName`;
+    const bdK = `child${i}.birthDate`;
+    const edK = `child${i}.entryDate`;
+    const fedK = `child${i}.firstEntryDate`;
+    const fjdK = `child${i}.fileJoinDate`;
+
+    if (idK in fieldsByPdfKey) child.israeliId = fieldsByPdfKey[idK] ?? "";
+    if (fnK in fieldsByPdfKey) child.firstName = fieldsByPdfKey[fnK] ?? "";
+    if (lnK in fieldsByPdfKey) child.lastName = fieldsByPdfKey[lnK] ?? "";
+    if (bdK in fieldsByPdfKey) child.birthDate = fieldsByPdfKey[bdK] ?? "";
+    if (edK in fieldsByPdfKey) child.entryDate = fieldsByPdfKey[edK] ?? "";
+
+    if (fedK in fieldsByPdfKey) nextExtras.children[idx]!.firstEntryDate = fieldsByPdfKey[fedK] ?? "";
+    if (fjdK in fieldsByPdfKey) nextExtras.children[idx]!.fileJoinDate = fieldsByPdfKey[fjdK] ?? "";
+  }
+
+  setDraft(nextDraft);
+  setExtras(nextExtras);
+}
+
+async function onDraftFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Draft JSON must be an object of { fieldKey: value }");
+    }
+
+    // Ensure values are strings (your pipeline expects strings)
+    const fieldsByPdfKey: Record<string, string> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      fieldsByPdfKey[k] = v == null ? "" : String(v);
+    }
+
+    applyPdfDraftToForm(fieldsByPdfKey);
+  } catch (err: any) {
+    alert(`Failed to load draft: ${err?.message ?? String(err)}`);
+  } finally {
+    // allow selecting same file again
+    e.target.value = "";
+  }
+}
+
+
+  async function handleSubmit(mode: SubmitMode) {
+    if (!payload || !extras) return;
+
+    if (mode === "draft") setIsSavingDraft(true);
+    else setIsGeneratingPdf(true);
+
+    try {
+      const mergedFields = buildMergedFields(payload, extras);
+
+      if (mode === "draft") {
+        const fieldsByPdfKey = pickFieldMapKeys(mergedFields, fieldMap);
+
+        const s1 = payload.intake.step1;
+        const fileName = `draft_child_allowance_${safePart(
+          s1.israeliId ||
+            s1.passportNumber ||
+            s1.lastName ||
+            s1.email ||
+            "unknown"
+        )}_${new Date().toISOString().slice(0, 10)}.json`;
+
+        downloadDraftJson(fileName, fieldsByPdfKey);
+        return;
       }
-    );
+      // ✅ Final: generate pdf (your existing logic)
+      const [tplRes, fontRes] = await Promise.all([
+        fetch("/forms/child-allowance-request.pdf"),
+        fetch("/fonts/SimplerPro-Regular.otf"),
+      ]);
 
-    const s1 = payload.intake.step1;
-    const fileName = `child_allowance_${safePart(
-      s1.israeliId || s1.passportNumber || s1.lastName || "unknown"
-    )}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      if (!tplRes.ok) throw new Error("Failed to load template PDF");
+      if (!fontRes.ok) throw new Error("Failed to load font");
 
-    // downloadPdf(fileName, outBytes);
+      const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
+      const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
 
-    // ✅ Store + redirect (instead of downloading here)
-    const key = `pdf_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-    sessionStorage.setItem(
-      key,
-      JSON.stringify({
-        fileName,
-        bytesBase64: uint8ToBase64(outBytes),
-      })
-    );
+      const outBytes = await fillFieldsToNewPdfBytesClient(
+        templateBytes,
+        mergedFields,
+        fieldMap,
+        {
+          fontBytes,
+          autoDetectRtl: true,
+          defaultRtlAlignRight: true,
+        }
+      );
 
-    router.push(
-      `/forms/child-allowance-request/download?key=${encodeURIComponent(key)}`
-    );
+      const s1 = payload.intake.step1;
+      const fileName = `child_allowance_${safePart(
+        s1.israeliId || s1.passportNumber || s1.lastName || "unknown"
+      )}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+      // ✅ Store + redirect (instead of downloading here)
+      const key = `pdf_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      sessionStorage.setItem(
+        key,
+        JSON.stringify({
+          fileName,
+          bytesBase64: uint8ToBase64(outBytes),
+        })
+      );
+
+      router.push(
+        `/forms/child-allowance-request/download?key=${encodeURIComponent(key)}`
+      );
+    } finally {
+      setIsSavingDraft(false);
+      setIsGeneratingPdf(false);
+    }
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await handleSubmit("final");
   }
 
   if (!draft || !payload || !extras) {
@@ -842,8 +1098,41 @@ export default function ChildAllowanceRequestPage() {
             הורד JSON (DB record)
           </button>
 
-          <button type="submit" style={buttonStyle}>
-            הורד PDF
+          {/* ✅ NEW: Save Draft */}
+          <button
+            type="button"
+            style={secondaryButtonStyle}
+            onClick={() => handleSubmit("draft")}
+            disabled={isSavingDraft || isGeneratingPdf}
+          >
+            {isSavingDraft ? "שומר טיוטה..." : "שמור טיוטה"}
+          </button>
+
+          <button
+            type="submit"
+            style={buttonStyle}
+            disabled={isSavingDraft || isGeneratingPdf}
+          >
+            {isGeneratingPdf ? "מייצר PDF..." : "הורד PDF"}
+          </button>
+
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json"
+            style={{ display: "none" }}
+            onChange={onDraftFileSelected}
+          />
+
+          <button
+            type="button"
+            style={secondaryButtonStyle}
+            onClick={openDraftPicker}
+            disabled={isSavingDraft || isGeneratingPdf}
+          >
+            טען טיוטה (JSON)
           </button>
         </div>
 
