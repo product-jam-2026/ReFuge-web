@@ -89,29 +89,19 @@ export default async function HomePage({
           </section>
 
           <section className="cardsGrid">
-            {/* שורה 1 - ימין: אזור אישי */}
-            <Link href={hrefProfile} className="cardBtn cardOrange">
+            {/* אזור אישי - רחב (כמו הכרטיסים שמתחת) */}
+            <Link href={hrefProfile} className="cardBtn cardOrange cardWide">
               <div className="cardBtnTitle">{t('cards.profile.title')}</div>
               <div className="cardBtnDesc">{t('cards.profile.desc')}</div>
             </Link>
 
-            {/* שורה 1 - שמאל: הטפסים שלי (בקרוב) */}
-            <button
-              type="button"
-              className="cardBtn cardBlueLight cardDisabled"
-              disabled
-            >
-              <div className="cardBtnTitle">{t('cards.myForms.title')}</div>
-              <div className="cardBtnDesc">{t('cards.myForms.desc')}</div>
-            </button>
-
-            {/* שורה 2 - רחב: טפסים למילוי */}
+            {/* טפסים למילוי - רחב */}
             <Link href={hrefForms} className="cardBtn cardBlue cardWide">
               <div className="cardBtnTitle">{t('cards.forms.title')}</div>
               <div className="cardBtnDesc">{t('cards.forms.desc')}</div>
             </Link>
 
-            {/* שורה 3 - רחב: זכויות */}
+            {/* זכויות - רחב */}
             <Link href={hrefRights} className="cardBtn cardGreen cardWide">
               <div className="cardBtnTitle">{t('cards.rights.title')}</div>
               <div className="cardBtnDesc">{t('cards.rights.desc')}</div>

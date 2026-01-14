@@ -81,25 +81,33 @@ a {
   text-decoration: none;
 }
 
-/* 5) App mobile shell helpers */
 .appShell {
-  min-height: 100dvh; /* better than 100vh on mobile */
-  display: flex;
-  justify-content: center;
-  padding: 16px;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+
+  /* padding “חכם” שמתחשב ב-safe area במובייל */
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
 }
 
 .appFrame {
-  width: 100%;
-  max-width: var(--app-max-width);
-  min-height: 100dvh;
+  /* מרכז תמיד, בכל רוחב מכשיר */
+  width: min(100%, var(--app-max-width));
+  margin-inline: auto;
+
+  /* כדי שלא ייווצר מצב של overflow מוזר במכשירים מסוימים */
+  min-height: 100%;
   background: var(--c-surface);
-  border: 0;                 /* ✅ אין מסגרת */
+  border: 0;
   border-radius: var(--r-lg);
   overflow: hidden;
+
+  /* אם יש לך כבר padding-top safe-area כאן – אפשר להשאיר/להסיר,
+     זה לא קריטי אחרי שהוספנו safe-area ב-appShell */
   padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
 }
 
 
