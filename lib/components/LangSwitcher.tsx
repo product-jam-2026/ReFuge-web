@@ -34,7 +34,7 @@ export default function LangSwitcher() {
       const rect = titleEl.getBoundingClientRect();
 
       // אותו "גובה" של הכותרת על המסך (עם מינימום מרווח קטן מלמעלה)
-      const topPx = Math.max(16, Math.round(rect.top));
+      const topPx = Math.max(8, Math.round(rect.top));
 
       document.documentElement.style.setProperty('--langFabTop', `${topPx}px`);
     };
