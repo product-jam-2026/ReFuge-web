@@ -118,6 +118,7 @@ a {
 .page {
   padding: 20px 18px;
   overflow-x: hidden;
+  padding-top: calc(20px + 44px); 
 
   /* ✅ כאן “החוק”: תמיד 65 למטה + safe-area */
   padding-bottom: calc(var(--screen-bottom-padding) + env(safe-area-inset-bottom));
@@ -263,11 +264,11 @@ button:focus {
 /* =========================
    Floating language button
    ========================= */
-.langFab {
+.langFab{
   position: fixed;
-  top: 85px;
-  inset-inline-end: 18px; /* end = ימין ב-LTR, שמאל ב-RTL */
-  z-index: 9999;
+  top: var(--langFabTop, 85px);
+  left: 18px;
+  right: auto;  z-index: 9999;
 
   height: 38px;
   padding: 0 18px;
@@ -279,9 +280,8 @@ button:focus {
 
   font-weight: 700;
   font-size: 14px;
-
-  cursor: pointer;
 }
+
 
 .langFab:active {
   transform: translateY(1px);
