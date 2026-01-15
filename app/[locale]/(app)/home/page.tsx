@@ -66,55 +66,51 @@ export default async function HomePage({
   const hrefRights = `/${locale}/rights`;
 
   return (
-    <div className="appShell">
-      <div className="appFrame">
-        <main className="page">
-          <section className="dashboardHero">
-            <div>
-              <h1 className="dashboardTitle">
-                {t('greetingLine', { greeting, name: firstName })}
-              </h1>
-              <p className="dashboardSubtitle">{t('subtitle')}</p>
-            </div>
+    <>
+      <section className="dashboardHero">
+        <div>
+          <h1 className="dashboardTitle">
+            {t('greetingLine', { greeting, name: firstName })}
+          </h1>
+          <p className="dashboardSubtitle">{t('subtitle')}</p>
+        </div>
 
-            <div className="dashboardIllustration" aria-hidden="true">
-              <Image
-                src="/illustrations/family.svg"
-                alt=""
-                width={240}
-                height={240}
-                priority
-              />
-            </div>
-          </section>
+        <div className="dashboardIllustration" aria-hidden="true">
+          <Image
+            src="/illustrations/family.svg"
+            alt=""
+            width={240}
+            height={240}
+            priority
+          />
+        </div>
+      </section>
 
-          <section className="cardsGrid">
-            {/* אזור אישי - רחב (כמו הכרטיסים שמתחת) */}
-            <Link href={hrefProfile} className="cardBtn cardOrange cardWide">
-              <div className="cardBtnTitle">{t('cards.profile.title')}</div>
-              <div className="cardBtnDesc">{t('cards.profile.desc')}</div>
-            </Link>
+      <section className="cardsGrid">
+        {/* טפסים למילוי - רחב */}
+        <Link href={hrefForms} className="cardBtn cardBlue cardWide">
+          <div className="cardBtnTitle">{t('cards.forms.title')}</div>
+          <div className="cardBtnDesc">{t('cards.forms.desc')}</div>
+        </Link>
 
-            {/* טפסים למילוי - רחב */}
-            <Link href={hrefForms} className="cardBtn cardBlue cardWide">
-              <div className="cardBtnTitle">{t('cards.forms.title')}</div>
-              <div className="cardBtnDesc">{t('cards.forms.desc')}</div>
-            </Link>
+        {/* אזור אישי - רחב (כמו הכרטיסים שמתחת) */}
+        <Link href={hrefProfile} className="cardBtn cardOrange cardWide">
+          <div className="cardBtnTitle">{t('cards.profile.title')}</div>
+          <div className="cardBtnDesc">{t('cards.profile.desc')}</div>
+        </Link>
 
-            {/* זכויות - רחב */}
-            <Link href={hrefRights} className="cardBtn cardGreen cardWide">
-              <div className="cardBtnTitle">{t('cards.rights.title')}</div>
-              <div className="cardBtnDesc">{t('cards.rights.desc')}</div>
-            </Link>
-          </section>
+        {/* זכויות - רחב */}
+        <Link href={hrefRights} className="cardBtn cardGreen cardWide">
+          <div className="cardBtnTitle">{t('cards.rights.title')}</div>
+          <div className="cardBtnDesc">{t('cards.rights.desc')}</div>
+        </Link>
+      </section>
 
-          {process.env.NODE_ENV !== 'production' && dbError && (
-            <p className="muted" style={{ marginTop: 18 }}>
-              DB error: {dbError}
-            </p>
-          )}
-        </main>
-      </div>
-    </div>
+      {process.env.NODE_ENV !== 'production' && dbError && (
+        <p className="muted" style={{ marginTop: 18 }}>
+          DB error: {dbError}
+        </p>
+      )}
+    </>
   );
 }

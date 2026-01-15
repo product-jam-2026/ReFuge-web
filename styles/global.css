@@ -96,10 +96,10 @@ a {
   align-items: flex-start;
 
   /* padding “חכם” שמתחשב ב-safe area במובייל */
-  padding-top: max(16px, env(safe-area-inset-top));
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-  padding-left: max(16px, env(safe-area-inset-left));
-  padding-right: max(16px, env(safe-area-inset-right));
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  padding-left: max(12px, env(safe-area-inset-left));
+  padding-right: max(12px, env(safe-area-inset-right));
 }
 
 .appFrame {
@@ -116,14 +116,12 @@ a {
 
 /* content area inside frame */
 .page {
-  padding: 20px 18px;
+  padding: 16px 18px;
   overflow-x: hidden;
-  padding-top: calc(20px + 44px); 
 
-  /* ✅ כאן “החוק”: תמיד 65 למטה + safe-area */
+  /* ברירת מחדל: 65 למטה */
   padding-bottom: calc(var(--screen-bottom-padding) + env(safe-area-inset-bottom));
 }
-
 /* Make media behave nicely */
 img,
 video {
@@ -267,19 +265,19 @@ button:focus {
 .langFab{
   position: fixed;
   top: var(--langFabTop, 85px);
-  left: 18px;
+  left: 20px;
   right: auto;  z-index: 9999;
 
-  height: 38px;
-  padding: 0 18px;
+  height: 34px;
+  padding: 0 16px;
   border-radius: 999px;
 
   background: var(--c-surface);
-  border: 1px solid rgba(11, 42, 74, 0.35);
+  border: 1px solid rgba(20, 30, 50, 0.35);
   color: var(--c-blue-2);
 
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 
@@ -293,16 +291,16 @@ button:focus {
 .dashboardHero {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 18px;
+  gap: clamp(16px, 4vw, 22px);
   align-items: start;
-  margin-top: 60px; /* כדי לא להתנגש בכפתור השפה */
+  margin-top: clamp(12px, 3vw, 20px); /* ריווח כמו בפיגמה */
 }
 
 .dashboardTitle {
   font-family: var(--font-family-heading);
-  font-size: 36px;
+  font-size: clamp(26px, 6.6vw, 30px);
   font-weight: 700;
-  line-height: 42px;
+  line-height: 31px;
   color: #000;
   text-align: right;
   letter-spacing: -0.02em;
@@ -310,25 +308,26 @@ button:focus {
 }
 
 .dashboardSubtitle {
-  margin-top: 12px;
-  font-size: 16px;
-  line-height: 21px;
+  margin-top: clamp(10px, 2.6vw, 14px);
+  font-size: clamp(14px, 3.8vw, 16px);
+  line-height: 1.4;
   letter-spacing: -0.32px;
   color: #000;
   opacity: 0.8;
-  text-align: right;
+  text-align: center;
   white-space: pre-line;
-  max-width: 353px;
+  max-width: 280px;
+  margin-inline: auto;
 }
 
 .dashboardIllustration {
   justify-self: end;
-  margin-top: 6px;
-  width: clamp(180px, 45vw, 280px);
+  margin-top: clamp(4px, 2vw, 10px);
+  width: clamp(180px, 55vw, 240px);
 }
 
 .dashboardIllustration img {
-  width: 65%;
+  width: 100%;
   height: auto;
 }
 
@@ -342,8 +341,8 @@ button:focus {
   /* במקום repeat(2, 170px) */
   grid-template-columns: repeat(2, minmax(0, 1fr));
 
-  gap: 18px 13px;
-  margin-top: 26px;
+  gap: clamp(14px, 3.6vw, 20px);
+  margin-top: clamp(20px, 5.5vw, 26px);
 
   /* במקום max-width: 353px */
   width: 100%;
@@ -362,7 +361,7 @@ button:focus {
 .cardWide.cardBtn {
   width: 100%;
   height: auto;
-  min-height: 108px;
+  min-height: clamp(96px, 14vh, 120px);
 }
 
 .cardBtn {
@@ -374,8 +373,8 @@ button:focus {
   /* במקום width: 170px */
   width: 100%;
 
-  height: 108px;
-  min-height: 108px;
+  height: auto;
+  min-height: clamp(96px, 14vh, 120px);
 
   border-radius: 26px;
   border: none;
@@ -384,8 +383,8 @@ button:focus {
   text-align: right;
 
   /* סידור פנימי */
-  padding: 24px 18px; /* קצת פחות מ-33 כדי שיישב טוב במכשירים קטנים */
-  gap: 6px;
+  padding: clamp(16px, 4vw, 22px) clamp(16px, 4.5vw, 20px);
+  gap: 8px;
 
   /* כדי למנוע “גלישה” של תוכן */
   min-width: 0;
@@ -407,8 +406,8 @@ button:focus {
 
 .cardBtnDesc {
   margin-top: 0;
-  font-size: clamp(14px, 3.8vw, 16px);
-  line-height: 1.3;
+  font-size: clamp(13px, 3.4vw, 15px);
+  line-height: 1.35;
   letter-spacing: -0.32px;
   opacity: 1;
   color: #011429;
@@ -439,7 +438,6 @@ button:focus {
 }
 
 @media (max-width: 360px) {
-  .dashboardTitle { font-size: 38px; }
   .cardsGrid { grid-template-columns: 1fr; }
   .dashboardIllustration { width: min(200px, 68vw); }
 }
@@ -465,13 +463,14 @@ button:focus {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 8px;
+  margin-top: clamp(4px, 2vw, 8px);
 }
 
 .profileTitle {
   margin: 0;
-  font-size: 32px;
+  font-size: clamp(24px, 6vw, 32px);
   font-weight: 800;
+  line-height: 1.1;
 }
 
 .pillBtn {
@@ -487,9 +486,9 @@ button:focus {
 }
 
 .profileForm {
-  margin-top: 28px;
+  margin-top: clamp(18px, 5vw, 28px);
   display: grid;
-  gap: 18px;
+  gap: clamp(12px, 3vw, 18px);
 }
 
 .fieldGroup {
@@ -505,9 +504,9 @@ button:focus {
 .fieldPill {
   border: 1px solid rgba(20, 30, 50, 0.25);
   border-radius: 999px;
-  padding: 14px 18px;
+  padding: clamp(10px, 3vw, 14px) clamp(12px, 4vw, 18px);
   background: #fff;
-  font-size: 18px;
+  font-size: clamp(15px, 3.6vw, 18px);
 }
 
 .fieldRow {
@@ -521,21 +520,28 @@ button:focus {
 }
 
 .profileActions {
-  margin-top: 26px;
+  margin-top: clamp(18px, 5vw, 26px);
   display: grid;
-  gap: 14px;
-  padding-bottom: 20px;
+  gap: clamp(10px, 3vw, 14px);
+  padding-bottom: 0;
 }
 
 .bigOrangeBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 18px 22px;
+  padding: clamp(14px, 4vw, 18px) clamp(18px, 5vw, 22px);
   border-radius: 999px;
   background: #f07a2b;
   color: #111;
   font-weight: 800;
   text-decoration: none;
-  font-size: 18px;
+  font-size: clamp(16px, 4vw, 18px);
+}
+/* ביטול padding תחתון בדף הבית כדי שלא תהיה גלילה */
+.page:has(.dashboardHero) {
+  padding-bottom: 0px !important;
+}
+.page:has(.profileHeader) {
+  padding-bottom: 0px !important;
 }

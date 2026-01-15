@@ -20,6 +20,12 @@ export default function LangSwitcher() {
 
   useEffect(() => {
     const setTopFromTitle = () => {
+      const styles = getComputedStyle(document.documentElement);
+      const fixedTop = styles.getPropertyValue("--langFabTopFixed").trim();
+      if (fixedTop === "1") {
+        return;
+      }
+
       // מחפשים כותרת "ראשית" בדף. אפשר להרחיב אם צריך.
       const titleEl =
         (document.querySelector('main.page h1') as HTMLElement | null) ||

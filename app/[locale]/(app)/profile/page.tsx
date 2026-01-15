@@ -27,26 +27,22 @@ export default async function ProfilePage({
   // ✅ אם ה-guard פעיל ואין משתמש — מציגים הודעה (בפרודקשן/כשאת מפעילה true)
   if (!user && guardEnabled) {
     return (
-      <div className="appShell">
-        <div className="appFrame">
-          <main className="page">
-            <div className="profileHeader">
-              <h1 className="profileTitle">{t("title")}</h1>
-            </div>
-
-            <p className="muted" style={{ textAlign: "center", marginTop: 24 }}>
-              {t("notLoggedIn")}
-            </p>
-
-            {/* אם יש לך דף התחברות קיים ואת רוצה כפתור כאן, תגידי ואוסיף */}
-            <p className="muted" style={{ textAlign: "center", marginTop: 8 }}>
-              <Link href={`/${locale}/login`} style={{ textDecoration: "underline" }}>
-                {t("goToLogin")}
-              </Link>
-            </p>
-          </main>
+      <>
+        <div className="profileHeader">
+          <h1 className="profileTitle">{t("title")}</h1>
         </div>
-      </div>
+
+        <p className="muted" style={{ textAlign: "center", marginTop: 24 }}>
+          {t("notLoggedIn")}
+        </p>
+
+        {/* אם יש לך דף התחברות קיים ואת רוצה כפתור כאן, תגידי ואוסיף */}
+        <p className="muted" style={{ textAlign: "center", marginTop: 8 }}>
+          <Link href={`/${locale}/login`} style={{ textDecoration: "underline" }}>
+            {t("goToLogin")}
+          </Link>
+        </p>
+      </>
     );
   }
 
@@ -85,77 +81,71 @@ export default async function ProfilePage({
     fullName ?? [firstName, lastName].filter(Boolean).join(" ") ?? "";
 
   return (
-    <div className="appShell">
-      <div className="appFrame">
-        <main className="page">
-          <div className="profileHeader">
-            <h1 className="profileTitle">{t("title")}</h1>
-          </div>
-
-          <p className="muted" style={{ marginTop: 10 }}>
-            {t("subtitle")}
-          </p>
-
-          <section className="profileForm">
-            <div className="fieldGroup">
-              <div className="fieldLabel">{t("fields.fullName")}</div>
-              <div className="fieldPill">
-                {showName || <span className="placeholder">{t("empty")}</span>}
-              </div>
-            </div>
-
-            <div className="fieldGroup">
-              <div className="fieldLabel">{t("fields.phone")}</div>
-              <div className="fieldPill fieldRow">
-                {phoneDisplay || (
-                  <span className="placeholder">{t("empty")}</span>
-                )}
-              </div>
-            </div>
-
-            <div className="fieldGroup">
-              <div className="fieldLabel">{t("fields.email")}</div>
-              <div className="fieldPill">
-                {email || <span className="placeholder">{t("empty")}</span>}
-              </div>
-            </div>
-
-            <div className="fieldGroup">
-              <div className="fieldLabel">{t("fields.address")}</div>
-              <div className="fieldPill">
-                {address || <span className="placeholder">{t("empty")}</span>}
-              </div>
-            </div>
-
-            {contactMethods ? (
-              <div className="fieldGroup">
-                <div className="fieldLabel">{t("fields.contactMethods")}</div>
-                <div className="fieldPill">
-                  <span style={{ direction: "ltr" }}>
-                    {JSON.stringify(contactMethods)}
-                  </span>
-                </div>
-              </div>
-            ) : null}
-          </section>
-
-          <section className="profileActions">
-            <Link href={`/${locale}/forms/saved`} className="bigOrangeBtn">
-              {t("actions.savedForms")}
-            </Link>
-
-            <Link href={`/${locale}/intake`} className="bigOrangeBtn">
-              {t("actions.editIntake")}
-            </Link>
-          </section>
-
-          {process.env.NODE_ENV !== "production" && dbError ? (
-            <p className="muted" style={{ marginTop: 16 }}>
-              DB error: {dbError}
-            </p>
-          ) : null}
-        </main>
+    <>
+      <div className="profileHeader">
+        <h1 className="profileTitle">{t("title")}</h1>
       </div>
-    </div>
+
+      <p className="muted" style={{ marginTop: 10 }}>
+        {t("subtitle")}
+      </p>
+
+      <section className="profileForm">
+        <div className="fieldGroup">
+          <div className="fieldLabel">{t("fields.fullName")}</div>
+          <div className="fieldPill">
+            {showName || <span className="placeholder">{t("empty")}</span>}
+          </div>
+        </div>
+
+        <div className="fieldGroup">
+          <div className="fieldLabel">{t("fields.phone")}</div>
+          <div className="fieldPill fieldRow">
+            {phoneDisplay || <span className="placeholder">{t("empty")}</span>}
+          </div>
+        </div>
+
+        <div className="fieldGroup">
+          <div className="fieldLabel">{t("fields.email")}</div>
+          <div className="fieldPill">
+            {email || <span className="placeholder">{t("empty")}</span>}
+          </div>
+        </div>
+
+        <div className="fieldGroup">
+          <div className="fieldLabel">{t("fields.address")}</div>
+          <div className="fieldPill">
+            {address || <span className="placeholder">{t("empty")}</span>}
+          </div>
+        </div>
+
+        {contactMethods ? (
+          <div className="fieldGroup">
+            <div className="fieldLabel">{t("fields.contactMethods")}</div>
+            <div className="fieldPill">
+              <span style={{ direction: "ltr" }}>
+                {JSON.stringify(contactMethods)}
+              </span>
+            </div>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="profileActions">
+        <Link href={`/${locale}/forms/saved`} className="bigOrangeBtn">
+          {t("actions.savedForms")}
+        </Link>
+
+        <Link href={`/${locale}/intake`} className="bigOrangeBtn">
+          {t("actions.editIntake")}
+        </Link>
+      </section>
+
+      {process.env.NODE_ENV !== "production" && dbError ? (
+        <p className="muted" style={{ marginTop: 16 }}>
+          DB error: {dbError}
+        </p>
+      ) : null}
+    </>
   );
 }
