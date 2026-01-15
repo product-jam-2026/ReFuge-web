@@ -15,30 +15,34 @@ export default async function ProfilePage({
   params: { locale: string };
 }) {
   const { locale } = params;
-
   const t = await getTranslations("ProfilePage");
+
+  const guardEnabled = process.env.NEXT_PUBLIC_ENABLE_AUTH_GUARD === "true";
 
   const supabase = createClient(cookies());
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // אם אין משתמש (כי אין sessions) – אפשר להפנות/להציג הודעה.
-  // כרגע נשאיר UI נקי + קישור חזרה.
-  if (!user) {
+  // ✅ אם ה-guard פעיל ואין משתמש — מציגים הודעה (בפרודקשן/כשאת מפעילה true)
+  if (!user && guardEnabled) {
     return (
       <div className="appShell">
         <div className="appFrame">
           <main className="page">
             <div className="profileHeader">
-              <Link href={`/${locale}`} className="pillBtn">
-                {t("buttons.back")}
-              </Link>
               <h1 className="profileTitle">{t("title")}</h1>
             </div>
 
             <p className="muted" style={{ textAlign: "center", marginTop: 24 }}>
               {t("notLoggedIn")}
+            </p>
+
+            {/* אם יש לך דף התחברות קיים ואת רוצה כפתור כאן, תגידי ואוסיף */}
+            <p className="muted" style={{ textAlign: "center", marginTop: 8 }}>
+              <Link href={`/${locale}/login`} style={{ textDecoration: "underline" }}>
+                {t("goToLogin")}
+              </Link>
             </p>
           </main>
         </div>
@@ -46,13 +50,21 @@ export default async function ProfilePage({
     );
   }
 
-  const { data: profileRow, error } = await supabase
-    .from("profiles")
-    .select("data")
-    .eq("id", user.id)
-    .maybeSingle();
+  // ✅ אם אין user אבל guard כבוי (פיתוח) — לא מציגים הודעה, פשוט placeholders
+  let data: any = {};
+  let dbError: string | null = null;
 
-  const data: any = profileRow?.data ?? {};
+  if (user) {
+    const { data: profileRow, error } = await supabase
+      .from("profiles")
+      .select("data")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) dbError = error.message;
+    data = profileRow?.data ?? {};
+  }
+
   const step1 = data?.intake?.step1 ?? {};
 
   const fullName = pickFirst(step1?.fullName, step1?.full_name);
@@ -62,8 +74,6 @@ export default async function ProfilePage({
   const email = pickFirst(step1?.email);
   const address = pickFirst(step1?.address);
 
-  // נוח להציג טלפון בצורה “אנושית” גם אם שמרת link של wa.me
-  // אם נשמר wa.me/972..., נחלץ רק את המספר לתצוגה.
   const phoneDisplay =
     typeof phoneLink === "string"
       ? phoneLink.replace("https://wa.me/", "").replace(/^0+/, "")
@@ -78,16 +88,14 @@ export default async function ProfilePage({
     <div className="appShell">
       <div className="appFrame">
         <main className="page">
-          {/* Header כמו בעיצוב: כפתור שפה בצד אחד + כותרת */}
           <div className="profileHeader">
-            <Link href={`/${locale}`} className="pillBtn">
-              {t("buttons.language")}
-            </Link>
-
             <h1 className="profileTitle">{t("title")}</h1>
           </div>
 
-          {/* שדות */}
+          <p className="muted" style={{ marginTop: 10 }}>
+            {t("subtitle")}
+          </p>
+
           <section className="profileForm">
             <div className="fieldGroup">
               <div className="fieldLabel">{t("fields.fullName")}</div>
@@ -99,8 +107,6 @@ export default async function ProfilePage({
             <div className="fieldGroup">
               <div className="fieldLabel">{t("fields.phone")}</div>
               <div className="fieldPill fieldRow">
-                {/* אם בעתיד תרצי להציג קידומת + שדה – נבנה לפי הדאטה שלך.
-                    כרגע מציגים ערך אחד. */}
                 {phoneDisplay || (
                   <span className="placeholder">{t("empty")}</span>
                 )}
@@ -121,7 +127,6 @@ export default async function ProfilePage({
               </div>
             </div>
 
-            {/* אם תרצי להציג גם contactMethods בעתיד לפי העיצוב שלך */}
             {contactMethods ? (
               <div className="fieldGroup">
                 <div className="fieldLabel">{t("fields.contactMethods")}</div>
@@ -134,7 +139,6 @@ export default async function ProfilePage({
             ) : null}
           </section>
 
-          {/* כפתורי פעולה לפי העיצוב */}
           <section className="profileActions">
             <Link href={`/${locale}/forms/saved`} className="bigOrangeBtn">
               {t("actions.savedForms")}
@@ -145,9 +149,9 @@ export default async function ProfilePage({
             </Link>
           </section>
 
-          {process.env.NODE_ENV !== "production" && error ? (
+          {process.env.NODE_ENV !== "production" && dbError ? (
             <p className="muted" style={{ marginTop: 16 }}>
-              DB error: {error.message}
+              DB error: {dbError}
             </p>
           ) : null}
         </main>
