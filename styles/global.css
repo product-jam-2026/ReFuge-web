@@ -319,10 +319,11 @@ button:focus {
   max-width: 280px;
   margin-inline: auto;
 }
+/*jjjj!*/
 
 .dashboardIllustration {
   justify-self: end;
-  margin-top: clamp(4px, 2vw, 10px);
+  margin-top: clamp(4px, 2vw, 10px); 
   width: clamp(180px, 55vw, 240px);
 }
 
