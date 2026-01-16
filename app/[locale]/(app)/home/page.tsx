@@ -4,8 +4,8 @@ import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 
 import { createClient } from '../../../../lib/supabase/server';
+import styles from './HomePage.module.css';
 
-// שעה לפי אזור זמן ישראל (כדי שברכה תתאים גם אם השרת לא באותה שעה)
 function getHourInTimeZone(timeZone = 'Asia/Jerusalem') {
   const parts = new Intl.DateTimeFormat('en-US', {
     hour: '2-digit',
@@ -33,8 +33,6 @@ export default async function HomePage({
   const t = await getTranslations('HomePage');
 
   const supabase = createClient(cookies());
-
-  // מצב פיתוח: גם בלי התחברות
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -60,57 +58,82 @@ export default async function HomePage({
   const hour = getHourInTimeZone('Asia/Jerusalem');
   const greeting = t(`greetings.${getGreetingKey(hour)}`);
 
-  // לינקים עם locale
+  // routes
   const hrefProfile = `/${locale}/profile`;
   const hrefForms = `/${locale}/forms`;
   const hrefRights = `/${locale}/rights`;
 
   return (
-    <>
-      <section className="dashboardHero">
-        <div>
-          <h1 className="dashboardTitle">
-            {t('greetingLine', { greeting, name: firstName })}
-          </h1>
-          <p className="dashboardSubtitle">{t('subtitle')}</p>
-        </div>
-
-        <div className="dashboardIllustration" aria-hidden="true">
-          <Image
-            src="/illustrations/family.svg"
-            alt=""
-            width={240}
-            height={240}
-            priority
-          />
-        </div>
+<main className={`${styles.root} homeFullBleed`}>
+      {/* ✅ תכלת למעלה (full width) */}
+      <section className={styles.topCard}>
+        <h1 className={styles.title}>
+          {t('greetingLine', { greeting, name: firstName })}
+        </h1>
+        <p className={styles.subtitle}>{t('subtitle')}</p>
       </section>
 
-      <section className="cardsGrid">
-        {/* טפסים למילוי - רחב */}
-        <Link href={hrefForms} className="cardBtn cardBlue cardWide">
-          <div className="cardBtnTitle">{t('cards.forms.title')}</div>
-          <div className="cardBtnDesc">{t('cards.forms.desc')}</div>
-        </Link>
+      {/* ✅ כל מה שמתחת לתכלת */}
+      <div className={styles.content}>
+        {/* איור באזור הלבן */}
+        <div className={styles.illustrationArea} aria-hidden="true">
+          <div className={styles.illustrationWrap}>
+            <Image
+              src="/illustrations/family.svg"
+              alt=""
+              width={520}
+              height={520}
+              priority
+            />
+          </div>
+        </div>
 
-        {/* אזור אישי - רחב (כמו הכרטיסים שמתחת) */}
-        <Link href={hrefProfile} className="cardBtn cardOrange cardWide">
-          <div className="cardBtnTitle">{t('cards.profile.title')}</div>
-          <div className="cardBtnDesc">{t('cards.profile.desc')}</div>
-        </Link>
+        {/* כרטיסים למטה (1 רחב + 2 חצי-חצי) */}
+        <section className={styles.cardsGrid}>
+          {/* כחול רחב */}
+          <Link
+            href={hrefForms}
+            className={`${styles.card} ${styles.cardBlue} ${styles.cardWide}`}
+          >
+            <span className={styles.chev} aria-hidden="true">
+              ‹
+            </span>
+            <div className={styles.cardText}>
+              <div className={styles.cardTitle}>{t('cards.forms.title')}</div>
+              <div className={styles.cardDesc}>{t('cards.forms.desc')}</div>
+            </div>
+          </Link>
 
-        {/* זכויות - רחב */}
-        <Link href={hrefRights} className="cardBtn cardGreen cardWide">
-          <div className="cardBtnTitle">{t('cards.rights.title')}</div>
-          <div className="cardBtnDesc">{t('cards.rights.desc')}</div>
-        </Link>
-      </section>
+          {/* כתום */}
+          <Link
+            href={hrefProfile}
+            className={`${styles.card} ${styles.cardOrange}`}
+          >
+            <span className={styles.chev} aria-hidden="true">
+              ‹
+            </span>
+            <div className={styles.cardText}>
+              <div className={styles.cardTitle}>{t('cards.profile.title')}</div>
+              <div className={styles.cardDesc}>{t('cards.profile.desc')}</div>
+            </div>
+          </Link>
 
-      {process.env.NODE_ENV !== 'production' && dbError && (
-        <p className="muted" style={{ marginTop: 18 }}>
-          DB error: {dbError}
-        </p>
-      )}
-    </>
+          {/* ירוק */}
+          <Link href={hrefRights} className={`${styles.card} ${styles.cardGreen}`}>
+            <span className={styles.chev} aria-hidden="true">
+              ‹
+            </span>
+            <div className={styles.cardText}>
+              <div className={styles.cardTitle}>{t('cards.rights.title')}</div>
+              <div className={styles.cardDesc}>{t('cards.rights.desc')}</div>
+            </div>
+          </Link>
+        </section>
+
+        {process.env.NODE_ENV !== 'production' && dbError && (
+          <p className={styles.muted}>DB error: {dbError}</p>
+        )}
+      </div>
+    </main>
   );
 }
