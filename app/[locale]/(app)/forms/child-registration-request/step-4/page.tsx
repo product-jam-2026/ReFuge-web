@@ -362,7 +362,7 @@ export default function Step4() {
         ) : null}
       </div>
 
-      <SectionTitle>חתימה בטקסט (אופציונלי)</SectionTitle>
+      {/* <SectionTitle>חתימה בטקסט (אופציונלי)</SectionTitle>
       <Field label="שם חתימה">
         <input
           value={(extras as any).applicantSignatureName}
@@ -371,7 +371,7 @@ export default function Step4() {
           }
           style={inputStyle}
         />
-      </Field>
+      </Field> */}
 
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <button type="button" onClick={() => router.back()}>

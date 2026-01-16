@@ -8,14 +8,14 @@ export type IntakeRecord = typeof demo; // simplest if demo matches your schema
 export type ExtrasState = {
   formDate: string;
   poBox: string;
-  applicantSignatureName: string;
+//   applicantSignatureName: string;
   applicantSignatureDataUrl: string; // ✅ new (handwritten PNG dataURL)
 };
 
 const initialExtras: ExtrasState = {
   formDate: new Date().toISOString().slice(0, 10),
   poBox: "",
-  applicantSignatureName: "",
+//   applicantSignatureName: "",
   applicantSignatureDataUrl: "", // ✅ new
 };
 
