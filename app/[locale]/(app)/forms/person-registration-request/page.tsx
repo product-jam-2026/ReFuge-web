@@ -4,155 +4,161 @@ import React, { useEffect, useMemo, useState } from "react";
 import { fieldMap } from "./fieldMap";
 import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
 import demo from "@/public/demo/intake.demo.json";
+import {
+  intakeToPdfFields,
+  deriveExtrasFromIntake,
+  type IntakeRecord,
+  type ExtrasState,
+} from "./intakeToPdfFields";
 
-type IntakeRecord = {
-  intake: {
-    step1: {
-      lastName: string;
-      firstName: string;
-      oldLastName: string;
-      oldFirstName: string;
-      gender: string;
-      birthDate: string;
-      nationality: string;
-      israeliId: string;
-      passportNumber: string;
-      passportIssueDate: string;
-      passportExpiryDate: string;
-      passportIssueCountry: string;
-      phone: string;
-      email: string;
-    };
-    step2: {
-      residenceCountry: string;
-      residenceCity: string;
-      residenceAddress: string;
-      visaType: string;
-      visaStartDate: string;
-      visaEndDate: string;
-      entryDate: string;
-    };
-    step3: {
-      maritalStatus: string;
-      statusDate: string;
-      registeredAddress: {
-        city: string;
-        street: string;
-        houseNumber: string;
-        entry: string;
-        apartment: string;
-        zip: string;
-      };
-      mailingDifferent: boolean;
-      mailingAddress: {
-        city: string;
-        street: string;
-        houseNumber: string;
-        entry: string;
-        apartment: string;
-        zip: string;
-      };
-      employmentStatus: string;
-      notWorkingReason: string;
-      occupation: string;
-    };
-    step4: {
-      healthFund: string;
-      bank: { bankName: string; branch: string; accountNumber: string };
-      nationalInsurance: {
-        hasFile: string;
-        fileNumber: string;
-        getsAllowance: string;
-        allowanceType: string;
-        allowanceFileNumber: string;
-      };
-    };
-    step5: {
-      person: {
-        lastName: string;
-        firstName: string;
-        oldLastName: string;
-        oldFirstName: string;
-        gender: string;
-        birthDate: string;
-        nationality: string;
-        israeliId: string;
-        passportNumber: string;
-      };
-      maritalStatus: string;
-      statusDate: string;
-      phone: string;
-      email: string;
-    };
-    step6: {
-      children: Array<{
-        lastName: string;
-        firstName: string;
-        gender: string;
-        birthDate: string;
-        nationality: string;
-        israeliId: string;
-        residenceCountry: string;
-        entryDate: string;
-      }>;
-    };
-  };
-};
+// type IntakeRecord = {
+//   intake: {
+//     step1: {
+//       lastName: string;
+//       firstName: string;
+//       oldLastName: string;
+//       oldFirstName: string;
+//       gender: string;
+//       birthDate: string;
+//       nationality: string;
+//       israeliId: string;
+//       passportNumber: string;
+//       passportIssueDate: string;
+//       passportExpiryDate: string;
+//       passportIssueCountry: string;
+//       phone: string;
+//       email: string;
+//     };
+//     step2: {
+//       residenceCountry: string;
+//       residenceCity: string;
+//       residenceAddress: string;
+//       visaType: string;
+//       visaStartDate: string;
+//       visaEndDate: string;
+//       entryDate: string;
+//     };
+//     step3: {
+//       maritalStatus: string;
+//       statusDate: string;
+//       registeredAddress: {
+//         city: string;
+//         street: string;
+//         houseNumber: string;
+//         entry: string;
+//         apartment: string;
+//         zip: string;
+//       };
+//       mailingDifferent: boolean;
+//       mailingAddress: {
+//         city: string;
+//         street: string;
+//         houseNumber: string;
+//         entry: string;
+//         apartment: string;
+//         zip: string;
+//       };
+//       employmentStatus: string;
+//       notWorkingReason: string;
+//       occupation: string;
+//     };
+//     step4: {
+//       healthFund: string;
+//       bank: { bankName: string; branch: string; accountNumber: string };
+//       nationalInsurance: {
+//         hasFile: string;
+//         fileNumber: string;
+//         getsAllowance: string;
+//         allowanceType: string;
+//         allowanceFileNumber: string;
+//       };
+//     };
+//     step5: {
+//       person: {
+//         lastName: string;
+//         firstName: string;
+//         oldLastName: string;
+//         oldFirstName: string;
+//         gender: string;
+//         birthDate: string;
+//         nationality: string;
+//         israeliId: string;
+//         passportNumber: string;
+//       };
+//       maritalStatus: string;
+//       statusDate: string;
+//       phone: string;
+//       email: string;
+//     };
+//     step6: {
+//       children: Array<{
+//         lastName: string;
+//         firstName: string;
+//         gender: string;
+//         birthDate: string;
+//         nationality: string;
+//         israeliId: string;
+//         residenceCountry: string;
+//         entryDate: string;
+//       }>;
+//     };
+//   };
+// };
 
 type TripRow = { startDate: string; endDate: string; purpose: string };
 
-type ExtrasState = {
-  // English name variants (PDF has both Hebrew+English fields)
-  firstNameEnglish: string;
-  lastNameEnglish: string;
-  prevLastNameEnglish: string;
+// type ExtrasState = {
+//   // English name variants (PDF has both Hebrew+English fields)
+//   firstNameEnglish: string;
+//   lastNameEnglish: string;
+//   prevLastNameEnglish: string;
 
-  // Birth details (not in DB template)
-  birthCountry: string;
-  birthCity: string;
+//   // Birth details (not in DB template)
+//   birthCountry: string;
+//   birthCity: string;
 
-  // Phone for the address block (PDF has it as part of address)
-  addressPhoneNumber: string;
+//   // Phone for the address block (PDF has it as part of address)
+//   addressPhoneNumber: string;
 
-  // Parents (not in DB template)
-  father: {
-    firstNameHebrew: string;
-    lastNameHebrew: string;
-    firstNameEnglish: string;
-    lastNameEnglish: string;
-    idNumber: string;
-    passportNumber: string;
-  };
-  mother: {
-    firstNameHebrew: string;
-    lastNameHebrew: string;
-    firstNameEnglish: string;
-    lastNameEnglish: string;
-    idNumber: string;
-    passportNumber: string;
-  };
+//   // Parents (not in DB template)
+//   father: {
+//     firstNameHebrew: string;
+//     lastNameHebrew: string;
+//     firstNameEnglish: string;
+//     lastNameEnglish: string;
+//     idNumber: string;
+//     passportNumber: string;
+//   };
+//   mother: {
+//     firstNameHebrew: string;
+//     lastNameHebrew: string;
+//     firstNameEnglish: string;
+//     lastNameEnglish: string;
+//     idNumber: string;
+//     passportNumber: string;
+//   };
 
-  // Partner English variants (partner Hebrew pulled from step5.person by default)
-  partner: {
-    firstNameEnglish: string;
-    lastNameEnglish: string;
-  };
+//   // Partner English variants (partner Hebrew pulled from step5.person by default)
+//   partner: {
+//     firstNameEnglish: string;
+//     lastNameEnglish: string;
+//   };
 
-  // “meta”
-  numberChildrenUnder18: string; // PDF wants a number (string is fine)
-  purposeOfStay: string; // PDF has purposeOfStay (we default from step2.visaType)
+//   // “meta”
+//   numberChildrenUnder18: string; // PDF wants a number (string is fine)
+//   purposeOfStay: string; // PDF has purposeOfStay (we default from step2.visaType)
 
-  // Employment / income (not in DB template)
-  employerName: string;
-  employerAddress: string;
-  selfEmploymentStartDate: string;
-  unemployedWithIncomeStartDate: string;
-  selfEmployedYearlyIncome: string;
-  unemployedYearlyIncome: string;
+//   // Employment / income (not in DB template)
+//   employerName: string;
+//   employerAddress: string;
+//   selfEmploymentStartDate: string;
+//   unemployedWithIncomeStartDate: string;
+//   selfEmployedYearlyIncome: string;
+//   unemployedYearlyIncome: string;
 
-  // Trips abroad (not in DB template)
-  trips: TripRow[];
-};
+//   // Trips abroad (not in DB template)
+//   trips: TripRow[];
+// };
 
 const emptyTrip = (): TripRow => ({ startDate: "", endDate: "", purpose: "" });
 
@@ -237,18 +243,29 @@ export default function PersonRegistrationPage() {
   const [extras, setExtras] = useState<ExtrasState>(initialExtras);
 
   // Hydrate ON PAGE LOAD from demo JSON
-  useEffect(() => {
-    const d = structuredClone(demo) as IntakeRecord;
-    setDraft(d);
+  // useEffect(() => {
+  //   const d = structuredClone(demo) as IntakeRecord;
+  //   setDraft(d);
 
-    setExtras((prev) => ({
-      ...prev,
-      // default these so PDF can be produced immediately
-      addressPhoneNumber: d.intake.step1.phone ?? "",
-      numberChildrenUnder18: String(d.intake.step6.children?.length ?? 0),
-      purposeOfStay: d.intake.step2.visaType ?? "",
-    }));
-  }, []);
+  //   setExtras((prev) => ({
+  //     ...prev,
+  //     // default these so PDF can be produced immediately
+  //     addressPhoneNumber: d.intake.step1.phone ?? "",
+  //     numberChildrenUnder18: String(d.intake.step6.children?.length ?? 0),
+  //     purposeOfStay: d.intake.step2.visaType ?? "",
+  //   }));
+  // }, []);
+
+  // fix
+  useEffect(() => {
+  const d = structuredClone(demo) as IntakeRecord;
+  setDraft(d);
+
+  setExtras((prev) => ({
+    ...prev,
+    ...deriveExtrasFromIntake(d, prev),
+  }) as ExtrasState);
+}, []);
 
   function update(path: string, value: any) {
     setDraft((prev) => {
@@ -283,100 +300,102 @@ export default function PersonRegistrationPage() {
     e.preventDefault();
     if (!draft) return;
 
-    const s1 = draft.intake.step1;
-    const s2 = draft.intake.step2;
-    const s3 = draft.intake.step3;
-    const s4 = draft.intake.step4;
-    const s5 = draft.intake.step5;
+      const fields = intakeToPdfFields(draft, extras);
 
-    const addr = s3.registeredAddress;
+    // const s1 = draft.intake.step1;
+    // const s2 = draft.intake.step2;
+    // const s3 = draft.intake.step3;
+    // const s4 = draft.intake.step4;
+    // const s5 = draft.intake.step5;
 
-    const fields: Record<string, string> = {
-      // ===== Page 0 =====
-      firstNameHebrew: s1.firstName ?? "",
-      firstNameEnglish: extras.firstNameEnglish ?? "",
-      lastNameHebrew: s1.lastName ?? "",
-      lastNameEnglish: extras.lastNameEnglish ?? "",
+    // const addr = s3.registeredAddress;
 
-      prevLastNameHebrew: s1.oldLastName ?? "",
-      prevLastNameEnglish: extras.prevLastNameEnglish ?? "",
-      prevFirstNameHebrew: s1.oldFirstName ?? "",
+    // const fields: Record<string, string> = {
+    //   // ===== Page 0 =====
+    //   firstNameHebrew: s1.firstName ?? "",
+    //   firstNameEnglish: extras.firstNameEnglish ?? "",
+    //   lastNameHebrew: s1.lastName ?? "",
+    //   lastNameEnglish: extras.lastNameEnglish ?? "",
 
-      birthDate: s1.birthDate ?? "",
-      birthCountry: extras.birthCountry ?? "",
-      birthCity: extras.birthCity ?? "",
-      citizenship: s1.nationality ?? "",
+    //   prevLastNameHebrew: s1.oldLastName ?? "",
+    //   prevLastNameEnglish: extras.prevLastNameEnglish ?? "",
+    //   prevFirstNameHebrew: s1.oldFirstName ?? "",
 
-      passportNumber: s1.passportNumber ?? "",
-      passportIssuanceCountry: s1.passportIssueCountry ?? "",
-      passportIssueDate: s1.passportIssueDate ?? "",
-      passportExpiryDate: s1.passportExpiryDate ?? "",
+    //   birthDate: s1.birthDate ?? "",
+    //   birthCountry: extras.birthCountry ?? "",
+    //   birthCity: extras.birthCity ?? "",
+    //   citizenship: s1.nationality ?? "",
 
-      visaStartDate: s2.visaStartDate ?? "",
-      visaEndDate: s2.visaEndDate ?? "",
-      visaDateOfArrival: s2.entryDate ?? "",
+    //   passportNumber: s1.passportNumber ?? "",
+    //   passportIssuanceCountry: s1.passportIssueCountry ?? "",
+    //   passportIssueDate: s1.passportIssueDate ?? "",
+    //   passportExpiryDate: s1.passportExpiryDate ?? "",
 
-      "address.street": addr.street ?? "",
-      "address.homeNumber": addr.houseNumber ?? "",
-      "address.entrance": addr.entry ?? "",
-      "address.apartmentNumber": addr.apartment ?? "",
-      "address.city": addr.city ?? "",
-      "address.zipcode": addr.zip ?? "",
-      "address.phoneNumber": extras.addressPhoneNumber || s1.phone || "",
+    //   visaStartDate: s2.visaStartDate ?? "",
+    //   visaEndDate: s2.visaEndDate ?? "",
+    //   visaDateOfArrival: s2.entryDate ?? "",
 
-      fatherLastNameHebrew: extras.father.lastNameHebrew ?? "",
-      fatherLastNameEnglish: extras.father.lastNameEnglish ?? "",
-      fatherFirstNameHebrew: extras.father.firstNameHebrew ?? "",
-      fatherFirstNameEnglish: extras.father.firstNameEnglish ?? "",
-      fatherIdNumber: extras.father.idNumber ?? "",
-      fatherPassportNumber: extras.father.passportNumber ?? "",
+    //   "address.street": addr.street ?? "",
+    //   "address.homeNumber": addr.houseNumber ?? "",
+    //   "address.entrance": addr.entry ?? "",
+    //   "address.apartmentNumber": addr.apartment ?? "",
+    //   "address.city": addr.city ?? "",
+    //   "address.zipcode": addr.zip ?? "",
+    //   "address.phoneNumber": extras.addressPhoneNumber || s1.phone || "",
 
-      motherLastNameHebrew: extras.mother.lastNameHebrew ?? "",
-      motherLastNameEnglish: extras.mother.lastNameEnglish ?? "",
-      motherFirstNameHebrew: extras.mother.firstNameHebrew ?? "",
-      motherFirstNameEnglish: extras.mother.firstNameEnglish ?? "",
-      motherIdNumber: extras.mother.idNumber ?? "",
-      motherPassportNumber: extras.mother.passportNumber ?? "",
+    //   fatherLastNameHebrew: extras.father.lastNameHebrew ?? "",
+    //   fatherLastNameEnglish: extras.father.lastNameEnglish ?? "",
+    //   fatherFirstNameHebrew: extras.father.firstNameHebrew ?? "",
+    //   fatherFirstNameEnglish: extras.father.firstNameEnglish ?? "",
+    //   fatherIdNumber: extras.father.idNumber ?? "",
+    //   fatherPassportNumber: extras.father.passportNumber ?? "",
 
-      maritalStatusLastUpdateDate: s3.statusDate ?? "",
-      numberChildrenUnder18:
-        extras.numberChildrenUnder18 || String(draft.intake.step6.children?.length ?? 0),
+    //   motherLastNameHebrew: extras.mother.lastNameHebrew ?? "",
+    //   motherLastNameEnglish: extras.mother.lastNameEnglish ?? "",
+    //   motherFirstNameHebrew: extras.mother.firstNameHebrew ?? "",
+    //   motherFirstNameEnglish: extras.mother.firstNameEnglish ?? "",
+    //   motherIdNumber: extras.mother.idNumber ?? "",
+    //   motherPassportNumber: extras.mother.passportNumber ?? "",
 
-      partnerLastNameHebrew: s5.person.lastName ?? "",
-      partnerLastNameEnglish: extras.partner.lastNameEnglish ?? "",
-      partnerFirstNameHebrew: s5.person.firstName ?? "",
-      partnerFirstNameEnglish: extras.partner.firstNameEnglish ?? "",
-      partnerIdNumber: s5.person.israeliId ?? "",
-      partnerPassportNumber: s5.person.passportNumber ?? "",
+    //   maritalStatusLastUpdateDate: s3.statusDate ?? "",
+    //   numberChildrenUnder18:
+    //     extras.numberChildrenUnder18 || String(draft.intake.step6.children?.length ?? 0),
 
-      // ===== Page 1 =====
-      purposeOfStay: extras.purposeOfStay || s2.visaType || "",
-      bankName: s4.bank.bankName ?? "",
-      bankBranch: s4.bank.branch ?? "",
-      bankAccountNumber: s4.bank.accountNumber ?? "",
+    //   partnerLastNameHebrew: s5.person.lastName ?? "",
+    //   partnerLastNameEnglish: extras.partner.lastNameEnglish ?? "",
+    //   partnerFirstNameHebrew: s5.person.firstName ?? "",
+    //   partnerFirstNameEnglish: extras.partner.firstNameEnglish ?? "",
+    //   partnerIdNumber: s5.person.israeliId ?? "",
+    //   partnerPassportNumber: s5.person.passportNumber ?? "",
 
-      employerName: extras.employerName ?? "",
-      employerAddress: extras.employerAddress ?? "",
-      selfEmploymentStartDate: extras.selfEmploymentStartDate ?? "",
-      unemployedWithIncomeStartDate: extras.unemployedWithIncomeStartDate ?? "",
-      selfEmployedYearlyIncome: extras.selfEmployedYearlyIncome ?? "",
-      unemployedYearlyIncome: extras.unemployedYearlyIncome ?? "",
+    //   // ===== Page 1 =====
+    //   purposeOfStay: extras.purposeOfStay || s2.visaType || "",
+    //   bankName: s4.bank.bankName ?? "",
+    //   bankBranch: s4.bank.branch ?? "",
+    //   bankAccountNumber: s4.bank.accountNumber ?? "",
 
-      nationalInsuranceFileNumber: s4.nationalInsurance.fileNumber ?? "",
+    //   employerName: extras.employerName ?? "",
+    //   employerAddress: extras.employerAddress ?? "",
+    //   selfEmploymentStartDate: extras.selfEmploymentStartDate ?? "",
+    //   unemployedWithIncomeStartDate: extras.unemployedWithIncomeStartDate ?? "",
+    //   selfEmployedYearlyIncome: extras.selfEmployedYearlyIncome ?? "",
+    //   unemployedYearlyIncome: extras.unemployedYearlyIncome ?? "",
 
-      tripAbroad1StartDate: extras.trips[0]?.startDate ?? "",
-      tripAbroad1EndDate: extras.trips[0]?.endDate ?? "",
-      tripAbroad1Purpose: extras.trips[0]?.purpose ?? "",
-      tripAbroad2StartDate: extras.trips[1]?.startDate ?? "",
-      tripAbroad2EndDate: extras.trips[1]?.endDate ?? "",
-      tripAbroad2Purpose: extras.trips[1]?.purpose ?? "",
-      tripAbroad3StartDate: extras.trips[2]?.startDate ?? "",
-      tripAbroad3EndDate: extras.trips[2]?.endDate ?? "",
-      tripAbroad3Purpose: extras.trips[2]?.purpose ?? "",
+    //   nationalInsuranceFileNumber: s4.nationalInsurance.fileNumber ?? "",
 
-      NationInsuranceTypeOfAllowance: s4.nationalInsurance.allowanceType ?? "",
-      NationInsuranceFileNumber: s4.nationalInsurance.allowanceFileNumber ?? "",
-    };
+    //   tripAbroad1StartDate: extras.trips[0]?.startDate ?? "",
+    //   tripAbroad1EndDate: extras.trips[0]?.endDate ?? "",
+    //   tripAbroad1Purpose: extras.trips[0]?.purpose ?? "",
+    //   tripAbroad2StartDate: extras.trips[1]?.startDate ?? "",
+    //   tripAbroad2EndDate: extras.trips[1]?.endDate ?? "",
+    //   tripAbroad2Purpose: extras.trips[1]?.purpose ?? "",
+    //   tripAbroad3StartDate: extras.trips[2]?.startDate ?? "",
+    //   tripAbroad3EndDate: extras.trips[2]?.endDate ?? "",
+    //   tripAbroad3Purpose: extras.trips[2]?.purpose ?? "",
+
+    //   NationInsuranceTypeOfAllowance: s4.nationalInsurance.allowanceType ?? "",
+    //   NationInsuranceFileNumber: s4.nationalInsurance.allowanceFileNumber ?? "",
+    // };
 
     const [tplRes, fontRes] = await Promise.all([
       fetch("/forms/person-registration.pdf"),
