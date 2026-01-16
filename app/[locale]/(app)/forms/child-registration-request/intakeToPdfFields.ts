@@ -106,6 +106,7 @@ export type PdfExtras = {
   formDate?: string;
   /** Not in intake template, but exists in fieldMap */
   poBox?: string;
+  applicantSignature?: string;
 };
 
 function todayISO() {
@@ -132,6 +133,7 @@ export function intakeToPdfFields(
   const fields: Record<string, string> = {
     // PDF-only extras
     formDate: extras?.formDate || todayISO(),
+    applicantSignature: extras?.applicantSignature ?? "",
 
     // israeliApplicant
     "israeliApplicant.firstName": s1.firstName ?? "",

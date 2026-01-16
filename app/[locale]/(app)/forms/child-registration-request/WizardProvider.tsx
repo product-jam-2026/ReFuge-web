@@ -9,12 +9,14 @@ export type ExtrasState = {
   formDate: string;
   poBox: string;
   applicantSignatureName: string;
+  applicantSignatureDataUrl: string; // ✅ new (handwritten PNG dataURL)
 };
 
 const initialExtras: ExtrasState = {
   formDate: new Date().toISOString().slice(0, 10),
   poBox: "",
   applicantSignatureName: "",
+  applicantSignatureDataUrl: "", // ✅ new
 };
 
 type Ctx = {
@@ -28,7 +30,9 @@ type Ctx = {
 const WizardCtx = createContext<Ctx | null>(null);
 
 export function WizardProvider({ children }: { children: React.ReactNode }) {
-  const [draft, setDraft] = useState<IntakeRecord>(structuredClone(demo) as any);
+  const [draft, setDraft] = useState<IntakeRecord>(
+    structuredClone(demo) as any
+  );
   const [extras, setExtras] = useState<ExtrasState>(initialExtras);
 
   function update(path: string, value: any) {

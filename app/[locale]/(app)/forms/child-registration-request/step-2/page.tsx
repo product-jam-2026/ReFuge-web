@@ -8,7 +8,7 @@ export default function Step2() {
 
   return (
     <main style={{ maxWidth: 820, margin: "0 auto", padding: 24, direction: "rtl" }}>
-      <h1 style={{ fontSize: 22, fontWeight: 800 }}>שלב 1: פרטים כלליים + המבקש</h1>
+      {/* <h1 style={{ fontSize: 22, fontWeight: 800 }}>שלב 1: פרטים כלליים + המבקש</h1>
 
       <label>
         תאריך הטופס (PDF בלבד)
@@ -41,7 +41,7 @@ export default function Step2() {
           value={draft.intake.step1.israeliId}
           onChange={(e) => update("intake.step1.israeliId", e.target.value)}
         />
-      </label>
+      </label> */}
 
       <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
         <button type="button" onClick={() => router.push("./step-3")}>

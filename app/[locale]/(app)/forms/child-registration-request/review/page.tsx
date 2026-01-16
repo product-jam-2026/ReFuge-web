@@ -42,6 +42,7 @@ export default function Review() {
     const fields = intakeToPdfFields(draft as any, {
       formDate: extras.formDate,
       poBox: extras.poBox,
+      applicantSignature: extras.applicantSignatureDataUrl,
     });
 
     const [tplRes, fontRes] = await Promise.all([

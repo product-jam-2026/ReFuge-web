@@ -137,8 +137,14 @@ function downloadJson(filename: string, data: unknown) {
 }
 
 function downloadPdf(filename: string, pdfBytes: Uint8Array) {
-  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  // const blob = new Blob([pdfBytes], { type: "application/pdf" });
+  // const url = URL.createObjectURL(blob);
+
+  const copy = new Uint8Array(pdfBytes); // copies into a new ArrayBuffer
+  const blob = new Blob([copy.buffer], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
+
+
 
   const a = document.createElement("a");
   a.href = url;
@@ -150,14 +156,25 @@ function downloadPdf(filename: string, pdfBytes: Uint8Array) {
   URL.revokeObjectURL(url);
 }
 
+// function safePart(s: string) {
+//   return (
+//     s
+//       .trim()
+//       .replace(/[^\p{L}\p{N}_-]+/gu, "_")
+//       .slice(0, 40) || "unknown"
+//   );
+// }
+
 function safePart(s: string) {
   return (
-    s
+    (s ?? "")
+      .toString()
       .trim()
-      .replace(/[^\p{L}\p{N}_-]+/gu, "_")
+      .replace(/[^a-zA-Z0-9_-]+/g, "_")
       .slice(0, 40) || "unknown"
   );
 }
+
 
 function isTruthyForCheckbox(value: string) {
   const v = (value ?? "").toString().trim().toLowerCase();
@@ -327,6 +344,8 @@ export default function ChildRegistrationPage() {
     );
 
     // 4) Download the result
+      const s1 = (draft as any).intake.step1;
+
     const fileName = `child_registration_${safePart(
       s1.israeliId || s1.passportNumber || s1.lastName || "unknown"
     )}_${new Date().toISOString().slice(0, 10)}.pdf`;
