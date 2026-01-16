@@ -4,7 +4,7 @@ import { getMessages } from "next-intl/server";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
-import LangSwitcher from "@/lib/components/LangSwitcher"; // ✅ הוספה
+import LangSwitcher from "@/lib/components/LangSwitcher";
 
 const simplerPro = localFont({
   src: [
@@ -40,8 +40,14 @@ export default async function RootLayout({
 
       <body className={`${simplerPro.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
-          <LangSwitcher /> {/* ✅ תמיד צף */}
-          {children}
+          <LangSwitcher />
+
+          {/* ✅ wrapper אחיד לכל המסכים */}
+          <div className="appShell">
+            <div className="appFrame">
+              <main className="page">{children}</main>
+            </div>
+          </div>
         </NextIntlClientProvider>
 
         <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
