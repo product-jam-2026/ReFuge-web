@@ -5,12 +5,25 @@ import { fieldMap } from "../fieldMap";
 import { intakeToPdfFields } from "../intakeToPdfFields";
 import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
 
+// function safePart(s: string) {
+//   return (s.trim().replace(/[^\p{L}\p{N}_-]+/gu, "_").slice(0, 40) || "unknown");
+// }
+
 function safePart(s: string) {
-  return (s.trim().replace(/[^\p{L}\p{N}_-]+/gu, "_").slice(0, 40) || "unknown");
+  return (
+    (s ?? "")
+      .toString()
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]+/g, "_")
+      .slice(0, 40) || "unknown"
+  );
 }
 
+
 function downloadPdf(filename: string, pdfBytes: Uint8Array) {
-  const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const copy = new Uint8Array(pdfBytes); // copies into a new ArrayBuffer
+  const blob = new Blob([copy.buffer], { type: "application/pdf" });
+//   const blob = new Blob([pdfBytes], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
