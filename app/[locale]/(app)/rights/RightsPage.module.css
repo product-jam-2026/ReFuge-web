@@ -1,0 +1,216 @@
+.root{
+  padding: 18px 18px;
+  padding-bottom: calc(var(--screen-bottom-padding) + env(safe-area-inset-bottom));
+  min-height: 100dvh;
+  background: var(--c-surface);
+}
+
+/* Header: centered title + back on right */
+.header{
+  position: relative;
+  display: flex;
+  align-items: center;
+  text-align: right;        /* ✅ יישור טקסט */
+  width: 100%;          
+    padding-right: 50px; /* כדי שלא תידבק לחץ */
+  min-height: 44px;
+  margin-top: 16px;
+  margin-bottom: 14px;
+}
+
+.title{
+  margin: 0;
+  font-size: clamp(20px, 5.6vw, 28px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: rgba(20, 30, 50, 0.95);
+}
+
+.backBtn{
+  position: absolute;
+  right:0;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: rgba(20, 30, 50, 0.9);
+  text-decoration: none;
+}
+
+.backBtn:hover{
+  background: rgba(20, 30, 50, 0.06);
+}
+
+/* ✅ filter should sit on the right (RTL) */
+.topControls{
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.filterPill{
+  height: 34px;
+  padding: 0 14px;
+  margin-left: auto;
+  border-radius: 999px;
+  border: 0;
+  background: var(--c-blue-2);
+  color: #fff;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filterPill:active{
+  transform: translateY(1px);
+}
+
+/* ✅ tags appear only when filter is open (in TSX) */
+.tagsRow{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+/* chip default = white with light border */
+.tag{
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(20, 30, 50, 0.22);
+  background: #fff;
+  color: rgba(20, 30, 50, 0.88);
+
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ✅ selected = outline (like figma) */
+.tagSelected{
+  background: #fff;
+  border: 2px solid var(--c-blue-2);
+  color: rgba(20, 30, 50, 0.95);
+}
+
+.list{
+  display: grid;
+  gap: 14px;
+  margin-top: 2px;
+}
+
+/* green full-width items */
+.item{
+  background: var(--c-mint);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.itemHead{
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 18px 16px;
+  text-align: right;
+}
+
+.qText{
+  flex: 1;
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.35;
+  color: rgba(20, 30, 50, 0.95);
+}
+
+.downCircle{
+  width: 44px;
+  height: 44px;
+  border-radius: 0;         /* ✅ אין עיגול */
+  background: transparent;  /* ✅ אין כחול */
+  color: var(--c-blue-2);   /* ✅ החץ עצמו כחול */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  transition: transform 600ms ease; /*שולטים במהירות סיבוב, מספר יותר גדול -> סיבוב איטי יותר*/
+}
+
+
+.downOpen{
+  transform: rotate(180deg);
+}
+
+.itemBody{
+  padding: 0 16px 16px;
+}
+
+.answer{
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(20, 30, 50, 0.12);
+
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(20, 30, 50, 0.9);
+}
+
+.itemActions{
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.speakBtn{
+  border: 0;
+  background: transparent;
+  color: rgba(20, 30, 50, 0.8);
+  cursor: pointer;
+
+  width: 40px;
+  height: 40px;
+  border-radius: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  order: 2;
+}
+
+.links{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  order: 1;
+}
+
+.link{
+  font-size: 12.5px;
+  font-weight: 800;
+  color: rgba(10, 60, 150, 0.95);
+  text-decoration: underline;
+}

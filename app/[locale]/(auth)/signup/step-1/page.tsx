@@ -1,72 +1,25 @@
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { saveSignupStep } from "../actions";
+// ✅ מייבאים את פעולת השרת מהקובץ החיצוני
+import { submitStep1 } from "../actions"; 
 import Step1FormClient from "./Step1FormClient";
 
-function normalizeText(v: FormDataEntryValue | null, max = 80) {
-  return String(v || "").trim().slice(0, max);
+// פונקציית עזר: יודעת לקבל או מחרוזת או אובייקט {he, ar} ולהחזיר מחרוזת לתצוגה
+// זה קריטי כדי שהטופס יציג נתונים גם אם הם נשמרו בפורמט החדש
+function getStringValue(field: any): string {
+  if (!field) return "";
+  if (typeof field === 'string') return field;
+  if (typeof field === 'object') return field.he || field.ar || "";
+  return String(field);
 }
-function normalizeEmail(v: FormDataEntryValue | null) {
-  return String(v || "").trim().toLowerCase();
-}
-function normalizePhone(v: FormDataEntryValue | null) {
-  return String(v || "").trim().replace(/[^\d+]/g, "");
-}
-function normalizeDigits(v: FormDataEntryValue | null) {
-  return String(v || "").trim().replace(/[^\d]/g, "");
-}
+
 function normalizeGenderValue(existing?: string) {
   const s = String(existing || "").trim().toLowerCase();
   if (!s) return "";
-  if (s === "male" || s === "m" || s.includes("זכר") || s.includes("ذكر"))
-    return "male";
-  if (s === "female" || s === "f" || s.includes("נקב") || s.includes("أنث"))
-    return "female";
+  if (s === "male" || s === "m" || s.includes("זכר") || s.includes("ذكر")) return "male";
+  if (s === "female" || s === "f" || s.includes("נקב") || s.includes("أنث")) return "female";
   return "";
-}
-
-// ✅ Supports BOTH:
-// 1) direct <input type="date" name="birthDate">  => YYYY-MM-DD
-// 2) legacy rolling selects: birthDate_y / birthDate_m / birthDate_d
-function buildISODateFromForm(formData: FormData, prefix: string) {
-  const direct = String(formData.get(prefix) || "").trim();
-  if (direct) {
-    const match = direct.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!match) return "";
-    const dt = new Date(`${direct}T00:00:00Z`);
-    if (Number.isNaN(dt.getTime())) return "";
-    const [yy, mm, dd] = direct.split("-").map((x) => Number(x));
-    if (
-      dt.getUTCFullYear() !== yy ||
-      dt.getUTCMonth() + 1 !== mm ||
-      dt.getUTCDate() !== dd
-    ) {
-      return "";
-    }
-    return direct;
-  }
-
-  const y = String(formData.get(`${prefix}_y`) || "").trim();
-  const m = String(formData.get(`${prefix}_m`) || "").trim();
-  const d = String(formData.get(`${prefix}_d`) || "").trim();
-
-  if (!y && !m && !d) return "";
-  if (!y || !m || !d) return "";
-
-  const iso = `${y}-${m}-${d}`;
-  const dt = new Date(`${iso}T00:00:00Z`);
-  if (Number.isNaN(dt.getTime())) return "";
-
-  const [yy, mm, dd] = iso.split("-").map((x) => Number(x));
-  if (
-    dt.getUTCFullYear() !== yy ||
-    dt.getUTCMonth() + 1 !== mm ||
-    dt.getUTCDate() !== dd
-  ) {
-    return "";
-  }
-  return iso;
 }
 
 export default async function Step1Page({
@@ -82,106 +35,61 @@ export default async function Step1Page({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("registration_completed, data")
+    .select("data")
     .eq("id", data.user.id)
     .single();
 
-  if (profile?.registration_completed) redirect(`/${params.locale}/home`);
-
-  const step1 = profile?.data?.intake?.step1 || {};
+  // שימוש ב-as any כדי למנוע שגיאות TypeScript אם הטיפוסים לא מעודכנים
+  const step1 = (profile?.data as any)?.intake?.step1 || {};
+  
   function isoToParts(iso: string) {
-  if (!iso) return { y: "", m: "", d: "" };
-  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!m) return { y: "", m: "", d: "" };
-  return { y: m[1], m: m[2], d: m[3] };
-}
-
-  const birth = isoToParts(step1.birthDate || "");
-  const passIssue = isoToParts(step1.passportIssueDate || "");
-  const passExp = isoToParts(step1.passportExpiryDate || "");
-
-  const genderDefault = normalizeGenderValue(step1.gender);
-
-  async function saveDraftAction(formData: FormData) {
-    "use server";
-    const patch = {
-      lastName: normalizeText(formData.get("lastName"), 60),
-      firstName: normalizeText(formData.get("firstName"), 60),
-      oldLastName: normalizeText(formData.get("oldLastName"), 60),
-      oldFirstName: normalizeText(formData.get("oldFirstName"), 60),
-      gender: normalizeText(formData.get("gender"), 20),
-
-      // ✅ direct date fields
-      birthDate: buildISODateFromForm(formData, "birthDate"),
-
-      nationality: normalizeText(formData.get("nationality"), 60),
-      israeliId: normalizeDigits(formData.get("israeliId")),
-      passportNumber: normalizeText(formData.get("passportNumber"), 40),
-
-      passportIssueDate: buildISODateFromForm(formData, "passportIssueDate"),
-      passportExpiryDate: buildISODateFromForm(formData, "passportExpiryDate"),
-
-      passportIssueCountry: normalizeText(formData.get("passportIssueCountry"), 60),
-      phone: normalizePhone(formData.get("phone")),
-      email: normalizeEmail(formData.get("email")),
-    };
-
-    await saveSignupStep({ locale: params.locale, step: 1, patch, goNext: false });
+    if (!iso) return { y: "", m: "", d: "" };
+    const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return { y: "", m: "", d: "" };
+    return { y: m[1], m: m[2], d: m[3] };
   }
 
-  async function saveAndNextAction(formData: FormData) {
-    "use server";
-    const patch = {
-      lastName: normalizeText(formData.get("lastName"), 60),
-      firstName: normalizeText(formData.get("firstName"), 60),
-      oldLastName: normalizeText(formData.get("oldLastName"), 60),
-      oldFirstName: normalizeText(formData.get("oldFirstName"), 60),
-      gender: normalizeText(formData.get("gender"), 20),
-      birthDate: buildISODateFromForm(formData, "birthDate"),
-      nationality: normalizeText(formData.get("nationality"), 60),
-      israeliId: normalizeDigits(formData.get("israeliId")),
-      passportNumber: normalizeText(formData.get("passportNumber"), 40),
-      passportIssueDate: buildISODateFromForm(formData, "passportIssueDate"),
-      passportExpiryDate: buildISODateFromForm(formData, "passportExpiryDate"),
-      passportIssueCountry: normalizeText(formData.get("passportIssueCountry"), 60),
-      phone: normalizePhone(formData.get("phone")),
-      email: normalizeEmail(formData.get("email")),
-    };
+  const birth = isoToParts(getStringValue(step1.birthDate));
+  const passIssue = isoToParts(getStringValue(step1.passportIssueDate));
+  const passExp = isoToParts(getStringValue(step1.passportExpiryDate));
+  const genderDefault = normalizeGenderValue(getStringValue(step1.gender));
 
-    await saveSignupStep({ locale: params.locale, step: 1, patch, goNext: true });
-  }
+  // ✅ יצירת Actions תקינים לקומפוננטת לקוח
+  // השימוש ב-bind יוצר פונקציה חדשה שכבר כוללת את ה-locale וה-mode,
+  // ונקסט יודע להעביר אותה בצורה בטוחה לקלאיינט כ-Server Action.
+  const saveDraft = submitStep1.bind(null, params.locale, "draft");
+  const saveAndNext = submitStep1.bind(null, params.locale, "next");
 
   return (
-  <div className="appShell" dir="rtl">
-    <div className="appFrame">
-      <Step1FormClient
-        locale={params.locale}
-        saved={searchParams?.saved === "1"}
-        defaults={{
-        lastName: step1.lastName || "",
-        firstName: step1.firstName || "",
-        oldLastName: step1.oldLastName || "",
-        oldFirstName: step1.oldFirstName || "",
-        gender: genderDefault || "",
-
-        // ✅ matches Props in Step1FormClient.tsx
-        birth,
-        passIssue,
-        passExp,
-
-        nationality: step1.nationality || "",
-        israeliId: step1.israeliId || "",
-        passportNumber: step1.passportNumber || "",
-        passportIssueCountry: step1.passportIssueCountry || "",
-        phone: step1.phone || "",
-        email: step1.email || data.user.email || "",
-      }}
-
-        saveDraftAction={saveDraftAction}
-        saveAndNextAction={saveAndNextAction}
-      />
+    <div className="appShell" dir="rtl">
+      <div className="appFrame">
+        <Step1FormClient
+          locale={params.locale}
+          saved={searchParams?.saved === "1"}
+          defaults={{
+            // שימוש ב-getStringValue לכל השדות שעלולים להיות אובייקטים
+            lastName: getStringValue(step1.lastName),
+            firstName: getStringValue(step1.firstName),
+            oldLastName: getStringValue(step1.oldLastName),
+            oldFirstName: getStringValue(step1.oldFirstName),
+            
+            gender: genderDefault,
+            birth,
+            passIssue,
+            passExp,
+            
+            nationality: getStringValue(step1.nationality),
+            israeliId: getStringValue(step1.israeliId),
+            passportNumber: getStringValue(step1.passportNumber),
+            passportIssueCountry: getStringValue(step1.passportIssueCountry),
+            phone: getStringValue(step1.phone),
+            email: getStringValue(step1.email) || data.user.email || "",
+          }}
+          // העברת הפונקציות המוכנות
+          saveDraftAction={saveDraft}
+          saveAndNextAction={saveAndNext}
+        />
+      </div>
     </div>
-  </div>
-);
-
+  );
 }

@@ -30,14 +30,13 @@ function redactPII(input: string): RedactionResult {
   // Emails
   replaceAll(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "EMAIL");
 
-  // Phone numbers (loose): catches +972..., 05x..., separators/spaces/dashes
-  // NOTE: This may also catch some non-phone long digit sequences, but that's OK for privacy.
+  // Phone numbers (loose)
   replaceAll(/(\+?\d[\d\s().-]{7,}\d)/g, "PHONE");
 
-  // Israeli ID (9 digits) - loose
+  // Israeli ID (9 digits)
   replaceAll(/\b\d{9}\b/g, "IL_ID");
 
-  // Credit card-ish sequences (13-19 digits with optional separators) - conservative
+  // Credit card-ish sequences
   replaceAll(/\b(?:\d[ -]*?){13,19}\b/g, "CARD");
 
   return { redactedText: text, map };
@@ -53,60 +52,73 @@ function restorePII(translated: string, map: Record<string, string>) {
   return out;
 }
 
-/**
- * תרגום מערבית -> עברית.
- * אם הטקסט כבר בעברית (או מעורבב) - המודל עדיין יחזיר עברית,
- * אבל הוא לא אמור "להמציא" מידע חדש.
- */
-export async function translateToHebrew(inputText: string) {
-  const text = (inputText ?? "").trim();
-  if (!text) return "";
+// --- פונקציה גנרית לביצוע התרגום ---
+async function runTranslation(text: string, targetLang: 'hebrew' | 'arabic') {
+  const inputText = (text ?? "").trim();
+  if (!inputText) return "";
 
   const apiKey = process.env.GOOGLE_API_KEY;
-  console.log("SERVER sees GOOGLE_API_KEY:", apiKey ? apiKey.slice(0, 8) : "MISSING");
-  if (!apiKey) return "שגיאה: חסר GOOGLE_API_KEY ב-.env.local";
+  if (!apiKey) return `Error: Missing API Key`;
 
-  // ✅ Redaction לפני שליחה ל-LLM
-  const { redactedText, map } = redactPII(text);
+  // 1. הסתרת פרטים רגישים
+  const { redactedText, map } = redactPII(inputText);
 
   const genAI = new GoogleGenerativeAI(apiKey);
 
   try {
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
+    // הגדרת הפרומפט בהתאם לשפת היעד
+    let promptInstruction = "";
+    if (targetLang === 'hebrew') {
+      promptInstruction = `
+        Task: Translate the text from Arabic (or English) to Hebrew.
+        If parts are already in Hebrew, keep them as-is.
+        Output ONLY the Hebrew translation.
+      `;
+    } else {
+      promptInstruction = `
+        Task: Translate the text from Hebrew (or English) to Arabic.
+        If parts are already in Arabic, keep them as-is.
+        Output ONLY the Arabic translation.
+      `;
+    }
+
     const prompt = `
-You are a professional translator helping refugees fill official forms in Israel.
-
-Task:
-Translate the text from Arabic to Hebrew.
-If parts are already in Hebrew, keep them as-is.
-
-CRITICAL RULES:
-- Output ONLY the Hebrew translation. No explanations. No quotes. No markdown.
-- Do NOT add new facts. Translate faithfully.
-- Preserve paragraphs and line breaks.
-- Keep numbers and dates exactly as written.
-- Do not change, remove, or move any tokens in the format [[REDACTED_*]].
-- Use clear, respectful Hebrew. If the text sounds like a formal form answer, use a formal register.
-
-Text:
-${redactedText}
-`.trim();
+      You are a professional translator helping refugees fill official forms in Israel.
+      ${promptInstruction}
+      
+      CRITICAL RULES:
+      - No explanations. No quotes. No markdown.
+      - Translate faithfully.
+      - Do not change, remove, or move tokens in the format [[REDACTED_*]].
+      
+      Text:
+      ${redactedText}
+    `.trim();
 
     const result = await model.generateContent(prompt);
-    const hebrew = result.response.text().trim();
+    const translatedText = result.response.text().trim();
 
-    // ✅ שחזור הפרטים אחרי התרגום
-    return restorePII(hebrew, map);
+    // 2. שחזור הפרטים
+    return restorePII(translatedText, map);
+
   } catch (error) {
-    console.error("Arabic->Hebrew Translation error:", error);
-    return "שגיאה בתרגום. נסה שוב.";
+    console.error(`${targetLang} Translation error:`, error);
+    return inputText; // במקרה שגיאה מחזירים את המקור
   }
 }
 
 /**
- * Alias ברור יותר לשם הפונקציה (אם את רוצה להשתמש בשם הזה בקוד).
+ * תרגום לערבית -> עברית
  */
-export async function translateArabicToHebrew(inputText: string) {
-  return translateToHebrew(inputText);
+export async function translateToHebrew(inputText: string) {
+  return runTranslation(inputText, 'hebrew');
+}
+
+/**
+ * תרגום לעברית -> ערבית (חדש!)
+ */
+export async function translateToArabic(inputText: string) {
+  return runTranslation(inputText, 'arabic');
 }
