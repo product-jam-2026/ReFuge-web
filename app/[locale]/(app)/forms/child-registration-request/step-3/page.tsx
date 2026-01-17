@@ -74,22 +74,22 @@ export default function Step3() {
     update(`intake.step6.children.${i}.${key}`, value);
   }
 
-  function addChildRow() {
-    const nextChildren = [
-      ...(draft.intake.step6.children ?? []),
-      {
-        lastName: "",
-        firstName: "",
-        gender: "",
-        birthDate: "",
-        nationality: "",
-        israeliId: "",
-        residenceCountry: "",
-        entryDate: "",
-      },
-    ];
-    update("intake.step6.children", nextChildren);
-  }
+  // function addChildRow() {
+  //   const nextChildren = [
+  //     ...(draft.intake.step6.children ?? []),
+  //     {
+  //       lastName: "",
+  //       firstName: "",
+  //       gender: "",
+  //       birthDate: "",
+  //       nationality: "",
+  //       israeliId: "",
+  //       residenceCountry: "",
+  //       entryDate: "",
+  //     },
+  //   ];
+  //   update("intake.step6.children", nextChildren);
+  // }
 
   return (
     <main
@@ -254,7 +254,7 @@ export default function Step3() {
         </div>
       ))}
 
-      <button
+      {/* <button
         type="button"
         onClick={addChildRow}
         style={{
@@ -268,7 +268,7 @@ export default function Step3() {
         }}
       >
         + הוסף ילד/ה נוסף/ת
-      </button>
+      </button> */}
 
       {/* SIGNATURE */}
       {/* <SectionTitle>חתימה (אופציונלי)</SectionTitle>
