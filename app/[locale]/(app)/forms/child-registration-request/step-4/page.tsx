@@ -48,7 +48,7 @@ function Field({
 
 export default function Step4() {
   const router = useRouter();
-  const { draft, extras, setExtras } = useWizard();
+  const { draft, extras, setExtras, instanceId } = useWizard();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -175,41 +175,103 @@ export default function Step4() {
     | string
     | undefined;
 
-  async function uploadPdf(outBytes: Uint8Array, fileName: string) {
-    const supabase = createClient();
+  // async function uploadPdf(
+  //   outBytes: Uint8Array,
+  //   fileName: string,
+  //   instanceId: string,
+  // ) {
+  //   const supabase = createClient();
 
-    const { data: userRes, error: userErr } = await supabase.auth.getUser();
-    if (userErr) throw userErr;
-    const user = userRes.user;
-    if (!user) throw new Error("Not logged in");
+  //   const { data: userRes, error: userErr } = await supabase.auth.getUser();
+  //   if (userErr) throw userErr;
+  //   const user = userRes.user;
+  //   if (!user) throw new Error("Not logged in");
 
-    const path = `${user.id}/child-registration-request/${fileName}`;
+  //   const path = `${user.id}/child-registration-request/${fileName}`;
 
-    // safest Blob creation for TS
-    const bytes = new Uint8Array(outBytes); // copy
-    const blob = new Blob([bytes.buffer], { type: "application/pdf" });
+  //   // safest Blob creation for TS
+  //   const bytes = new Uint8Array(outBytes); // copy
+  //   const blob = new Blob([bytes.buffer], { type: "application/pdf" });
 
-    const { data, error } = await supabase.storage
-      .from("generated-pdfs")
-      .upload(path, blob, {
-        contentType: "application/pdf",
-        upsert: true,
-      });
+  //   const { data, error } = await supabase.storage
+  //     .from("generated-pdfs")
+  //     .upload(path, blob, {
+  //       contentType: "application/pdf",
+  //       upsert: true,
+  //     });
 
-    if (error) throw error;
+  //   if (error) throw error;
 
-    const user_id = userRes.user!.id;
+  //   const user_id = userRes.user!.id;
 
-    const { error: insErr } = await supabase.from("generated_pdfs").insert({
-      user_id,
-      bucket: "generated-pdfs",
-      path: data.path,
+  //   const { error: insErr } = await supabase.from("generated_pdfs").insert({
+  //     user_id,
+  //     bucket: "generated-pdfs",
+  //     path: data.path,
+  //     form_instance_id: instanceId, // ✅ link
+  //     title,
+  //   });
+
+  //   if (insErr) throw insErr;
+
+  //   return data.path;
+  // }
+
+
+  function safeFileName(title: string) {
+  // keep it filesystem-safe
+  return (title ?? "")
+    .toString()
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, "_")
+    .slice(0, 60) || "Untitled";
+}
+
+async function uploadPdf(
+  outBytes: Uint8Array,
+  instanceId: string,
+  pdfTitle: string,
+) {
+  const supabase = createClient();
+
+  const { data: userRes, error: userErr } = await supabase.auth.getUser();
+  if (userErr) throw userErr;
+  const user = userRes.user;
+  if (!user) throw new Error("Not logged in");
+
+  // const ts = new Date().toISOString().replace(/[:.]/g, "-");
+  const ts = new Date().toISOString().replace("Z", "").replace(/[:.]/g, "-");
+  
+  const base = safeFileName(pdfTitle);
+  const fileName = `${base}_${ts}.pdf`;
+
+  // Put PDFs under the instance folder (nice organization)
+  const path = `${user.id}/child-registration-request/${instanceId}/${fileName}`;
+
+  const bytes = new Uint8Array(outBytes);
+  const blob = new Blob([bytes.buffer], { type: "application/pdf" });
+
+  const { data, error } = await supabase.storage
+    .from("generated-pdfs")
+    .upload(path, blob, {
+      contentType: "application/pdf",
+      upsert: false, // IMPORTANT: don't overwrite old pdf
     });
 
-    if (insErr) throw insErr;
+  if (error) throw error;
 
-    return data.path;
-  }
+  const { error: insErr } = await supabase.from("generated_pdfs").insert({
+    user_id: user.id,
+    bucket: "generated-pdfs",
+    path: data.path,
+    form_instance_id: instanceId,
+    pdf_title: pdfTitle, // snapshot title
+  });
+
+  if (insErr) throw insErr;
+
+  return data.path;
+}
 
   async function saveDraft(instanceId?: string) {
     const supabase = createClient();
@@ -220,7 +282,12 @@ export default function Step4() {
     if (!user) throw new Error("Not logged in");
     if (!draft) throw new Error("No draft to save");
 
+    // const title =
+    //   `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
+    //   "Untitled";
+
     const title =
+      (extras as any).formTitle?.trim() ||
       `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
       "Untitled";
 
@@ -256,39 +323,113 @@ export default function Step4() {
     }
   }
 
+  // async function onGenerate() {
+  //   const fields = intakeToPdfFields(draft as any, {
+  //     formDate: extras.formDate,
+  //     poBox: extras.poBox,
+  //     applicantSignature: extras.applicantSignatureDataUrl,
+  //   });
+
+  //   const [tplRes, fontRes] = await Promise.all([
+  //     fetch("/forms/child-registration-request.pdf"),
+  //     fetch("/fonts/SimplerPro-Regular.otf"),
+  //   ]);
+
+  //   const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
+  //   const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
+
+  //   const outBytes = await fillFieldsToNewPdfBytesClient(
+  //     templateBytes,
+  //     fields,
+  //     fieldMap,
+  //     { fontBytes, autoDetectRtl: true, defaultRtlAlignRight: true },
+  //   );
+
+  //   const s1 = (draft as any).intake.step1;
+  //   const fileName = `child_registration_${safePart(
+  //     s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
+  //   )}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+  //   // downloadPdf(fileName, outBytes);
+
+  //   // const { instanceId } = useWizard();
+
+  //   const savedInstanceId = await saveDraft(instanceId ?? undefined);
+  //   await uploadPdf(outBytes, fileName, savedInstanceId, extras.formTitle);
+
+  //   // const instanceId = await saveDraft(); // ✅ await + capture id
+
+  //   // const storagePath = await uploadPdf(outBytes, fileName, instanceId);
+  // }
+
+  // async function onGenerate() {
+  //   const pdfTitle =
+  //     (extras as any).formTitle?.trim() ||
+  //     `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
+  //     "Untitled";
+
+  //   const fields = intakeToPdfFields(draft as any, {
+  //     formDate: extras.formDate,
+  //     poBox: extras.poBox,
+  //     applicantSignature: extras.applicantSignatureDataUrl,
+  //   });
+
+  //   const [tplRes, fontRes] = await Promise.all([
+  //     fetch("/forms/child-registration-request.pdf"),
+  //     fetch("/fonts/SimplerPro-Regular.otf"),
+  //   ]);
+
+  //   const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
+  //   const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
+
+  //   const outBytes = await fillFieldsToNewPdfBytesClient(
+  //     templateBytes,
+  //     fields,
+  //     fieldMap,
+  //     { fontBytes, autoDetectRtl: true, defaultRtlAlignRight: true },
+  //   );
+
+  //   // ensure instance exists + has the current title
+  //   const savedInstanceId = await saveDraft(instanceId ?? undefined);
+
+  //   // create a NEW pdf row + NEW storage object (title-based)
+  //   await uploadPdf(outBytes, savedInstanceId, pdfTitle);
+  // }
+
   async function onGenerate() {
-    const fields = intakeToPdfFields(draft as any, {
-      formDate: extras.formDate,
-      poBox: extras.poBox,
-      applicantSignature: extras.applicantSignatureDataUrl,
-    });
+  const pdfTitle =
+    (extras as any).formTitle?.trim() ||
+    `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
+    "Untitled";
 
-    const [tplRes, fontRes] = await Promise.all([
-      fetch("/forms/child-registration-request.pdf"),
-      fetch("/fonts/SimplerPro-Regular.otf"),
-    ]);
+  const fields = intakeToPdfFields(draft as any, {
+    formDate: extras.formDate,
+    poBox: extras.poBox,
+    applicantSignature: extras.applicantSignatureDataUrl,
+  });
 
-    const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
-    const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
+  const [tplRes, fontRes] = await Promise.all([
+    fetch("/forms/child-registration-request.pdf"),
+    fetch("/fonts/SimplerPro-Regular.otf"),
+  ]);
 
-    const outBytes = await fillFieldsToNewPdfBytesClient(
-      templateBytes,
-      fields,
-      fieldMap,
-      { fontBytes, autoDetectRtl: true, defaultRtlAlignRight: true },
-    );
+  const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
+  const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
 
-    const s1 = (draft as any).intake.step1;
-    const fileName = `child_registration_${safePart(
-      s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
-    )}_${new Date().toISOString().slice(0, 10)}.pdf`;
+  const outBytes = await fillFieldsToNewPdfBytesClient(
+    templateBytes,
+    fields,
+    fieldMap,
+    { fontBytes, autoDetectRtl: true, defaultRtlAlignRight: true },
+  );
 
-    // downloadPdf(fileName, outBytes);
+  // ensure instance exists + has the current title
+  const savedInstanceId = await saveDraft(instanceId ?? undefined);
 
-    const storagePath = await uploadPdf(outBytes, fileName);
+  // create a NEW pdf row + NEW storage object (title-based)
+  await uploadPdf(outBytes, savedInstanceId, pdfTitle);
+}
 
-    saveDraft();
-  }
 
   return (
     <main
@@ -305,6 +446,19 @@ export default function Step4() {
             setExtras((p: any) => ({ ...p, formDate: e.target.value }))
           }
           style={inputStyle}
+        />
+      </Field>
+
+      <SectionTitle>פרטי הטופס</SectionTitle>
+
+      <Field label="שם הטופס (למשל: 'דנה כהן' / 'Person A')">
+        <input
+          value={(extras as any).formTitle}
+          onChange={(e) =>
+            setExtras((p: any) => ({ ...p, formTitle: e.target.value }))
+          }
+          style={inputStyle}
+          placeholder="שם לזיהוי ברשימות"
         />
       </Field>
 

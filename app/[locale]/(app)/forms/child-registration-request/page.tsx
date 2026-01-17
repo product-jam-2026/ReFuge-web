@@ -4,11 +4,30 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+// type GeneratedPdfRow = {
+//   id: string;
+//   bucket: string;
+//   path: string;
+//   created_at: string;
+// };
+
+// type GeneratedPdfRow = {
+//   id: string;
+//   bucket: string;
+//   path: string;
+//   created_at: string;
+//   form_instance_id: string | null;
+//   form_instance: { title: string | null } | null;
+//   // form_instances: { title: string | null }[]; // matches your current result
+// };
+
 type GeneratedPdfRow = {
   id: string;
   bucket: string;
   path: string;
   created_at: string;
+  form_instance_id: string | null;
+  pdf_title: string | null;
 };
 
 function fileNameFromPath(path: string) {
@@ -82,19 +101,34 @@ export default function ChildRegistrationHomePage() {
         return;
       }
 
+      //     const { data, error } = await supabase
+      //       .from("generated_pdfs")
+      //       .select(
+      //         `
+      //   id,
+      //   bucket,
+      //   path,
+      //   created_at,
+      //   form_instance_id,
+      //   form_instance:form_instances ( title )
+      // `,
+      //       )
+      //       .eq("user_id", userRes.user.id)
+      //       .order("created_at", { ascending: false });
+      //     if (error) {
+      //       setPdfErr(error.message);
+      //       setPdfLoading(false);
+      //       return;
+      //     }
+
       const { data, error } = await supabase
         .from("generated_pdfs")
-        .select("id, bucket, path, created_at")
+        .select("id, bucket, path, created_at, form_instance_id, pdf_title")
         .eq("user_id", userRes.user.id)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        setPdfErr(error.message);
-        setPdfLoading(false);
-        return;
-      }
-
       setPdfRows((data ?? []) as GeneratedPdfRow[]);
+      // setPdfRows(data ?? []);
       setPdfLoading(false);
     })();
   }, []);
@@ -151,40 +185,22 @@ export default function ChildRegistrationHomePage() {
         <p style={{ marginTop: 12 }}>אין PDFים עדיין.</p>
       ) : (
         <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-          {pdfRows.map((p) => (
-            <div key={p.id} style={card}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <div style={{ fontWeight: 800 }}>
-                  {fileNameFromPath(p.path)}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>
-                  {fmt(p.created_at)}
-                </div>
-              </div>
+          <div style={tileGrid}>
+            {pdfRows.map((p) => {
+              // const title =
+              //   (p.form_instances?.[0]?.title ?? "").trim() ||
+              //   fileNameFromPath(p.path);
 
-              <div style={{ fontSize: 12, opacity: 0.75, marginTop: 6 }}>
-                bucket: {p.bucket}
-                <br />
-                path: {p.path}
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  marginTop: 10,
-                  flexWrap: "wrap",
-                }}
-              >
+              // const title =
+              //   (p.form_instance?.title ?? "").trim() ||
+              //   fileNameFromPath(p.path);
+              const title =
+                (p.pdf_title ?? "").trim() || fileNameFromPath(p.path);
+              return (
                 <button
+                  key={p.id}
                   type="button"
-                  style={btnSecondary}
+                  style={tile}
                   onClick={async () => {
                     try {
                       await downloadPdfFromStorage(supabase, p.bucket, p.path);
@@ -192,12 +208,14 @@ export default function ChildRegistrationHomePage() {
                       alert(e?.message ?? "Download failed");
                     }
                   }}
+                  aria-label={`הורד PDF: ${title}`}
+                  title={title}
                 >
-                  הורד PDF
+                  {title}
                 </button>
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -233,66 +251,29 @@ export default function ChildRegistrationHomePage() {
         <p style={{ marginTop: 16 }}>אין טיוטות עדיין.</p>
       ) : (
         <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
-          {rows.map((r) => (
-            <div key={r.id} style={card}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <div style={{ fontWeight: 800 }}>
-                  {r.title?.trim() || "טיוטה ללא שם"}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.8 }}>
-                  עודכן: {fmt(r.updated_at)}
-                </div>
-              </div>
+          <div style={tileGrid}>
+            {rows.map((r) => {
+              const title = (r.title ?? "").trim() || "טיוטה ללא שם";
 
-              <div style={{ fontSize: 13, opacity: 0.85 }}>
-                סטטוס: {r.status || "draft"} · נוצר: {fmt(r.created_at)}
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  marginTop: 8,
-                  flexWrap: "wrap",
-                }}
-              >
+              return (
                 <button
+                  key={r.id}
                   type="button"
-                  style={btnSecondary}
+                  style={tile}
                   onClick={() => {
-                    // Option A: navigate to wizard with instanceId in query
+                    // choose what clicking a draft should do:
                     router.push(
                       `child-registration-request/step-3?instanceId=${r.id}`,
                     );
                   }}
+                  aria-label={`המשך עריכה: ${title}`}
+                  title={title}
                 >
-                  המשך עריכה
+                  {title}
                 </button>
-
-                <button
-                  type="button"
-                  style={btnSecondary}
-                  onClick={() => {
-                    router.push(
-                      `child-registration-request/review?instanceId=${r.id}`,
-                    );
-                  }}
-                >
-                  צפייה / PDF
-                </button>
-              </div>
-
-              <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
-                id: {r.id}
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       )}
     </main>
@@ -318,4 +299,22 @@ const btnSecondary: React.CSSProperties = {
   border: "1px solid #ccc",
   background: "transparent",
   cursor: "pointer",
+};
+
+const tile: React.CSSProperties = {
+  width: "100%",
+  textAlign: "right",
+  border: "1px solid #ddd",
+  borderRadius: 12,
+  padding: 14,
+  background: "#fff",
+  cursor: "pointer",
+  fontWeight: 800,
+  fontSize: 16,
+};
+
+const tileGrid: React.CSSProperties = {
+  display: "grid",
+  gap: 10,
+  marginTop: 12,
 };
