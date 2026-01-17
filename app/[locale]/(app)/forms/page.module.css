@@ -1,0 +1,142 @@
+.page {
+  display: flex;
+  flex-direction: column;
+}
+.formCard {
+  /* position: relative; */
+  display: flex;
+  flex-direction: column;
+  gap: 42px;
+  padding: 16px;
+
+  /* card look */
+  background: #8fb2ff;
+  border-radius: 16px;
+  padding: 18px 18px 22px;
+
+  /* make room for the left arrow */
+  padding-left: 52px;
+
+  text-decoration: none;
+  color: #0b0b0b;
+
+  /* box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06); */
+  /* transition: transform 120ms ease, opacity 120ms ease, box-shadow 120ms ease; */
+}
+
+.backArrow {
+  width: 6px;
+  height: 12px;
+}
+.logoImage {
+  padding-bottom: 20px;
+  float: left;
+  width: 236.003px;
+  height: 139.008px;
+}
+.subTextSection {
+  color: #000;
+  text-align: right;
+  width: 309px;
+  height: 104px;
+  flex-shrink: 0;
+  padding-bottom: 0px;
+
+  /* text */
+  font-family: SimplerPro;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 21px; /* 131.25% */
+  letter-spacing: -0.32px;
+}
+
+/* .formCard:hover {
+  opacity: 0.95;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+} */
+
+/* .formCard:active {
+  transform: translateY(0px) scale(0.99);
+} */
+
+.content {
+  text-align: center; /* matches screenshot */
+  direction: rtl;
+}
+
+.formTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.formSubtitle {
+  margin: 10px 0 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  opacity: 0.95;
+}
+
+.formsList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.topBar {
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 27px;
+  padding-top: 70px;
+  /* align-self: center; */
+  /* justify-content: space-between;  */
+  /* justify-self: center; */
+  align-items: center;
+  gap: 20px;
+
+}
+
+.arrowBox{
+    display: flex;
+    padding-top: 5px;
+}
+
+.langSwitcher {
+  display: flex;
+  flex-direction: row;
+  padding-bottom: 27px;
+}
+
+.bigTitles {
+  color: #000;
+  text-align: right;
+
+  /* big titles */
+  font-family: SimplerPro;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 29px; /* 120.833% */
+  padding-left: 80px;
+}
+
+/* Left arrow (like the screenshot) */
+/* .arrow {
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  width: 28px;
+  height: 28px;
+  opacity: 0.9; */
+
+/* Use a mask so it inherits currentColor */
+/* background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 19a1 1 0 0 1-.7-.3l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 1 1 1.4 1.4L11.62 12l4.58 4.6A1 1 0 0 1 15.5 19z'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 19a1 1 0 0 1-.7-.3l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 1 1 1.4 1.4L11.62 12l4.58 4.6A1 1 0 0 1 15.5 19z'/%3E%3C/svg%3E")
+    no-repeat center / contain; */
+/* } */
