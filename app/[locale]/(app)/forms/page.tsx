@@ -1,10 +1,16 @@
+"use client";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import LangSwitcher from "@/lib/components/LangSwitcher";
 import styles from "./page.module.css";
 
+import { useParams, useRouter } from "next/navigation";
+
 export default function FormsPage() {
   const t = useTranslations("FormsPage");
+  const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
 
   return (
     <main className={styles.page}>
@@ -12,10 +18,13 @@ export default function FormsPage() {
         {/* <div className={styles.langSwitcher}>
           <LangSwitcher />
         </div> */}
-        <div className={styles.arrowBox}>
-          <img className={styles.backArrow} src="/images/backArrow.svg"></img>
-        </div>
-
+        <img
+          className={styles.backArrow}
+          src="/images/backArrow.svg"
+          alt="Back"
+          style={{ cursor: "pointer" }}
+          onClick={() => router.push(`/${locale}/home/`)}
+        />
         <div className={styles.bigTitles}>מאגר טפסים</div>
         <img className={styles.readButton} src="/images/readButton.svg"></img>
       </div>

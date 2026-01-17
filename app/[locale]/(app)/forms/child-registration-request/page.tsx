@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
+import Link from "next/link";
+
+
 
 // type GeneratedPdfRow = {
 //   id: string;
@@ -83,6 +86,10 @@ export default function ChildRegistrationHomePage() {
   const [pdfRows, setPdfRows] = useState<GeneratedPdfRow[]>([]);
   const [pdfLoading, setPdfLoading] = useState(true);
   const [pdfErr, setPdfErr] = useState<string>("");
+
+  const params = useParams();
+  const locale = params.locale as string;
+
 
   // final pdf loading logic
   useEffect(() => {
@@ -327,7 +334,13 @@ export default function ChildRegistrationHomePage() {
           <LangSwitcher />
         </div> */}
         <div className={styles.arrowBox}>
-          <img className={styles.backArrow} src="/images/backArrow.svg"></img>
+          <img
+            className={styles.backArrow}
+            src="/images/backArrow.svg"
+            alt="Back"
+            style={{ cursor: "pointer" }}
+            onClick={() => router.push(`/${locale}/forms/`)}
+          />{" "}
         </div>
 
         <div className={styles.bigTitles}>תביעה לקצבת ילדים</div>
@@ -383,7 +396,8 @@ export default function ChildRegistrationHomePage() {
                 aria-label={`הורד PDF: ${title}`}
                 title={title}
               >
-                {title}
+                <div>{title}</div>
+                <img src="/images/forwardArrowBlack.svg"></img>
               </button>
             );
           })}
@@ -419,7 +433,8 @@ export default function ChildRegistrationHomePage() {
                 aria-label={`המשך עריכה: ${title}`}
                 title={title}
               >
-                {title}
+                <div>{title}</div>
+                <img src="/images/forwardArrowBlack.svg"></img>
               </button>
             );
           })}
