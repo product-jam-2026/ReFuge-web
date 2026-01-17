@@ -103,12 +103,12 @@
 
 /* cards */
 .cardsGrid{
-  width: 100%;
-  max-width: 390px;
+  width: min(100%, 390px);
   margin-inline: auto;
 
   display: grid;
   grid-template-columns: 1fr 1fr;
+  justify-content: center;
   row-gap: 0;
   column-gap: 10px; 
   margin-top: calc(var(--cards-top) - var(--white-gap-h));

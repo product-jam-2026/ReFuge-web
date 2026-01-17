@@ -63,6 +63,9 @@ export default async function HomePage({
 
   const hour = getHourInTimeZone('Asia/Jerusalem');
   const greeting = t(`greetings.${getGreetingKey(hour)}`);
+  const greetingLine = t.has?.('greetingLine')
+    ? t('greetingLine', { greeting, name: firstName })
+    : `${greeting}, ${firstName}`;
 
   // routes
   const hrefProfile = `/${locale}/profile`;
@@ -78,7 +81,7 @@ export default async function HomePage({
       {/* ✅ תכלת למעלה (full width) */}
       <section className={styles.topCard}>
         <h1 className={styles.title}>
-          {t('greetingLine', { greeting, name: firstName })}
+          {greetingLine}
         </h1>
         <p className={styles.subtitle}>{t('subtitle')}</p>
       </section>
