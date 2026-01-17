@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
 import { createClient } from "../../../../lib/supabase/server";
+import styles from "./ProfilePage.module.css";
 
 function pickFirst<T>(...vals: Array<T | null | undefined>): T | undefined {
   for (const v of vals) if (v !== null && v !== undefined && v !== "") return v;
@@ -16,6 +17,7 @@ export default async function ProfilePage({
 }) {
   const { locale } = params;
   const t = await getTranslations("ProfilePage");
+  const isArabic = locale === "ar";
 
   const guardEnabled = process.env.NEXT_PUBLIC_ENABLE_AUTH_GUARD === "true";
 
@@ -28,8 +30,24 @@ export default async function ProfilePage({
   if (!user && guardEnabled) {
     return (
       <>
-        <div className="profileHeader">
-          <h1 className="profileTitle">{t("title")}</h1>
+        <div className={styles.profileHeader}>
+          <h1 className={styles.profileTitle}>{t("title")}</h1>
+          <Link
+            href={`/${locale}/home`}
+            className={styles.profileBackBtn}
+            aria-label={isArabic ? "رجوع" : "חזרה"}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="22" viewBox="0 0 11 22" fill="none" aria-hidden="true">
+              <g clipPath="url(#clip0_1820_2548)">
+                <path d="M3.19922 4.25879L9.19922 10.2588L3.19922 16.2588" stroke="#011429" strokeWidth="1.5" />
+              </g>
+              <defs>
+                <clipPath id="clip0_1820_2548">
+                  <rect width="22" height="11" fill="white" transform="translate(0 22) rotate(-90)" />
+                </clipPath>
+              </defs>
+            </svg>
+          </Link>
         </div>
 
         <p className="muted" style={{ textAlign: "center", marginTop: 24 }}>
@@ -82,47 +100,59 @@ export default async function ProfilePage({
 
   return (
     <>
-      <div className="profileHeader">
-        <h1 className="profileTitle">{t("title")}</h1>
+      <div className={styles.profileHeader}>
+        <h1 className={styles.profileTitle}>{t("title")}</h1>
+        <Link
+          href={`/${locale}/home`}
+          className={styles.profileBackBtn}
+          aria-label={isArabic ? "رجوع" : "חזרה"}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="22" viewBox="0 0 11 22" fill="none" aria-hidden="true">
+            <g clipPath="url(#clip0_1820_2548)">
+              <path d="M3.19922 4.25879L9.19922 10.2588L3.19922 16.2588" stroke="#011429" strokeWidth="1.5" />
+            </g>
+            <defs>
+              <clipPath id="clip0_1820_2548">
+                <rect width="22" height="11" fill="white" transform="translate(0 22) rotate(-90)" />
+              </clipPath>
+            </defs>
+          </svg>
+        </Link>
       </div>
 
-      <p className="muted" style={{ marginTop: 10 }}>
-        {t("subtitle")}
-      </p>
-
-      <section className="profileForm">
-        <div className="fieldGroup">
-          <div className="fieldLabel">{t("fields.fullName")}</div>
-          <div className="fieldPill">
-            {showName || <span className="placeholder">{t("empty")}</span>}
+      <section className={styles.profileForm}>
+        <div className={styles.fieldGroup}>
+          <div className={styles.fieldLabel}>{t("fields.fullName")}</div>
+          <div className={styles.fieldPill}>
+            {showName || <span className={styles.placeholder}>{t("empty")}</span>}
           </div>
         </div>
 
-        <div className="fieldGroup">
-          <div className="fieldLabel">{t("fields.phone")}</div>
-          <div className="fieldPill fieldRow">
-            {phoneDisplay || <span className="placeholder">{t("empty")}</span>}
+        <div className={styles.fieldGroup}>
+          <div className={styles.fieldLabel}>{t("fields.phone")}</div>
+          <div className={`${styles.fieldPill} ${styles.fieldRow}`}>
+            {phoneDisplay || <span className={styles.placeholder}>{t("empty")}</span>}
           </div>
         </div>
 
-        <div className="fieldGroup">
-          <div className="fieldLabel">{t("fields.email")}</div>
-          <div className="fieldPill">
-            {email || <span className="placeholder">{t("empty")}</span>}
+        <div className={styles.fieldGroup}>
+          <div className={styles.fieldLabel}>{t("fields.email")}</div>
+          <div className={styles.fieldPill}>
+            {email || <span className={styles.placeholder}>{t("empty")}</span>}
           </div>
         </div>
 
-        <div className="fieldGroup">
-          <div className="fieldLabel">{t("fields.address")}</div>
-          <div className="fieldPill">
-            {address || <span className="placeholder">{t("empty")}</span>}
+        <div className={styles.fieldGroup}>
+          <div className={styles.fieldLabel}>{t("fields.address")}</div>
+          <div className={styles.fieldPill}>
+            {address || <span className={styles.placeholder}>{t("empty")}</span>}
           </div>
         </div>
 
         {contactMethods ? (
-          <div className="fieldGroup">
-            <div className="fieldLabel">{t("fields.contactMethods")}</div>
-            <div className="fieldPill">
+          <div className={styles.fieldGroup}>
+            <div className={styles.fieldLabel}>{t("fields.contactMethods")}</div>
+            <div className={styles.fieldPill}>
               <span style={{ direction: "ltr" }}>
                 {JSON.stringify(contactMethods)}
               </span>
@@ -131,12 +161,12 @@ export default async function ProfilePage({
         ) : null}
       </section>
 
-      <section className="profileActions">
-        <Link href={`/${locale}/forms/saved`} className="bigOrangeBtn">
+      <section className={styles.profileActions}>
+        <Link href={`/${locale}/forms/saved`} className={styles.bigOrangeBtn}>
           {t("actions.savedForms")}
         </Link>
 
-        <Link href={`/${locale}/intake`} className="bigOrangeBtn">
+        <Link href={`/${locale}/intake`} className={styles.bigOrangeBtn}>
           {t("actions.editIntake")}
         </Link>
       </section>

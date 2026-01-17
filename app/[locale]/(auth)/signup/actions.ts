@@ -278,34 +278,98 @@ async function finishRegistration(params: {
 // Other Steps (3-7)
 // ----------------------------------------------------------------------
 
-function buildOccupationJSON(formData: FormData) {
+// ----------------------------------------------------------------------
+// Step 3 Logic
+// ----------------------------------------------------------------------
+
+export async function translateStep3Data(formData: FormData) {
+  "use server";
+  // השדות שביקשת לתרגם: רחוב מגורים, שם מעסיק, שם עסק, כתובת עבודה
+  const fields = ["regStreet", "employerName", "businessName", "workAddress"];
+  const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
+
+  await Promise.all(
+    fields.map(async (key) => {
+      const originalValue = String(formData.get(key) || "").trim();
+      
+      if (!originalValue) {
+        results[key] = { original: "", translated: "", direction: "ar-to-he" };
+        return;
+      }
+
+      const sourceIsHebrew = isHebrew(originalValue);
+      let translatedValue = "";
+
+      if (sourceIsHebrew) {
+        translatedValue = await translateToArabic(originalValue);
+        results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
+      } else {
+        translatedValue = await translateToHebrew(originalValue);
+        results[key] = { original: originalValue, translated: translatedValue, direction: "ar-to-he" };
+      }
+    })
+  );
+  return results;
+}
+
+function buildOccupationJSON(formData: FormData, buildDualField: (name: string) => any) {
   const rawAssets = formData.getAll("assets").map(String);
   const cleanedAssets = Array.from(new Set(rawAssets)).filter(Boolean);
+  
+  // טיפול בשם העסק או שם המעסיק - שניהם נכנסים לאותו שדה ב-DB
+  // אנו בודקים מי מהם קיים ושולחים אותו לפונקציה הדו-לשונית
+  const businessVal = formData.get("businessName");
+  const employerVal = formData.get("employerName");
+  
+  let finalEmployerName = { he: "", ar: "" };
+  
+  if (businessVal) {
+     finalEmployerName = buildDualField("businessName");
+  } else if (employerVal) {
+     finalEmployerName = buildDualField("employerName");
+  }
+
   return JSON.stringify({
     assets: cleanedAssets,
-    occupationText: normalizeText(formData.get("occupationText")),
-    employerName: normalizeText(formData.get("employerName") || formData.get("businessName")),
-    workAddress: normalizeText(formData.get("workAddress")),
+    occupationText: normalizeText(formData.get("occupationText")), // שדה חופשי ישן אם קיים
+    employerName: finalEmployerName, // נשמר כאובייקט {he, ar}
+    workAddress: buildDualField("workAddress"), // נשמר כאובייקט {he, ar}
     workStartDate: normalizeText(formData.get("workStartDate")),
+    notWorkingSub: normalizeText(formData.get("notWorkingSub")), // הוספנו את תת-הסטטוס של לא עובד
   });
 }
 
 export async function submitStep3(locale: string, mode: "draft" | "next" | "back", formData: FormData) {
   "use server"; 
+  
+  // פונקציית עזר לשמירת שדות דו-לשוניים (כמו בשלבים 1 ו-2)
+  const buildDualField = (baseName: string) => {
+    const heVal = normalizeText(formData.get(`${baseName}He`));
+    const arVal = normalizeText(formData.get(`${baseName}Ar`));
+    const baseVal = normalizeText(formData.get(baseName));
+    
+    // אם הגיעו ערכים מפוצלים (ממסך הסיכום) נשתמש בהם, אחרת בערך המקורי
+    return { he: heVal || baseVal, ar: arVal || "" };
+  };
+
   const mailingDiff = formData.get("mailingDifferent") === "true";
+  
   const patch = {
     maritalStatus: normalizeText(formData.get("maritalStatus")),
     statusDate: normalizeText(formData.get("statusDate")),
+    
     registeredAddress: {
-      city: normalizeText(formData.get("regCity")),
-      street: normalizeText(formData.get("regStreet")),
+      city: normalizeText(formData.get("regCity")), // עיר נשמרת כרגע כטקסט (בחירה מרשימה)
+      street: buildDualField("regStreet"), // רחוב נשמר כדו-לשוני
       houseNumber: normalizeDigits(formData.get("regHouseNumber")),
       entry: normalizeText(formData.get("regEntry")),
       apartment: normalizeDigits(formData.get("regApartment")),
       zip: normalizeDigits(formData.get("regZip")),
     },
+    
     housingType: normalizeText(formData.get("housingType")),
     mailingDifferent: mailingDiff,
+    
     mailingAddress: {
       city: mailingDiff ? normalizeText(formData.get("mailCity")) : "",
       street: mailingDiff ? normalizeText(formData.get("mailStreet")) : "",
@@ -314,8 +378,10 @@ export async function submitStep3(locale: string, mode: "draft" | "next" | "back
       apartment: mailingDiff ? normalizeDigits(formData.get("mailApartment")) : "",
       zip: mailingDiff ? normalizeDigits(formData.get("mailZip")) : "",
     },
+    
     employmentStatus: normalizeText(formData.get("employmentStatus")),
-    occupation: buildOccupationJSON(formData),
+    // כאן אנו מעבירים את buildDualField כדי לשמור תרגומים גם בתוך ה-JSON
+    occupation: buildOccupationJSON(formData, buildDualField),
   };
   
   if (mode === "back") {
@@ -323,6 +389,17 @@ export async function submitStep3(locale: string, mode: "draft" | "next" | "back
   } else {
     await saveSignupStep({ locale, step: 3, patch, goNext: mode === "next" });
   }
+}
+
+// ----------------------------------------------------------------------
+// Step 4 Logic
+// ----------------------------------------------------------------------
+
+export async function translateStep4Data(formData: FormData) {
+  "use server";
+  // כרגע אין שדות טקסט חופשי לתרגום בשלב 4 (הכל בחירות או מספרים).
+  // אנו מחזירים אובייקט ריק כדי לשמור על המבנה האחיד של הקוד.
+  return {}; 
 }
 
 export async function submitStep4(locale: string, mode: "draft" | "next" | "back", formData: FormData) {
@@ -348,15 +425,68 @@ export async function submitStep4(locale: string, mode: "draft" | "next" | "back
     await saveSignupStep({ locale, step: 4, patch, goNext: mode === "next" });
   }
 }
+// הוסף את זה לקובץ actions.ts הקיים
+
+// ----------------------------------------------------------------------
+// Step 5 Logic (Spouse / Additional Parent)
+// ----------------------------------------------------------------------
+
+export async function translateStep5Data(formData: FormData) {
+  "use server";
+  // שדות לתרגום: שמות ההורה הנוסף
+  const fields = ["firstName", "lastName", "oldFirstName", "oldLastName"];
+  const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
+
+  await Promise.all(
+    fields.map(async (key) => {
+      const originalValue = String(formData.get(key) || "").trim();
+      if (!originalValue) {
+        results[key] = { original: "", translated: "", direction: "ar-to-he" };
+        return;
+      }
+      const sourceIsHebrew = isHebrew(originalValue);
+      let translatedValue = "";
+      if (sourceIsHebrew) {
+        translatedValue = await translateToArabic(originalValue);
+        results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
+      } else {
+        translatedValue = await translateToHebrew(originalValue);
+        results[key] = { original: originalValue, translated: translatedValue, direction: "ar-to-he" };
+      }
+    })
+  );
+  return results;
+}
 
 export async function submitStep5(locale: string, mode: "draft" | "next" | "back", formData: FormData) {
   "use server";
-  const patch = {
-    person: {
-      firstName: normalizeText(formData.get("firstName"), 60),
-      lastName: normalizeText(formData.get("lastName"), 60),
-    },
+  
+  const buildDualField = (baseName: string) => {
+    const heVal = normalizeText(formData.get(`${baseName}He`));
+    const arVal = normalizeText(formData.get(`${baseName}Ar`));
+    const baseVal = normalizeText(formData.get(baseName));
+    return { he: heVal || baseVal, ar: arVal || "" };
   };
+
+  const patch = {
+    spouse: { // שומרים תחת אובייקט spouse כדי להבדיל מהמשתמש הראשי
+      lastName: buildDualField("lastName"),
+      firstName: buildDualField("firstName"),
+      oldLastName: buildDualField("oldLastName"),
+      oldFirstName: buildDualField("oldFirstName"),
+      gender: normalizeText(formData.get("gender"), 20),
+      birthDate: buildISODateFromForm(formData, "birthDate"),
+      nationality: normalizeText(formData.get("nationality"), 60),
+      israeliId: normalizeDigits(formData.get("israeliId")),
+      passportNumber: normalizeText(formData.get("passportNumber"), 40),
+      passportIssueDate: buildISODateFromForm(formData, "passportIssueDate"),
+      passportExpiryDate: buildISODateFromForm(formData, "passportExpiryDate"),
+      passportIssueCountry: normalizeText(formData.get("passportIssueCountry"), 60),
+      phone: normalizePhone(formData.get("phone")),
+      email: normalizeEmail(formData.get("email")),
+    }
+  };
+
   if (mode === "back") {
     await saveDraftAndGoToStep({ locale, step: 5, patch, goToStep: 4 });
   } else {

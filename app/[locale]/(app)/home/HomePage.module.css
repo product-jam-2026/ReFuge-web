@@ -110,13 +110,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   row-gap: 0;
-  column-gap: 20px; 
+  column-gap: 10px; 
   margin-top: calc(var(--cards-top) - var(--white-gap-h));
 }
 
 /* bring second row closer to the first row (adaptive by height) */
 .cardsGrid > :nth-child(n+2){
-  margin-top: -6vh;
+  margin-top: -2vh;
 }
 
 .card{

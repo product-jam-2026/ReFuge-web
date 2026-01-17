@@ -49,6 +49,10 @@ function isoToParts(iso: string) {
   if (!m) return { y: "", m: "", d: "" };
   return { y: m[1], m: m[2], d: m[3] };
 }
+function formatDateDisplay(iso: string) {
+  if (!iso) return "";
+  return iso.split('-').reverse().join('.');
+}
 function BiInline({ ar, he }: { ar: string; he: string }) {
   return (<><span>{ar}</span><span>{he}</span></>);
 }
@@ -205,7 +209,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
       {/* Main Form Container */}
       <form ref={formRef} className={styles.form} action={saveAndNextAction} onSubmit={(e) => { if (screen === 2) handleFinishStep2(e); }}>
         
-        {screen > 0 && (
+        {screen > 0 && screen < 3 && (
           <div className={styles.headerArea}>
             <div className={styles.topRow}>
                <button type="button" className={styles.backBtn} onClick={goBack}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
@@ -213,11 +217,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
             </div>
             <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${progress}%` }} /></div>
             <div className={styles.titleBlock}>
-                {screen === 3 ? (
-                    <div className={styles.h1}><BiInline ar="نهاية المرحلة 2" he="סוף שלב 2" /></div>
-                ) : (
-                    <div className={styles.h1}><BiInline ar="الوضع القانوني" he="מעמד" /></div>
-                )}
+                <div className={styles.h1}><BiInline ar="الوضع القانوني" he="מעמד" /></div>
             </div>
           </div>
         )}
@@ -249,80 +249,119 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
           <div className={styles.actions}><button type="submit" className={styles.btnPrimary}><BiInline ar="إنهاء المرحلة" he="סיום שלב" /></button><button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button></div>
         </div>
 
-        {/* Screen 3: Summary */}
-        <div style={{ display: screen === 3 ? 'block' : 'none' }}>
-          <div className={styles.summarySub} style={{textAlign: 'center', marginBottom: 20}}><BiInline ar="يرجى التحقق من صحة الترجمة" he="אנא וודא/י כי התרגום האוטומטי נכון" /></div>
-          
-          {/* Country (Read-only) */}
-          <div className={styles.summaryPair}>
-             <div className={styles.summaryPairLabel}><span>بلد الميلاد / ארץ לידה</span></div>
-             <input className={styles.readOnlyControl} defaultValue={getCountryLabel(formDataState.residenceCountry)} readOnly />
-          </div>
+        {/* Screen 3: Summary (Designed like Step 1) */}
+        {screen === 3 && (
+          <div className={styles.screenShow}>
+            <div className={styles.summaryHeader}>
+              
+              {/* כותרת: רווח בין השפות באותה שורה */}
+              <div className={styles.summaryTitle} style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                <span>نهاية المرحلة 2</span>
+                <span>סוף שלב 2</span>
+              </div>
 
-          {/* City (Translated) */}
-          <div className={styles.summaryPair}>
-            <div className={styles.summaryPairLabel}><span>مدينة الميلاد / עיר לידה</span><span style={{fontSize: 10, opacity: 0.5}}>{translations['residenceCity']?.direction === "he-to-ar" ? "(עב->ער)" : "(ער->עב)"}</span></div>
-            <div className={styles.summaryCard}>
-                <input className={styles.originalInput} defaultValue={formDataState.residenceCity || ""} readOnly tabIndex={-1} />
-                {translations['residenceCity'] ? (
-                  <>
-                    <input type="hidden" name={translations['residenceCity'].direction === "he-to-ar" ? "residenceCityHe" : "residenceCityAr"} value={formDataState.residenceCity} />
-                    <input className={styles.translatedInput} defaultValue={translations['residenceCity'].translated} name={translations['residenceCity'].direction === "he-to-ar" ? "residenceCityAr" : "residenceCityHe"} />
-                  </>
-                ) : (
-                  <input className={styles.translatedInput} defaultValue="" name="residenceCityHe" placeholder="תרגום..." />
-                )}
+              {/* תת-כותרת: ירידת שורה בין השפות */}
+              <div className={styles.summarySub} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                 <span>يرجى التحقق من صحة التفاصيل وترجمتها</span>
+                 <span>אנא וודא/י כי כל הפרטים ותרגומם נכונים</span>
+              </div>
+              
             </div>
-            <input type="hidden" name="residenceCity" value={formDataState.residenceCity} />
+
+            {/* --- Translated Fields (Split) --- */}
+            {[
+              { key: "residenceCity", labelAr: "مدينة الميلاد", labelHe: "עיר לידה" },
+              { key: "residenceAddress", labelAr: "هدف الإقامة", labelHe: "מטרת שהייה" },
+            ].map((field) => {
+                const data = translations[field.key];
+                // Show even if empty to keep consistency, or hide if original is empty
+                if (!data || !data.original) return null;
+                
+                const isHeToAr = data.direction === "he-to-ar";
+                const originalName = isHeToAr ? `${field.key}He` : `${field.key}Ar`;
+                const translatedName = isHeToAr ? `${field.key}Ar` : `${field.key}He`;
+
+                return (
+                  <div className={styles.summaryPair} key={field.key}>
+                    <div className={styles.summaryPairLabel}><span>{field.labelAr} / {field.labelHe}</span></div>
+                    <div className={styles.summaryInputs}>
+                       <input className={styles.originalInput} defaultValue={data.original} readOnly tabIndex={-1} />
+                       <input type="hidden" name={originalName} value={data.original} />
+                       <input className={styles.translatedInput} defaultValue={data.translated} name={translatedName} />
+                    </div>
+                    <input type="hidden" name={field.key} value={data.original} />
+                  </div>
+                );
+            })}
+
+            {/* --- Read Only Standard Fields --- */}
+            
+            {/* Country */}
+            {formDataState.residenceCountry && (
+              <div className={styles.summaryField}>
+                <div className={styles.label}><BiInline ar="بلد الميلاد" he="ארץ לידה" /></div>
+                <div className={styles.readOnlyInputWrap}>
+                   {/* We assume Select/Combobox icon logic */}
+                   <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+                   <input className={styles.readOnlyInput} defaultValue={getCountryLabel(formDataState.residenceCountry)} readOnly />
+                </div>
+              </div>
+            )}
+
+            {/* Visa Type */}
+            {formDataState.visaType && (
+              <div className={styles.summaryField}>
+                <div className={styles.label}><BiInline ar="نوع التأشيرة" he="סוג אשרה" /></div>
+                <div className={styles.readOnlyInputWrap}>
+                   <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+                   <input className={styles.readOnlyInput} defaultValue={getVisaLabel(formDataState.visaType)} readOnly />
+                </div>
+              </div>
+            )}
+
+            {/* Visa Dates */}
+            {(formDataState.visaStartDate || formDataState.visaEndDate) && (
+              <div className={styles.summaryField}>
+                 <div className={styles.label}><BiInline ar="توقيف" he="תוקף אשרה" /></div>
+                 <div className={styles.dateRow}>
+                    <div className={styles.dateCol}>
+                       <div className={styles.readOnlyInputWrap}>
+                          <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                          <input className={styles.readOnlyInput} defaultValue={formatDateDisplay(formDataState.visaEndDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', fontSize: 14}} />
+                       </div>
+                    </div>
+                    <span style={{color: '#aaa', marginTop: 5}}>-</span>
+                    <div className={styles.dateCol}>
+                       <div className={styles.readOnlyInputWrap}>
+                          <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                          <input className={styles.readOnlyInput} defaultValue={formatDateDisplay(formDataState.visaStartDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', fontSize: 14}} />
+                       </div>
+                    </div>
+                 </div>
+              </div>
+            )}
+
+            {/* Entry Date */}
+            {formDataState.entryDate && (
+               <div className={styles.summaryField}>
+                 <div className={styles.label}><BiInline ar="تاريخ الدخول" he="תאריך כניסה" /></div>
+                 <div className={styles.readOnlyInputWrap}>
+                    <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <input className={styles.readOnlyInput} defaultValue={formatDateDisplay(formDataState.entryDate)} readOnly style={{paddingLeft: 50, direction: 'ltr'}} />
+                 </div>
+               </div>
+            )}
+
+            {/* Hidden Fields for Submission */}
+            <input type="hidden" name="residenceCountry" value={formDataState.residenceCountry || ""} />
+            <input type="hidden" name="visaType" value={formDataState.visaType || ""} />
+            <input type="hidden" name="visaStartDate" value={formDataState.visaStartDate || ""} />
+            <input type="hidden" name="visaEndDate" value={formDataState.visaEndDate || ""} />
+            <input type="hidden" name="entryDate" value={formDataState.entryDate || ""} />
+
+            <div className={styles.actions}><button type="submit" className={styles.btnPrimary}><BiInline ar="موافقة" he="אישור וסיום" /></button><button type="button" onClick={() => setScreen(2)} className={styles.btnSecondary}><BiInline ar="تعديل" he="חזור לעריכה" /></button></div>
           </div>
-
-          {/* Address (Translated) */}
-          <div className={styles.summaryPair}>
-            <div className={styles.summaryPairLabel}><span>هدف الإقامة / מטרת שהייה</span><span style={{fontSize: 10, opacity: 0.5}}>{translations['residenceAddress']?.direction === "he-to-ar" ? "(עב->ער)" : "(ער->עב)"}</span></div>
-            <div className={styles.summaryCard}>
-                <input className={styles.originalInput} defaultValue={formDataState.residenceAddress || ""} readOnly tabIndex={-1} />
-                {translations['residenceAddress'] ? (
-                  <>
-                    <input type="hidden" name={translations['residenceAddress'].direction === "he-to-ar" ? "residenceAddressHe" : "residenceAddressAr"} value={formDataState.residenceAddress} />
-                    <input className={styles.translatedInput} defaultValue={translations['residenceAddress'].translated} name={translations['residenceAddress'].direction === "he-to-ar" ? "residenceAddressAr" : "residenceAddressHe"} />
-                  </>
-                ) : (
-                   <input className={styles.translatedInput} defaultValue="" name="residenceAddressHe" placeholder="תרגום..." />
-                )}
-            </div>
-            <input type="hidden" name="residenceAddress" value={formDataState.residenceAddress} />
-          </div>
-
-          {/* Visa (Read-only) */}
-          <div className={styles.summaryPair}>
-             <div className={styles.summaryPairLabel}><span>نوع التأشيرة / סוג אשרה</span></div>
-             <input className={styles.readOnlyControl} defaultValue={getVisaLabel(formDataState.visaType)} readOnly />
-          </div>
-
-          {/* Dates (Read-only) */}
-          <div className={styles.summaryPair}>
-            <div className={styles.summaryPairLabel}><span>توقيف / תוקף אשרה</span></div>
-            <div style={{display:'flex', gap: 10, alignItems:'center'}}>
-               <input className={styles.readOnlyControl} defaultValue={formDataState.visaEndDate} readOnly style={{textAlign:'center'}} />
-               <span>-</span>
-               <input className={styles.readOnlyControl} defaultValue={formDataState.visaStartDate} readOnly style={{textAlign:'center'}} />
-            </div>
-          </div>
-
-          <div className={styles.summaryPair}>
-             <div className={styles.summaryPairLabel}><span>تاريخ الدخول / תאריך כניסה</span></div>
-             <input className={styles.readOnlyControl} defaultValue={formDataState.entryDate} readOnly style={{direction:'ltr'}} />
-          </div>
-
-          {/* Hidden Submit Data */}
-          <input type="hidden" name="residenceCountry" value={formDataState.residenceCountry} />
-          <input type="hidden" name="visaType" value={formDataState.visaType} />
-          <input type="hidden" name="visaStartDate" value={formDataState.visaStartDate} />
-          <input type="hidden" name="visaEndDate" value={formDataState.visaEndDate} />
-          <input type="hidden" name="entryDate" value={formDataState.entryDate} />
-
-          <div className={styles.actions}><button type="submit" className={styles.btnPrimary}><BiInline ar="موافقة" he="אישור וסיום" /></button><button type="button" onClick={() => setScreen(2)} className={styles.btnSecondary}><BiInline ar="تعديل" he="חזור לעריכה" /></button></div>
-        </div>
+        )}
 
       </form>
     </div>

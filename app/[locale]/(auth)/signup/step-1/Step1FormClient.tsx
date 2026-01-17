@@ -365,21 +365,23 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
                <BiInline ar="نهاية المرحلة 1" he="סוף שלב 1" />
             </div>
             <div className={styles.summarySub}>
-               <BiInline ar="يرجى التحقق من صحة الترجمة" he="אנא וודא/י כי התרגום האוטומטי נכון" />
+               <BiInline ar="يرجى التحقق من صحة التفاصيل وترجمتها" he="אנא וודא/י כי כל הפרטים ותרגומם נכונים" />
             </div>
           </div>
 
+          {/* הוסרה הכותרת "כללי" לבקשתך */}
+
+          {/* --- חלק 1: שדות שמות (מפוצלים - עברית/ערבית) --- */}
           {[
-            { key: "firstName", labelAr: "الاسم الشخصي", labelHe: "שם פרטי" },
             { key: "lastName", labelAr: "اسم العائلة", labelHe: "שם משפחה" },
-            { key: "oldFirstName", labelAr: "الاسم الشخصي السابق", labelHe: "שם פרטי קודם" },
+            { key: "firstName", labelAr: "الاسم الشخصي", labelHe: "שם פרטי" },
             { key: "oldLastName", labelAr: "اسم العائلة السابق", labelHe: "שם משפחה קודם" },
+            { key: "oldFirstName", labelAr: "الاسم الشخصي السابق", labelHe: "שם פרטי קודם" },
           ].map((field) => {
             const data = translations[field.key];
             if (!data || !data.original) return null;
 
             const isHeToAr = data.direction === "he-to-ar";
-            
             const originalName = isHeToAr ? `${field.key}He` : `${field.key}Ar`;
             const translatedName = isHeToAr ? `${field.key}Ar` : `${field.key}He`;
 
@@ -387,44 +389,146 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
               <div className={styles.summaryPair} key={field.key}>
                 <div className={styles.summaryPairLabel}>
                    <span>{field.labelAr} / {field.labelHe}</span>
-                   <span style={{fontSize: 10, opacity: 0.5}}>
-                     {isHeToAr ? "(עברית -> ערבית)" : "(ערבית -> עברית)"}
-                   </span>
                 </div>
                 
                 <div className={styles.summaryInputs}>
-                   {/* 1. השדה המקורי (Read Only) */}
+                   {/* שדה המקור */}
                    <input 
                      className={styles.originalInput} 
                      defaultValue={data.original} 
-                     readOnly 
-                     tabIndex={-1}
+                     readOnly tabIndex={-1}
                    />
                    <input type="hidden" name={originalName} value={data.original} />
                    
-                   {/* 2. השדה המתורגם (Editable) */}
+                   {/* שדה התרגום */}
                    <input 
                      className={styles.translatedInput} 
                      defaultValue={data.translated} 
                      name={translatedName} 
                    />
                 </div>
-                
                 <input type="hidden" name={field.key} value={data.original} />
               </div>
             );
           })}
 
-          <input type="hidden" name="gender" value={formDataState.gender} />
-          <input type="hidden" name="birthDate" value={formDataState.birthDate} />
-          <input type="hidden" name="nationality" value={formDataState.nationality} />
-          <input type="hidden" name="israeliId" value={formDataState.israeliId} />
-          <input type="hidden" name="passportNumber" value={formDataState.passportNumber} />
-          <input type="hidden" name="passportIssueDate" value={formDataState.passportIssueDate} />
-          <input type="hidden" name="passportExpiryDate" value={formDataState.passportExpiryDate} />
-          <input type="hidden" name="passportIssueCountry" value={formDataState.passportIssueCountry} />
-          <input type="hidden" name="phone" value={formDataState.phone} />
-          <input type="hidden" name="email" value={formDataState.email} />
+          {/* --- חלק 2: שאר השדות (קריאה בלבד) --- */}
+
+          {/* תאריך לידה */}
+          {formDataState.birthDate && (
+            <div className={styles.summaryField}>
+              <div className={styles.label}><BiInline ar="تاريخ الميلاد" he="תאריך לידה" /></div>
+              <div className={styles.readOnlyInputWrap}>
+                <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <input 
+                  className={styles.readOnlyInput} 
+                  value={formDataState.birthDate.split('-').reverse().join('.')} 
+                  readOnly 
+                  style={{paddingLeft: 50, direction: 'ltr', textAlign: 'right'}} 
+                />
+              </div>
+            </div>
+          )}
+
+          {/* אזרחות */}
+          {formDataState.nationality && (
+             <div className={styles.summaryField}>
+               <div className={styles.label}><BiInline ar="الجنسية" he="אזרחות" /></div>
+               <div className={styles.readOnlyInputWrap}>
+                 <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+                 <input className={styles.readOnlyInput} value={formDataState.nationality} readOnly />
+               </div>
+             </div>
+          )}
+
+           {/* מין */}
+           {formDataState.gender && (
+             <div className={styles.summaryField}>
+               <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
+               <div className={styles.readOnlyInputWrap}>
+                  <input 
+                    className={styles.readOnlyInput} 
+                    value={
+                      formDataState.gender === 'male' ? 'זכר / ذكر' : 
+                      formDataState.gender === 'female' ? 'נקבה / أنثى' : formDataState.gender
+                    } 
+                    readOnly 
+                  />
+               </div>
+             </div>
+          )}
+
+          {/* תעודת זהות */}
+          {formDataState.israeliId && (
+            <div className={styles.summaryField}>
+              <div className={styles.label}><BiInline ar="رقم الهوية" he="ת.ז ישראלית" /></div>
+              <div className={styles.readOnlyInputWrap}>
+                <input 
+                  className={styles.readOnlyInput} 
+                  value={formDataState.israeliId} 
+                  readOnly 
+                  style={{direction: 'ltr', textAlign: 'right'}}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* דרכון */}
+          {formDataState.passportNumber && (
+            <div className={styles.summaryField}>
+              <div className={styles.label}><BiInline ar="رقم جواز السفر" he="מספר דרכון" /></div>
+              <div className={styles.readOnlyInputWrap}>
+                 <input 
+                   className={styles.readOnlyInput} 
+                   value={formDataState.passportNumber} 
+                   readOnly 
+                   style={{direction: 'ltr', textAlign: 'right'}}
+                  />
+              </div>
+            </div>
+          )}
+
+          {/* טלפון */}
+          {formDataState.phone && (
+            <div className={styles.summaryField}>
+              <div className={styles.label}><BiInline ar="هاتف" he="טלפון נייד" /></div>
+              <div className={styles.readOnlyInputWrap}>
+                 <input 
+                   className={styles.readOnlyInput} 
+                   value={formDataState.phone} 
+                   readOnly 
+                   style={{direction: 'ltr', textAlign: 'left'}} // מוצג משמאל לימין
+                  />
+              </div>
+            </div>
+          )}
+
+          {/* אימייל */}
+          {formDataState.email && (
+            <div className={styles.summaryField}>
+              <div className={styles.label}><BiInline ar="بريد إلكتروني" he="אימייל" /></div>
+              <div className={styles.readOnlyInputWrap}>
+                 <input 
+                   className={styles.readOnlyInput} 
+                   value={formDataState.email} 
+                   readOnly 
+                   style={{direction: 'ltr', textAlign: 'left'}} // מוצג משמאל לימין
+                  />
+              </div>
+            </div>
+          )}
+
+          {/* Hidden Inputs for Form Submission */}
+          <input type="hidden" name="gender" value={formDataState.gender || ""} />
+          <input type="hidden" name="birthDate" value={formDataState.birthDate || ""} />
+          <input type="hidden" name="nationality" value={formDataState.nationality || ""} />
+          <input type="hidden" name="israeliId" value={formDataState.israeliId || ""} />
+          <input type="hidden" name="passportNumber" value={formDataState.passportNumber || ""} />
+          <input type="hidden" name="passportIssueDate" value={formDataState.passportIssueDate || ""} />
+          <input type="hidden" name="passportExpiryDate" value={formDataState.passportExpiryDate || ""} />
+          <input type="hidden" name="passportIssueCountry" value={formDataState.passportIssueCountry || ""} />
+          <input type="hidden" name="phone" value={formDataState.phone || ""} />
+          <input type="hidden" name="email" value={formDataState.email || ""} />
 
           <div className={styles.actions}>
              <button type="submit" className={styles.btnPrimary}>

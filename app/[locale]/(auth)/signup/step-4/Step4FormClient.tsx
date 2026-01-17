@@ -1,50 +1,128 @@
 "use client";
 
-import { useMemo, useState, CSSProperties } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import styles from "./step4.module.css";
+import { translateStep4Data } from "@/app/[locale]/(auth)/signup/actions"; 
+
+// הנתיב לתמונה לפי צילום המסך שלך
+const STEP_IMAGE = "/images/step4-intro-umbrella.svg"; 
 
 // --- Visual Helpers ---
-interface BiProps {
-  ar: string;
-  he: string;
-  className?: string;
-  style?: CSSProperties;
-}
-
-function BiInline({ ar, he, className, style }: BiProps) {
+function BiInline({ ar, he }: { ar: string; he: string }) {
   return (
-    <div className={`${styles.biLine} ${className || ""}`} style={style}>
+    <div className={styles.biLine}>
       <span className={styles.biAr}>{ar}</span>
       <span className={styles.biHe}>{he}</span>
     </div>
   );
 }
 
-function BiStack({ ar, he, className, style }: BiProps) {
+// --- Custom Select Component ---
+function CustomSelect({ 
+  value, 
+  onChange, 
+  options, 
+  placeholderAr = "اختر", 
+  placeholderHe = "בחר",
+  disabled = false
+}: { 
+  value: string; 
+  onChange: (val: string) => void; 
+  options: { value: string; labelAr: string; labelHe: string }[];
+  placeholderAr?: string;
+  placeholderHe?: string;
+  disabled?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value);
+
   return (
-    <div className={`${styles.biStack} ${className || ""}`} style={style}>
-      <div className={styles.biAr}>{ar}</div>
-      <div className={styles.biHe}>{he}</div>
+    <div className={styles.customSelectWrap} ref={containerRef}>
+      <div 
+        className={styles.customSelectTrigger} 
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        data-open={isOpen}
+        style={{opacity: disabled ? 0.6 : 1, cursor: disabled ? 'not-allowed' : 'pointer'}}
+      >
+        <span>
+          {selectedOption ? (
+            <BiInline ar={selectedOption.labelAr} he={selectedOption.labelHe} />
+          ) : (
+             <span style={{color: '#9CA3AF'}}>{placeholderAr} / {placeholderHe}</span>
+          )}
+        </span>
+        <div className={styles.customSelectArrow} />
+      </div>
+
+      {isOpen && !disabled && (
+        <div className={styles.customSelectOptions}>
+           {options.map((opt) => (
+             <div 
+               key={opt.value} 
+               className={styles.customOption}
+               data-selected={value === opt.value}
+               onClick={() => {
+                 onChange(opt.value);
+                 setIsOpen(false);
+               }}
+             >
+                <BiInline ar={opt.labelAr} he={opt.labelHe} />
+             </div>
+           ))}
+        </div>
+      )}
     </div>
   );
 }
+
+// --- Lists Data ---
+const healthFunds = [
+  { value: "clalit", labelAr: "كلاليت", labelHe: "כללית" },
+  { value: "maccabi", labelAr: "مكابي", labelHe: "מכבי" },
+  { value: "meuhedet", labelAr: "موؤحدت", labelHe: "מאוחדת" },
+  { value: "leumit", labelAr: "لئوميت", labelHe: "לאומית" },
+];
+
+const banks = [
+  { value: "10", labelAr: "بنك لئومي (10)", labelHe: "בנק לאומי (10)" },
+  { value: "12", labelAr: "بنك هبوعليم (12)", labelHe: "בנק הפועלים (12)" },
+  { value: "20", labelAr: "بنك مزراحي تفحوت (20)", labelHe: "בנק מזרחי טפחות (20)" },
+  { value: "11", labelAr: "بنك ديسكونت (11)", labelHe: "בנק דיסקונט (11)" },
+  { value: "31", labelAr: "البنك الدولي (31)", labelHe: "הבנק הבינלאומי (31)" },
+  { value: "4", labelAr: "بنك ياهف (4)", labelHe: "בנק יהב (4)" },
+  { value: "17", labelAr: "بنك مركنتيل ديسكونت (17)", labelHe: "בנק מרכנתיל דיסקונט (17)" },
+  { value: "14", labelAr: "بنك أوتسار هحيال (14)", labelHe: "בנק אוצר החייל (14)" },
+  { value: "46", labelAr: "بنك مساد (46)", labelHe: "בנק מסד (46)" },
+  { value: "54", labelAr: "بنك يרושלים (54)", labelHe: "בנק ירושלים (54)" },
+];
+
+const allowanceTypes = [
+  { value: "income_support", labelAr: "ضمان الدخل", labelHe: "הבטחת הכנסה" },
+  { value: "disability", labelAr: "إعاقة", labelHe: "נכות" },
+  { value: "child", labelAr: "مخصصات الأطفال", labelHe: "קצבת ילדים" },
+  { value: "unemployment", labelAr: "بطالة", labelHe: "אבטלה" },
+  { value: "old_age", labelAr: "شيخوخة", labelHe: "זקנה" },
+];
 
 type HasYesNo = "yes" | "no" | "";
 
 type Props = {
   locale: string;
   saved: boolean;
-  defaults: {
-    healthFund: string;
-    bankName: string;
-    branch: string;
-    accountNumber: string;
-    hasFile: HasYesNo;
-    fileNumber: string;
-    getsAllowance: HasYesNo;
-    allowanceType: string;
-    allowanceFileNumber: string;
-  };
+  defaults: any;
   saveDraftAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
   saveDraftAndBackAction: (formData: FormData) => Promise<void>;
@@ -57,127 +135,136 @@ export default function Step4FormClient({
   saveAndNextAction,
   saveDraftAndBackAction,
 }: Props) {
-  // Screens: 0=Intro, 1=Health, 2=Bank, 3=National Insurance
   const [screen, setScreen] = useState(0);
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const [formDataState, setFormDataState] = useState<any>({});
+  const formRef = useRef<HTMLFormElement>(null);
 
   // --- Logic State ---
+  const [healthFund, setHealthFund] = useState(defaults.healthFund || "");
+  const [bankName, setBankName] = useState(defaults.bankName || "");
   const [hasFile, setHasFile] = useState<HasYesNo>(defaults.hasFile || "");
   const [getsAllowance, setGetsAllowance] = useState<HasYesNo>(defaults.getsAllowance || "");
+  const [allowanceType, setAllowanceType] = useState(defaults.allowanceType || "");
 
-  // Bank Logic
-  const [bankName, setBankName] = useState(defaults.bankName || "");
-  const [branch, setBranch] = useState(defaults.branch || "");
-
-  // Lists (Hardcoded for UI demo, expand as needed)
-  const healthFunds = [
-    { val: "clalit", ar: "כללית", he: "כללית" },
-    { val: "maccabi", ar: "מכבי", he: "מכבי" },
-    { val: "meuhedet", ar: "מאוחדת", he: "מאוחדת" },
-    { val: "leumit", ar: "לאומית", he: "לאומית" },
-  ];
-
-  const banks = [
-    { val: "hapoalim", ar: "בנק הפועלים", he: "בנק הפועלים" },
-    { val: "leumi", ar: "בנק לאומי", he: "בנק לאומי" },
-    { val: "discount", ar: "בנק דיסקונט", he: "בנק דיסקונט" },
-    { val: "mizrahi", ar: "מזרחי טפחות", he: "מזרחי טפחות" },
-  ];
-
-  const branches = [
-    { val: "001", ar: "סניף ראשי (001)", he: "סניף ראשי (001)" },
-    { val: "123", ar: "סניף מרכז (123)", he: "סניף מרכז (123)" },
-  ];
-
-  const allowanceTypes = [
-    { val: "income_support", ar: "הבטחת הכנסה", he: "הבטחת הכנסה" },
-    { val: "disability", ar: "נכות", he: "נכות" },
-    { val: "child", ar: "קצבת ילדים", he: "קצבת ילדים" },
-  ];
-
-  // --- Navigation ---
   const progress = useMemo(() => {
     if (screen === 0) return 0;
-    return Math.round((screen / 3) * 100);
+    return Math.round((screen / 4) * 100);
   }, [screen]);
 
-  const goNext = () => setScreen((s) => Math.min(3, s + 1));
+  const goNext = () => setScreen((s) => Math.min(4, s + 1));
   const goBack = () => setScreen((s) => Math.max(0, s - 1));
 
+  const handleFinishStep4 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formRef.current) return;
+
+    const formData = new FormData(formRef.current);
+    const currentData: any = {};
+    formData.forEach((value, key) => { currentData[key] = value; });
+    setFormDataState(currentData);
+
+    setIsTranslating(true);
+    try {
+      await translateStep4Data(formData);
+      setScreen(4);
+    } catch (error) {
+      console.error(error);
+      setScreen(4);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const getLabel = (list: any[], val: string) => {
+    const found = list.find(i => i.value === val);
+    return found ? `${found.labelHe} / ${found.labelAr}` : val;
+  };
+
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} dir="rtl">
       
-      {/* Intro Screen (0) */}
-      {screen === 0 && (
-        <div className={styles.introFull}>
-          <div className={styles.introContent}>
-            <div className={styles.introTop}>
-              <BiInline ar="المرحلة 4 من 7" he="שלב 4 מתוך 7" className={styles.introStep} />
-            </div>
-            <div className={styles.introMain}>
-              <BiInline ar="جهات رسمية" he="מוסדות" className={styles.introH1} />
-            </div>
-            <div className={styles.introText}>
-              <BiStack 
-                ar="صندوق المرضى، البنك، والتأمين الوطني." 
-                he="קופת חולים, בנק וביטוח לאומי." 
-              />
-              <div className={styles.introMeta}>
-                <BiInline ar="الوقت المتوقع: 5 دقائق" he="זמן משוער: 5 דקות" />
-              </div>
-            </div>
-            <button type="button" className="btnPrimary" style={{background: '#0b2a4a'}} onClick={goNext}>
-              <BiInline ar="ابدأ" he="התחל" />
-            </button>
+      {isTranslating && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+             <BiInline ar="جاري المعالجة..." he="מעבד נתונים..." />
           </div>
         </div>
       )}
 
-      {/* Form Container */}
-      <form className={screen > 0 ? styles.form : styles.screenHide} action={saveAndNextAction}>
-        
-        {/* Header */}
-        <button type="button" className={styles.backBtn} onClick={goBack}>➜</button>
-
-        <div className={styles.headerArea}>
-          <div className={styles.topMeta}>
-            <BiInline ar="المرحلة 4 من 7" he="שלב 4 מתוך 7" className={styles.stepMeta} />
-            <div className={styles.progressTrack}>
-              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+      {/* Intro Screen (0) */}
+      {screen === 0 && (
+        <div className={styles.introFull}>
+          <Image 
+            src={STEP_IMAGE} 
+            alt="Intro Umbrella" 
+            width={280} 
+            height={200} 
+            className={styles.introImage}
+            priority 
+          />
+          <div className={styles.introContent} style={{marginTop: 'auto'}}>
+            <h1 className={styles.introTitle}><BiInline ar="المرحلة 4" he="שלב 4" /></h1>
+            <h2 className={styles.introSubtitle}><BiInline ar="جهات رسمية" he="מוסדות" /></h2>
+            <div className={styles.introBody}>
+               <p dir="rtl">بهالمرحلة بنسأل عن صندوق المرضى، البنك، والتأمين الوطني<br/>الوقت المتوقع للتعبئة: 5 دقائق</p>
+               <p dir="rtl">בשלב זה נשאל על קופת חולים, בנק וביטוח לאומי<br/>זמן מילוי משוער: 5 דקות</p>
             </div>
           </div>
-          <div className={styles.titleBlock}>
-            <BiInline ar="جهات رسمية" he="מוסדות" className={styles.h1} />
-          </div>
-          {saved && (
-            <div className={styles.savedNote}>
-              <BiInline ar="تم حفظ المسودة" he="הטיוטה נשמרה" />
-            </div>
-          )}
+          <button type="button" className={styles.introButton} onClick={goNext}>
+            <BiInline ar="ابدأ" he="התחל" />
+          </button>
         </div>
+      )}
+
+      {/* Form Container */}
+      <form 
+        ref={formRef}
+        className={screen > 0 ? styles.form : styles.screenHide} 
+        action={saveAndNextAction}
+        onSubmit={(e) => {
+            if (screen === 3) handleFinishStep4(e);
+        }}
+      >
+        
+        {screen < 4 && (
+        <div className={styles.headerArea}>
+            <div className={styles.topRow}>
+               <button type="button" className={styles.backBtn} onClick={goBack}>
+                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+               </button>
+               <div className={styles.stepMeta}><span>المرحلة 4 من 7</span><span> | </span><span>שלב 4 מתוך 7</span></div>
+            </div>
+            <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${progress}%` }} /></div>
+            <div className={styles.titleBlock}>
+                <div className={styles.h1}><BiInline ar="جهات رسمية" he="מוסדות" /></div>
+            </div>
+        </div>
+        )}
 
         {/* --- Screen 1: Health Fund --- */}
         <div className={screen === 1 ? styles.screenShow : styles.screenHide}>
-           <div className={styles.titleBlock}>
-             <BiInline ar="صندوق المرضى" he="קופת חולים" className={styles.label} style={{fontSize: 18}} />
+           <div className={styles.sectionHead}>
+             <div className={styles.sectionTitle}><BiInline ar="صندوق المرضى" he="קופת חולים" /></div>
            </div>
            
            <div className={styles.field}>
-              <label><BiInline ar="اختر" he="בחר" className={styles.label} /></label>
-              <div className={styles.selectWrapper}>
-                <select name="healthFund" defaultValue={defaults.healthFund} className={styles.inputControl}>
-                  <option value="" disabled hidden>اختر / בחר</option>
-                  {healthFunds.map(h => (
-                    <option key={h.val} value={h.val}>{h.ar} / {h.he}</option>
-                  ))}
-                </select>
-              </div>
+              <div className={styles.label}><BiInline ar="اختر" he="בחר" /></div>
+              <CustomSelect 
+                value={healthFund} 
+                onChange={setHealthFund} 
+                options={healthFunds} 
+              />
+              <input type="hidden" name="healthFund" value={healthFund} />
            </div>
 
            <div className={styles.actions}>
-              <button type="button" className="btnPrimary" onClick={goNext}>
+              <button type="button" className={styles.btnPrimary} onClick={goNext}>
                 <BiInline ar="التالي" he="המשך" />
               </button>
-              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
                 <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
               </button>
            </div>
@@ -185,60 +272,35 @@ export default function Step4FormClient({
 
         {/* --- Screen 2: Bank Details --- */}
         <div className={screen === 2 ? styles.screenShow : styles.screenHide}>
-            <div className={styles.titleBlock}>
-               <BiInline ar="تفاصيل حساب بنكي" he="פרטי חשבון בנק" className={styles.label} style={{fontSize: 18}} />
+            <div className={styles.sectionHead}>
+               <div className={styles.sectionTitle}><BiInline ar="تفاصيل حساب بنكي" he="פרטי חשבון בנק" /></div>
             </div>
 
             <div className={styles.field}>
-              <label><BiInline ar="بنك" he="בנק" className={styles.label} /></label>
-              <div className={styles.selectWrapper}>
-                <select 
-                  name="bankName" 
-                  value={bankName} 
-                  onChange={e => setBankName(e.target.value)}
-                  className={styles.inputControl}
-                >
-                  <option value="" disabled hidden>اختر / בחר</option>
-                  {banks.map(b => (
-                    <option key={b.val} value={b.val}>{b.ar} / {b.he}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className={styles.field}>
-              <label><BiInline ar="اسم ورقم الفرع" he="שם ומספר סניף" className={styles.label} /></label>
-              <div className={styles.selectWrapper}>
-                <select 
-                  name="branch" 
-                  value={branch} 
-                  onChange={e => setBranch(e.target.value)}
-                  className={styles.inputControl}
-                  disabled={!bankName}
-                >
-                  <option value="" disabled hidden>اختر / בחר</option>
-                  {branches.map(b => (
-                    <option key={b.val} value={b.val}>{b.ar} / {b.he}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className={styles.field}>
-              <label><BiInline ar="رقم الحساب" he="מספר חשבון" className={styles.label} /></label>
-              <input 
-                name="accountNumber" 
-                defaultValue={defaults.accountNumber} 
-                className={styles.inputControl} 
-                inputMode="numeric" 
+              <div className={styles.label}><BiInline ar="بنك" he="בנק" /></div>
+              <CustomSelect 
+                value={bankName} 
+                onChange={setBankName} 
+                options={banks} 
               />
+              <input type="hidden" name="bankName" value={bankName} />
+            </div>
+
+            <div className={styles.field}>
+              <div className={styles.label}><BiInline ar="اسم ورقم الفرع" he="מספר סניף" /></div>
+              <input name="branch" defaultValue={defaults.branch} className={styles.inputControl} inputMode="numeric" />
+            </div>
+
+            <div className={styles.field}>
+              <div className={styles.label}><BiInline ar="رقم الحساب" he="מספר חשבון" /></div>
+              <input name="accountNumber" defaultValue={defaults.accountNumber} className={styles.inputControl} inputMode="numeric" />
             </div>
 
             <div className={styles.actions}>
-              <button type="button" className="btnPrimary" onClick={goNext}>
+              <button type="button" className={styles.btnPrimary} onClick={goNext}>
                 <BiInline ar="التالي" he="המשך" />
               </button>
-              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
                 <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
               </button>
            </div>
@@ -246,15 +308,15 @@ export default function Step4FormClient({
 
         {/* --- Screen 3: National Insurance --- */}
         <div className={screen === 3 ? styles.screenShow : styles.screenHide}>
-            <div className={styles.titleBlock}>
-               <BiInline ar="التأمين الوطني" he="ביטוח לאומי" className={styles.label} style={{fontSize: 18}} />
+            <div className={styles.sectionHead}>
+               <div className={styles.sectionTitle}><BiInline ar="التأمين الوطني" he="ביטוח לאומי" /></div>
             </div>
 
             {/* Q1: File Exists? */}
             <div className={styles.field}>
-              <label>
-                <BiInline ar="هل أنت بدفع أو دفعت قبل هيك تأمين وطني؟" he="האם את.ה משלמ.ת / שילמת בעבר ביטוח לאומי?" className={styles.label} />
-              </label>
+              <div className={styles.label}>
+                <BiInline ar="هل أنت بدفع أو دفعت قبل هيك تأمين وطني؟" he="האם את.ה משלמ.ת / שילמת בעבר ביטוח לאומי?" />
+              </div>
               <div className={styles.toggleRow}>
                 <button 
                   type="button" 
@@ -278,16 +340,16 @@ export default function Step4FormClient({
 
             {hasFile === 'yes' && (
               <div className={styles.field} style={{animation: 'fadeIn 0.3s'}}>
-                <label><BiInline ar="رقم ملف التحصيل" he="מספר תיק גבייה" className={styles.label} /></label>
+                <div className={styles.label}><BiInline ar="رقم ملف التحصيل" he="מספר תיק גבייה" /></div>
                 <input name="fileNumber" defaultValue={defaults.fileNumber} className={styles.inputControl} />
               </div>
             )}
 
             {/* Q2: Allowance? */}
             <div className={styles.field}>
-              <label>
-                <BiInline ar="هل استلمت أو عم تستلم معاش من التأمين الوطني؟" he="האם קיבלת או שהינך מקבל כעת קצבה מביטוח לאומי?" className={styles.label} />
-              </label>
+              <div className={styles.label}>
+                <BiInline ar="هل استلمت أو عم تستلم معاش من التأمين الوطني؟" he="האם קיבלת או שהינך מקבל כעת קצבה מביטוח לאומי?" />
+              </div>
               <div className={styles.toggleRow}>
                 <button 
                   type="button" 
@@ -312,35 +374,137 @@ export default function Step4FormClient({
             {getsAllowance === 'yes' && (
               <div style={{animation: 'fadeIn 0.3s'}}>
                 <div className={styles.field}>
-                  <label><BiInline ar="نوع المعاش" he="סוג הקצבה" className={styles.label} /></label>
-                  <div className={styles.selectWrapper}>
-                    <select name="allowanceType" defaultValue={defaults.allowanceType} className={styles.inputControl}>
-                      <option value="" disabled hidden>اختر / בחר</option>
-                      {allowanceTypes.map(t => (
-                        <option key={t.val} value={t.val}>{t.ar} / {t.he}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <div className={styles.label}><BiInline ar="نوع المعاش" he="סוג הקצבה" /></div>
+                  <CustomSelect 
+                    value={allowanceType} 
+                    onChange={setAllowanceType} 
+                    options={allowanceTypes} 
+                  />
+                  <input type="hidden" name="allowanceType" value={allowanceType} />
                 </div>
                 <div className={styles.field}>
-                  <label><BiInline ar="رقم الملف في التأمين الوطني" he="מספר תיק בביטוח לאומי" className={styles.label} /></label>
+                  <div className={styles.label}><BiInline ar="رقم الملف في التأمين الوطني" he="מספר תיק בביטוח לאומי" /></div>
                   <input name="allowanceFileNumber" defaultValue={defaults.allowanceFileNumber} className={styles.inputControl} />
                 </div>
               </div>
             )}
 
             <div className={styles.actions}>
-              <button type="submit" className="btnPrimary">
+              <button type="submit" className={styles.btnPrimary}>
                 <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
               </button>
-              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
                 <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
-              </button>
-              <button type="submit" formAction={saveDraftAndBackAction} className="btnSecondary" style={{border: 'none', color: 'var(--c-muted)', fontSize: 13}}>
-                  <BiInline ar="حفظ والعودة" he="שמור וחזור" />
               </button>
            </div>
         </div>
+
+        {/* --- Screen 4: Summary --- */}
+        {screen === 4 && (
+           <div className={styles.screenShow}>
+              <div className={styles.summaryHeader}>
+                <div className={styles.summaryTitle} style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                  <span>نهاية المرحلة 4</span>
+                  <span>סוף שלב 4</span>
+                </div>
+                <div className={styles.summarySub} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                   <span>يرجى التحقق من صحة التفاصيل وترجمتها</span>
+                   <span>אנא וודא/י כי כל הפרטים ותרגומם נכונים</span>
+                </div>
+              </div>
+
+              {/* Health Fund */}
+              <div className={styles.summaryField}>
+                 <div className={styles.label}><BiInline ar="صندوق المرضى" he="קופת חולים" /></div>
+                 <div className={styles.readOnlyInputWrap}>
+                    <input className={styles.readOnlyInput} 
+                       value={getLabel(healthFunds, formDataState.healthFund)} 
+                       readOnly 
+                    />
+                 </div>
+              </div>
+
+              {/* Bank */}
+              <div className={styles.sectionHead} style={{marginTop: 20}}>
+                 <div className={styles.sectionTitle}><BiInline ar="تفاصيل حساب بنكي" he="פרטי חשבון בנק" /></div>
+              </div>
+              <div className={styles.summaryField}>
+                 <div className={styles.label}><BiInline ar="بنك" he="בנק" /></div>
+                 <div className={styles.readOnlyInputWrap}>
+                    <input className={styles.readOnlyInput} value={getLabel(banks, formDataState.bankName)} readOnly />
+                 </div>
+              </div>
+              <div className={styles.gridRow}>
+                 <div>
+                   <div className={styles.label}><BiInline ar="رقم الحساب" he="חשבון" /></div>
+                   <input className={styles.readOnlyInput} value={formDataState.accountNumber} readOnly style={{textAlign:'center'}} />
+                 </div>
+                 <div>
+                   <div className={styles.label}><BiInline ar="فرع" he="סניף" /></div>
+                   <input className={styles.readOnlyInput} value={formDataState.branch} readOnly style={{textAlign:'center'}} />
+                 </div>
+              </div>
+
+              {/* National Insurance */}
+              <div className={styles.sectionHead} style={{marginTop: 20}}>
+                 <div className={styles.sectionTitle}><BiInline ar="التأمين الوطني" he="ביטוח לאומי" /></div>
+              </div>
+              
+              <div className={styles.summaryField}>
+                 <div className={styles.readOnlyInputWrap}>
+                    <input className={styles.readOnlyInput} 
+                       value={formDataState.hasFile === 'yes' ? 'משלם/ת ביטוח לאומי' : 'לא משלם/ת ביטוח לאומי'}
+                       readOnly 
+                    />
+                 </div>
+              </div>
+              {formDataState.hasFile === 'yes' && (
+                 <div className={styles.summaryField}>
+                    <div className={styles.label}><BiInline ar="رقم ملف التحصيل" he="מספר תיק גבייה" /></div>
+                    <div className={styles.readOnlyInputWrap}>
+                       <input className={styles.readOnlyInput} value={formDataState.fileNumber} readOnly />
+                    </div>
+                 </div>
+              )}
+
+              {formDataState.getsAllowance === 'yes' && (
+                 <>
+                   <div className={styles.summaryField}>
+                      <div className={styles.readOnlyInputWrap}>
+                         <input className={styles.readOnlyInput} value={`מקבל קצבה: ${getLabel(allowanceTypes, formDataState.allowanceType)}`} readOnly />
+                      </div>
+                   </div>
+                   <div className={styles.summaryField}>
+                      <div className={styles.label}><BiInline ar="رقم الملف" he="מספר תיק" /></div>
+                      <div className={styles.readOnlyInputWrap}>
+                         <input className={styles.readOnlyInput} value={formDataState.allowanceFileNumber} readOnly />
+                      </div>
+                   </div>
+                 </>
+              )}
+
+              {/* Hidden Inputs for Submission */}
+              <input type="hidden" name="healthFund" value={formDataState.healthFund || ""} />
+              <input type="hidden" name="bankName" value={formDataState.bankName || ""} />
+              <input type="hidden" name="branch" value={formDataState.branch || ""} />
+              <input type="hidden" name="accountNumber" value={formDataState.accountNumber || ""} />
+              <input type="hidden" name="hasFile" value={formDataState.hasFile || ""} />
+              <input type="hidden" name="fileNumber" value={formDataState.fileNumber || ""} />
+              <input type="hidden" name="getsAllowance" value={formDataState.getsAllowance || ""} />
+              <input type="hidden" name="allowanceType" value={formDataState.allowanceType || ""} />
+              <input type="hidden" name="allowanceFileNumber" value={formDataState.allowanceFileNumber || ""} />
+
+              <div className={styles.actions}>
+                  <button type="submit" className={styles.btnPrimary}>
+                    <BiInline ar="موافقة" he="אישור וסיום" />
+                  </button>
+                  <button type="button" onClick={() => setScreen(3)} className={styles.btnSecondary}>
+                    <BiInline ar="تعديل" he="חזור לעריכה" />
+                  </button>
+              </div>
+
+           </div>
+        )}
 
       </form>
 
