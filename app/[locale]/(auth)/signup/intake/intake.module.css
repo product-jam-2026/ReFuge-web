@@ -1,22 +1,24 @@
 /* app/[locale]/(auth)/login/signup/intake/intake.module.css */
 
 .container {
-  /* --- שבירת הגבולות הלבנים --- */
-  position: fixed;
-  inset: 0; /* נמתח על כל המסך: למעלה, למטה, ימין, שמאל */
-  z-index: 9999; /* מעל הכל */
+  /* --- תיקון לתצוגת מובייל --- */
+  position: relative; /* שינוי מ-fixed ל-relative כדי לאפשר גלילה טבעית */
+  min-height: 100dvh; /* גובה דינמי שמתחשב בשורת הכתובת של הדפדפן */
+  width: 100%;
   
+  z-index: 9999;
   background-color: var(--mint, #DFFC8E);
   
   display: flex;
   flex-direction: column;
-  align-items: center; /* התמונה במרכז */
+  align-items: center;
   
-  overflow-y: auto; /* מאפשר גלילה במסכים נמוכים */
+  /* הסרנו את overflow-y כי כעת העמוד כולו נגלל */
   
-  /* Padding פנימי */
   padding-top: 80px; 
-  padding-bottom: 40px;
+  
+  /* ריווח תחתון חכם: גם 40 פיקסל וגם התחשבות ב"פס הבית" של האייפון */
+  padding-bottom: calc(40px + env(safe-area-inset-bottom)); 
   padding-left: 24px;
   padding-right: 24px;
 }
