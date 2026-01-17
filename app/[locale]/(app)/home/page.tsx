@@ -50,15 +50,15 @@ export default async function HomePage({
 
     if (error) dbError = error.message;
 
-    firstName =
-      (profileRow as any)?.data?.intake?.step1?.firstName ||
-      (profileRow as any)?.data?.intake?.step1?.first_name ||
-      firstName;
+    const step1 = (profileRow as any)?.data?.intake?.step1 ?? {};
+    const nameFromDb =
+      step1?.firstName?.[locale] ||
+      step1?.first_name?.[locale] ||
+      step1?.firstName ||
+      step1?.first_name;
 
-    gender =
-      (profileRow as any)?.data?.intake?.step1?.gender ||
-      (profileRow as any)?.data?.gender ||
-      null;
+    firstName = nameFromDb || firstName;
+    gender = step1?.gender || (profileRow as any)?.data?.gender || null;
   }
 
   const hour = getHourInTimeZone('Asia/Jerusalem');

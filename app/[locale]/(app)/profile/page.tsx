@@ -10,6 +10,15 @@ function pickFirst<T>(...vals: Array<T | null | undefined>): T | undefined {
   return undefined;
 }
 
+function getLocalizedText(
+  value: string | { he?: string; ar?: string } | null | undefined,
+  locale: string
+): string | undefined {
+  if (!value) return undefined;
+  if (typeof value === "string") return value;
+  return locale === "ar" ? value.ar || value.he : value.he || value.ar;
+}
+
 export default async function ProfilePage({
   params,
 }: {
@@ -80,18 +89,14 @@ export default async function ProfilePage({
   }
 
   const step1 = data?.intake?.step1 ?? {};
+  const step2 = data?.intake?.step2 ?? {};
 
   const fullName = pickFirst(step1?.fullName, step1?.full_name);
-  const firstName = pickFirst(step1?.firstName, step1?.first_name);
-  const lastName = pickFirst(step1?.lastName, step1?.last_name);
-  const phoneLink = pickFirst(step1?.whatsappLink, step1?.whatsapp_link);
+  const firstName = getLocalizedText(pickFirst(step1?.firstName, step1?.first_name), locale);
+  const lastName = getLocalizedText(pickFirst(step1?.lastName, step1?.last_name), locale);
+  const phoneDisplay = pickFirst(step1?.phone, step1?.phoneNumber, step1?.phone_number);
   const email = pickFirst(step1?.email);
-  const address = pickFirst(step1?.address);
-
-  const phoneDisplay =
-    typeof phoneLink === "string"
-      ? phoneLink.replace("https://wa.me/", "").replace(/^0+/, "")
-      : undefined;
+  const address = getLocalizedText(step2?.residenceAddress, locale);
 
   const contactMethods = data?.contactMethods ?? null;
 
