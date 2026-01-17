@@ -39,6 +39,7 @@ export default async function HomePage({
 
   let firstName = t('fallbackName');
   let dbError: string | null = null;
+  let gender: string | null = null;
 
   if (user) {
     const { data: profileRow, error } = await supabase
@@ -53,6 +54,11 @@ export default async function HomePage({
       (profileRow as any)?.data?.intake?.step1?.firstName ||
       (profileRow as any)?.data?.intake?.step1?.first_name ||
       firstName;
+
+    gender =
+      (profileRow as any)?.data?.intake?.step1?.gender ||
+      (profileRow as any)?.data?.gender ||
+      null;
   }
 
   const hour = getHourInTimeZone('Asia/Jerusalem');
@@ -62,6 +68,10 @@ export default async function HomePage({
   const hrefProfile = `/${locale}/profile`;
   const hrefForms = `/${locale}/forms`;
   const hrefRights = `/${locale}/rights`;
+  const isFemale = gender === 'female';
+  const familyIllustration = isFemale
+    ? '/illustrations/family%20female.svg'
+    : '/illustrations/family%20male.svg';
 
   return (
 <main className={`${styles.root} homeFullBleed`}>
@@ -79,7 +89,7 @@ export default async function HomePage({
         <div className={styles.illustrationArea} aria-hidden="true">
           <div className={styles.illustrationWrap}>
             <Image
-              src="/illustrations/family.svg"
+              src={familyIllustration}
               alt=""
               width={520}
               height={520}
