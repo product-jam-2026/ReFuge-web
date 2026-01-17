@@ -116,7 +116,7 @@
 
 /* bring second row closer to the first row (adaptive by height) */
 .cardsGrid > :nth-child(n+2){
-  margin-top: -6vh;
+  margin-top: -2vh;
 }
 
 .card{
