@@ -1,0 +1,195 @@
+/* lib/components/WelcomeFlow.module.css */
+
+.container {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px; 
+  height: 100dvh;
+  z-index: 9999;
+  overflow: hidden;
+  touch-action: none;
+  font-family: var(--font-simpler), sans-serif;
+  background: var(--light-blue, #C0DEFF);
+  box-shadow: 0 0 50px rgba(0,0,0,0.1);
+}
+
+.fadeIn { animation: fadeIn 0.6s ease-out forwards; }
+.fadeOut { animation: fadeOut 0.5s ease-in-out forwards; pointer-events: none; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* --- מסכים 1 ו-2 (ללא שינוי, רק מוודא שהם קיימים) --- */
+.splashScreen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 167px;
+  padding-bottom: 243px;
+  justify-content: space-between; 
+  z-index: 30;
+}
+.logoImage { width: 81px; height: 76px; object-fit: contain; }
+.bottomGroup { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.handsImage { width: 100%; max-width: 380px; height: auto; margin-bottom: 10px; }
+.splashTitle {
+  font-family: var(--font-simpler), sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 52px;
+  color: #011429;
+  text-align: center;
+  width: 251px;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.onboardingScreen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #C0DEFF;
+  z-index: 20;
+  padding: 65px 20px 40px 20px; 
+  gap: 20px; 
+  text-align: right;
+}
+.topLogos { width: 155px; height: auto; }
+.envelopeImage { width: 100%; max-width: 260px; height: auto; filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.1)); }
+.textContainer { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: flex-start; }
+.obTitle { font-size: 20px; font-weight: 800; color: #0B1B2B; line-height: 1.2; margin: 0; }
+.obBody { font-size: 15px; font-weight: 500; color: #0B1B2B; opacity: 0.9; line-height: 1.3; margin: 0; }
+.startButton { width: 100%; height: 56px; border-radius: 30px; background-color: #011429; color: white; font-weight: 700; font-size: 18px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 16px; margin-top: auto; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; }
+.startButton:active { transform: scale(0.98); }
+
+
+/* --- מסך 3: Login (תיקונים לפי בקשתך) --- */
+
+.loginScreen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* הכרטיס נדבק למטה */
+  align-items: center;
+  
+  /* 1. שינוי רקע לתכלת הרגיל במקום הכהה */
+  background: #C0DEFF; 
+  
+  z-index: 10;
+  padding: 0;
+}
+
+.loginCard {
+  background: #FFFFFF;
+  width: 100%;
+  max-width: 430px;
+  
+  /* 2. גובה הכרטיס: 3/4 מהמסך */
+  height: 75dvh; 
+  
+  border-radius: 30px 30px 0 0;
+  padding: 0 0 40px 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05); /* צל עדין יותר */
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.googleHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px 0;
+  border-bottom: 1px solid #E5E7EB;
+  margin-bottom: 30px;
+}
+
+.googleHeaderText {
+  font-size: 16px;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+.loginContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0 32px;
+  gap: 20px;
+}
+
+.loginLogo { width: 50px; height: auto; margin-bottom: 5px; }
+
+.loginTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #202124;
+  margin: 0;
+}
+
+.googleBtn {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 20px;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: right;
+}
+
+.googleBtn:active { background-color: #f8f9fa; }
+
+/* 3. הגדרות לאייקון בתוך הכפתור */
+.googleIconInBtn {
+  width: 28px;
+  height: 28px;
+  /* אין צורך ברקע סגול יותר, האייקון שקוף */
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.userName { font-size: 14px; font-weight: 500; color: #3c4043; }
+.userEmail { font-size: 12px; color: #5f6368; }
+
+.termsText {
+  margin-top: 20px;
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.4;
+  text-align: center;
+  padding: 0 20px;
+}

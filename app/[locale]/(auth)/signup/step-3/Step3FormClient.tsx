@@ -1,30 +1,120 @@
 "use client";
 
-import { useEffect, useMemo, useState, CSSProperties } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
+import Image from "next/image";
 import styles from "./step3.module.css";
+import { translateStep3Data } from "@/app/[locale]/(auth)/signup/actions";
+
+// --- Constants & Images ---
+const FAMILY_IMAGE = "/images/step3-family.svg";
 
 // --- Visual Helpers ---
-interface BiProps {
-  ar: string;
-  he: string;
-  className?: string;
-  style?: CSSProperties;
-}
-
-function BiInline({ ar, he, className, style }: BiProps) {
+function BiInline({ ar, he }: { ar: string; he: string }) {
   return (
-    <div className={`${styles.biLine} ${className || ""}`} style={style}>
+    <div className={styles.biLine}>
       <span className={styles.biAr}>{ar}</span>
       <span className={styles.biHe}>{he}</span>
     </div>
   );
 }
 
-function BiStack({ ar, he, className, style }: BiProps) {
+// --- DateField Component (כמו בשלב 1) ---
+function DateField({ labelAr, labelHe, name, defaultValue }: { 
+  labelAr: string; labelHe: string; name: string; defaultValue: string 
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const openPicker = () => {
+    try {
+      // מנסה לפתוח את הפיקר בצורה תכנותית
+      if (inputRef.current && typeof (inputRef.current as any).showPicker === "function") {
+        (inputRef.current as any).showPicker();
+      } else {
+        inputRef.current?.focus();
+      }
+    } catch(e) {}
+  };
+
   return (
-    <div className={`${styles.biStack} ${className || ""}`} style={style}>
-      <div className={styles.biAr}>{ar}</div>
-      <div className={styles.biHe}>{he}</div>
+    <div className={styles.field}>
+      <div className={styles.label}><BiInline ar={labelAr} he={labelHe} /></div>
+      <div className={styles.dateWrap} onClick={openPicker}>
+        <svg className={styles.calendarIcon} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        <input 
+          ref={inputRef}
+          type="date" 
+          name={name}
+          defaultValue={defaultValue} 
+          className={styles.dateInput} 
+        />
+      </div>
+    </div>
+  );
+}
+
+// --- Custom Select Component ---
+function CustomSelect({ 
+  value, 
+  onChange, 
+  options, 
+  placeholderAr = "اختر", 
+  placeholderHe = "בחר" 
+}: { 
+  value: string; 
+  onChange: (val: string) => void; 
+  options: { value: string; labelAr: string; labelHe: string }[];
+  placeholderAr?: string;
+  placeholderHe?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value);
+
+  return (
+    <div className={styles.customSelectWrap} ref={containerRef}>
+      <div 
+        className={styles.customSelectTrigger} 
+        onClick={() => setIsOpen(!isOpen)}
+        data-open={isOpen}
+      >
+        <span>
+          {selectedOption ? (
+            <BiInline ar={selectedOption.labelAr} he={selectedOption.labelHe} />
+          ) : (
+             <span style={{color: '#9CA3AF'}}>{placeholderAr} / {placeholderHe}</span>
+          )}
+        </span>
+        <div className={styles.customSelectArrow} />
+      </div>
+
+      {isOpen && (
+        <div className={styles.customSelectOptions}>
+           {options.map((opt) => (
+             <div 
+               key={opt.value} 
+               className={styles.customOption}
+               data-selected={value === opt.value}
+               onClick={() => {
+                 onChange(opt.value);
+                 setIsOpen(false);
+               }}
+             >
+                <BiInline ar={opt.labelAr} he={opt.labelHe} />
+             </div>
+           ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -36,10 +126,8 @@ async function fetchCities(query: string): Promise<CityOpt[]> {
   const username = process.env.NEXT_PUBLIC_GEONAMES_USERNAME || "demo";
   const country = "IL"; 
   if (query.trim().length < 2) return [];
-
   const base = "https://secure.geonames.org/searchJSON";
   const url = `${base}?country=${country}&name_startsWith=${encodeURIComponent(query)}&maxRows=5&username=${username}&lang=en`;
-
   try {
     const res = await fetch(url);
     const data = await res.json();
@@ -55,7 +143,6 @@ async function fetchCities(query: string): Promise<CityOpt[]> {
   }
 }
 
-// ✅ התיקון כאן: הוספנו את saveDraftAndBackAction לטיפוסים
 type Props = {
   locale: string;
   saved: boolean;
@@ -70,25 +157,24 @@ export default function Step3FormClient({
   defaults,
   saveDraftAction,
   saveAndNextAction,
-  saveDraftAndBackAction, // ✅ וגם כאן
+  saveDraftAndBackAction,
 }: Props) {
-  // Screens: 
-  // 0: Intro
-  // 1: Marital Status
-  // 2: Residence Address (+ Mailing Toggle)
-  // 3: Mailing Address (Only if toggle is true)
-  // 4: Employment
-  // 5: Assets
   const [screen, setScreen] = useState(0);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // --- Logic State ---
   const [maritalStatus, setMaritalStatus] = useState(defaults.maritalStatus || "");
-  const isMarried = maritalStatus === "married";
+  const showDate = maritalStatus === "married" || maritalStatus === "divorced";
 
+  const [housingType, setHousingType] = useState(defaults.housingType || "");
   const [mailingDifferent, setMailingDifferent] = useState(defaults.mailingDifferent || false);
+  
+  // Employment Logic
   const [empStatus, setEmpStatus] = useState(defaults.employmentStatus || "");
-  const [assets, setAssets] = useState<string[]>(defaults.assets || []);
+  const [notWorkingSub, setNotWorkingSub] = useState(defaults.notWorkingSub || ""); 
 
+  // Assets Logic
+  const [assets, setAssets] = useState<string[]>(defaults.assets || []);
   const toggleAsset = (val: string) => {
     setAssets(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
   };
@@ -99,6 +185,12 @@ export default function Step3FormClient({
   const [mailCityText, setMailCityText] = useState(defaults.mailingAddress?.city || "");
   const [mailCityOpts, setMailCityOpts] = useState<CityOpt[]>([]);
 
+  // Summary Data
+  const [formDataState, setFormDataState] = useState<any>({});
+  const [translations, setTranslations] = useState<any>({});
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // --- Effects ---
   useEffect(() => {
     if(regCityText.length < 2) return;
     const t = setTimeout(async () => {
@@ -117,118 +209,143 @@ export default function Step3FormClient({
     return () => clearTimeout(t);
   }, [mailCityText]);
 
-  // --- Navigation Logic ---
+  // --- Navigation ---
   const progress = useMemo(() => {
     if (screen === 0) return 0;
-    return Math.round((screen / 5) * 100);
+    return Math.round((screen / 6) * 100); 
   }, [screen]);
 
   const goNext = () => {
     if (screen === 2 && !mailingDifferent) {
-      // If on Address screen and mailing is same -> Skip Mailing screen (3) -> Go to 4
-      setScreen(4);
+      setScreen(4); 
     } else {
-      setScreen(s => Math.min(5, s + 1));
+      setScreen(s => Math.min(6, s + 1));
     }
   };
 
   const goBack = () => {
     if (screen === 4 && !mailingDifferent) {
-      // If on Employment and mailing was same -> Skip Mailing screen (3) -> Go to 2
-      setScreen(2);
+      setScreen(2); 
     } else {
       setScreen(s => Math.max(0, s - 1));
     }
   };
 
+  const handleFinishStep3 = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formRef.current) return;
+
+    const formData = new FormData(formRef.current);
+    const currentData: any = {};
+    formData.forEach((value, key) => { currentData[key] = value; });
+    currentData.assets = assets;
+    
+    setFormDataState(currentData);
+    setIsTranslating(true);
+
+    try {
+      const translatedResult = await translateStep3Data(formData);
+      setTranslations(translatedResult || {});
+      setScreen(6);
+    } catch (error) {
+      console.error("Translation error:", error);
+      setTranslations({});
+      setScreen(6);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} dir="rtl">
       
-      {/* Intro Screen (0) */}
-      {screen === 0 && (
-        <div className={styles.introFull}>
-          <div className={styles.introContent}>
-            <div className={styles.introTop}>
-              <BiInline ar="المرحلة 3 من 7" he="שלב 3 מתוך 7" className={styles.introStep} />
-            </div>
-            <div className={styles.introMain}>
-              <BiInline ar="مركز الحياة" he="מרכז חיים" className={styles.introH1} />
-            </div>
-            <div className={styles.introText}>
-              <BiStack 
-                ar="مكان سكنك وحياتك. نسأل عن عنوان السكن، الشغل، والحالة العائلية." 
-                he="מקום המגורים והחיים שלך. נשאל על כתובת המגורים, העבודה, והמצב המשפחתי." 
-              />
-              <div className={styles.introMeta}>
-                <BiInline ar="الوقت المتوقع: 6 دقيقة" he="זמן משוער: 6 דקות" />
-              </div>
-            </div>
-            <button type="button" className="btnPrimary" style={{background: '#0b2a4a'}} onClick={goNext}>
-              <BiInline ar="ابدأ" he="התחל" />
-            </button>
+      {isTranslating && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+             <BiInline ar="جاري الترجمة..." he="מתרגם נתונים..." />
           </div>
         </div>
       )}
 
-      {/* Form Container (Screens 1-5) */}
-      <form className={screen > 0 ? styles.form : styles.screenHide} action={saveAndNextAction}>
-        
-        {/* Header (Back, Title, Progress) */}
-        <button type="button" className={styles.backBtn} onClick={goBack}>➜</button>
-
-        <div className={styles.headerArea}>
-          <div className={styles.topMeta}>
-            <BiInline ar="المرحلة 3 من 7" he="שלב 3 מתוך 7" className={styles.stepMeta} />
-            <div className={styles.progressTrack}>
-              <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+      {/* Intro Screen (0) */}
+      {screen === 0 && (
+        <div className={styles.introFull}>
+          <Image src={FAMILY_IMAGE} alt="Family" width={280} height={200} className={styles.introImage} priority />
+          <div className={styles.introContent}>
+            <h1 className={styles.introTitle}><BiInline ar="المرحلة 3" he="שלב 3" /></h1>
+            <h2 className={styles.introSubtitle}><BiInline ar="مركز الحياة" he="מרכז חיים" /></h2>
+            <div className={styles.introBody}>
+               <p dir="rtl">بهالمرحلة بنسأل عن عنوان السكن، الشغل، والحالة العائلية<br/>الوقت المتوقع للتعبئة: 6 دقيقة</p>
+               <p dir="rtl">שלב זה עוסק בכתובת מגורים, תעסוקה ומצב משפחתי<br/>זמן מילוי משוער: 6 דקות</p>
             </div>
           </div>
-          <div className={styles.titleBlock}>
-            <BiInline ar="مركز الحياة" he="מרכז חיים" className={styles.h1} />
-          </div>
-          {saved && (
-            <div className={styles.savedNote}>
-              <BiInline ar="تم حفظ المسودة" he="הטיוטה נשמרה" />
-            </div>
-          )}
+          <button type="button" className={styles.introButton} onClick={goNext}>
+            <BiInline ar="ابدأ" he="התחל" />
+          </button>
         </div>
+      )}
+
+      {/* Form Container */}
+      <form 
+        ref={formRef} 
+        className={screen > 0 ? styles.form : styles.screenHide} 
+        action={saveAndNextAction}
+        onSubmit={(e) => {
+            if (screen === 5) handleFinishStep3(e);
+        }}
+      >
+        
+        {screen < 6 && (
+        <div className={styles.headerArea}>
+            <div className={styles.topRow}>
+               <button type="button" className={styles.backBtn} onClick={goBack}>
+                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+               </button>
+               <div className={styles.stepMeta}><span>المرحلة 3 من 7</span><span> | </span><span>שלב 3 מתוך 7</span></div>
+            </div>
+            <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${progress}%` }} /></div>
+            <div className={styles.titleBlock}>
+                <div className={styles.h1}><BiInline ar="مركز الحياة" he="מרכז חיים" /></div>
+            </div>
+        </div>
+        )}
 
         {/* --- Screen 1: Marital Status --- */}
         <div className={screen === 1 ? styles.screenShow : styles.screenHide}>
-           <div className={styles.titleBlock}>
-             <BiInline ar="الحالة الاجتماعية" he="מצב משפחתי" className={styles.label} style={{fontSize: 18}} />
+           <div className={styles.sectionHead}>
+              <div className={styles.sectionTitle}><BiInline ar="الحالة الاجتماعية" he="מצב משפחתי" /></div>
            </div>
            
            <div className={styles.field}>
-              <label><BiInline ar="اختر" he="בחר" className={styles.label} /></label>
-              <div className={styles.selectWrapper}>
-                <select 
-                  name="maritalStatus" 
-                  value={maritalStatus} 
-                  onChange={e => setMaritalStatus(e.target.value)}
-                  className={styles.inputControl}
-                >
-                  <option value="" disabled hidden>اختر / בחר</option>
-                  <option value="single">أعزب/ة / רווק/ה</option>
-                  <option value="married">متزوج/ة / נשוי/ה</option>
-                  <option value="divorced">مطلق/ة / גרוש/ה</option>
-                  <option value="widowed">أرمل/ة / אלמן/ה</option>
-                </select>
-              </div>
+              <div className={styles.label}><BiInline ar="اختر" he="בחר" /></div>
+              <CustomSelect 
+                value={maritalStatus} 
+                onChange={setMaritalStatus} 
+                options={[
+                  { value: "single", labelAr: "أعزب/ة", labelHe: "רווק/ה" },
+                  { value: "married", labelAr: "متزوج/ة", labelHe: "נשוי/ה" },
+                  { value: "divorced", labelAr: "مطلق/ة", labelHe: "גרוש/ה" },
+                  { value: "widowed", labelAr: "أرمل/ة", labelHe: "אלמן/ה" },
+                ]}
+              />
+              <input type="hidden" name="maritalStatus" value={maritalStatus} />
            </div>
 
-           {isMarried && (
-              <div className={styles.field}>
-                <label><BiInline ar="تاريخ ميلاد الزوج/ة" he="תאריך לידה (בן/בת הזוג)" className={styles.label} /></label>
-                <input type="date" name="statusDate" defaultValue={defaults.statusDate} className={styles.inputControl} />
-              </div>
+           {showDate && (
+              <DateField 
+                labelAr={maritalStatus === "married" ? "تاريخ الزواج" : "تاريخ الطلاق"}
+                labelHe={maritalStatus === "married" ? "תאריך נישואין" : "תאריך גירושין"}
+                name="statusDate"
+                defaultValue={defaults.statusDate}
+              />
            )}
 
            <div className={styles.actions}>
-              <button type="button" className="btnPrimary" onClick={goNext}>
+              <button type="button" className={styles.btnPrimary} onClick={goNext}>
                 <BiInline ar="التالي" he="המשך" />
               </button>
-              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
                 <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
               </button>
            </div>
@@ -236,13 +353,13 @@ export default function Step3FormClient({
 
         {/* --- Screen 2: Residence Address --- */}
         <div className={screen === 2 ? styles.screenShow : styles.screenHide}>
-            <div className={styles.titleBlock}>
-               <BiInline ar="عنوان السكن" he="כתובת מגורים" className={styles.label} style={{fontSize: 18}} />
+            <div className={styles.sectionHead}>
+               <div className={styles.sectionTitle}><BiInline ar="عنوان السكن" he="כתובת מגורים" /></div>
                <div className={styles.subtitle}><BiInline ar="المسجل في وزارة الداخلية" he="הרשומה במשרד הפנים" /></div>
             </div>
 
             <div className={styles.field}>
-              <label><BiInline ar="مدينة" he="עיר" className={styles.label} /></label>
+              <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
               <input 
                 list="regCities" 
                 name="regCity" 
@@ -257,74 +374,75 @@ export default function Step3FormClient({
             </div>
 
             <div className={styles.field}>
-              <label><BiInline ar="شارع" he="רחוב" className={styles.label} /></label>
+              <div className={styles.label}><BiInline ar="شارع" he="רחוב" /></div>
               <input name="regStreet" defaultValue={defaults.regStreet} className={styles.inputControl} />
             </div>
 
             <div className={styles.field}>
               <div className={styles.gridRow}>
                  <div>
-                   <label><BiInline ar="منزل" he="בית" className={styles.label} /></label>
+                   <div className={styles.label}><BiInline ar="منزل" he="בית" /></div>
                    <input name="regHouseNumber" defaultValue={defaults.regHouseNumber} className={styles.inputControl} />
                  </div>
                  <div>
-                   <label><BiInline ar="دخول" he="כניסה" className={styles.label} /></label>
+                   <div className={styles.label}><BiInline ar="دخول" he="כניסה" /></div>
                    <input name="regEntry" defaultValue={defaults.regEntry} className={styles.inputControl} />
                  </div>
                  <div>
-                   <label><BiInline ar="شقة" he="דירה" className={styles.label} /></label>
+                   <div className={styles.label}><BiInline ar="شقة" he="דירה" /></div>
                    <input name="regApartment" defaultValue={defaults.regApartment} className={styles.inputControl} />
                  </div>
               </div>
             </div>
 
             <div className={styles.field}>
-              <label><BiInline ar="الرمز البريدي" he="מיקוד" className={styles.label} /></label>
+              <div className={styles.label}><BiInline ar="الرمز البريدي" he="מיקוד" /></div>
               <input name="regZip" defaultValue={defaults.regZip} className={styles.inputControl} inputMode="numeric" />
             </div>
 
             <div className={styles.field}>
-                <label><BiInline ar="شقة مستأجرة / بملكية" he="דירה שכורה / בבעלות" className={styles.label} /></label>
-                <div className={styles.selectWrapper}>
-                  <select name="housingType" defaultValue={defaults.housingType} className={styles.inputControl}>
-                     <option value="rented">شقة مستأجرة / דירה שכורה</option>
-                     <option value="owned">شقة بملكية / דירה בבעלות</option>
-                     <option value="other">آخر / אחר</option>
-                  </select>
-                </div>
+                <div className={styles.label}><BiInline ar="شقة مستأجرة / بملكية" he="דירה שכורה / בבעלות" /></div>
+                <CustomSelect
+                  value={housingType}
+                  onChange={setHousingType}
+                  options={[
+                    { value: "rented", labelAr: "شقة مستأجرة", labelHe: "דירה שכורה" },
+                    { value: "owned", labelAr: "شقة بملكية", labelHe: "דירה בבעלות" },
+                    { value: "other", labelAr: "آخر", labelHe: "אחר" }
+                  ]}
+                />
+                <input type="hidden" name="housingType" value={housingType} />
             </div>
 
-            {/* Mailing Address Question */}
             <div className={styles.toggleSection}>
                 <label className={styles.checkboxLabel}>
-                  <BiInline ar="عنوان المراسلات مختلف؟" he="כתובת למכתבים שונה?" />
                   <input 
                     type="checkbox" 
                     checked={mailingDifferent} 
                     onChange={(e) => setMailingDifferent(e.target.checked)} 
                   />
+                  <BiInline ar="عنوان المراسلات مختلف؟" he="כתובת למכתבים שונה?" />
                   <input type="hidden" name="mailingDifferent" value={mailingDifferent ? "true" : "false"} />
                 </label>
             </div>
 
             <div className={styles.actions}>
-              <button type="button" className="btnPrimary" onClick={goNext}>
+              <button type="button" className={styles.btnPrimary} onClick={goNext}>
                 <BiInline ar="التالي" he="המשך" />
               </button>
-              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
                 <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
               </button>
            </div>
         </div>
 
-        {/* --- Screen 3: Mailing Address (Optional) --- */}
+        {/* --- Screen 3: Mailing Address --- */}
         <div className={screen === 3 ? styles.screenShow : styles.screenHide}>
-            <div className={styles.titleBlock}>
-               <BiInline ar="عنوان المراسلات" he="כתובת למכתבים" className={styles.label} style={{fontSize: 18}} />
+            <div className={styles.sectionHead}>
+               <div className={styles.sectionTitle}><BiInline ar="عنوان المراسلات" he="כתובת למכתבים" /></div>
             </div>
-
             <div className={styles.field}>
-              <label><BiInline ar="مدينة" he="עיר" className={styles.label} /></label>
+              <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
               <input 
                 list="mailCities" 
                 name="mailCity" 
@@ -336,40 +454,35 @@ export default function Step3FormClient({
                 {mailCityOpts.map(c => <option key={c.id} value={c.label} />)}
               </datalist>
             </div>
-
             <div className={styles.field}>
-              <label><BiInline ar="شارع" he="רחוב" className={styles.label} /></label>
+              <div className={styles.label}><BiInline ar="شارع" he="רחוב" /></div>
               <input name="mailStreet" defaultValue={defaults.mailingAddress?.street} className={styles.inputControl} />
             </div>
-            
-            {/* Same grid for Mailing */}
             <div className={styles.field}>
               <div className={styles.gridRow}>
                  <div>
-                   <label><BiInline ar="منزل" he="בית" className={styles.label} /></label>
+                   <div className={styles.label}><BiInline ar="منزل" he="בית" /></div>
                    <input name="mailHouseNumber" className={styles.inputControl} />
                  </div>
                  <div>
-                   <label><BiInline ar="دخول" he="כניסה" className={styles.label} /></label>
+                   <div className={styles.label}><BiInline ar="دخول" he="כניסה" /></div>
                    <input name="mailEntry" className={styles.inputControl} />
                  </div>
                  <div>
-                   <label><BiInline ar="شقة" he="דירה" className={styles.label} /></label>
+                   <div className={styles.label}><BiInline ar="شقة" he="דירה" /></div>
                    <input name="mailApartment" className={styles.inputControl} />
                  </div>
               </div>
             </div>
-
             <div className={styles.field}>
-              <label><BiInline ar="الرمز البريدي" he="מיקוד" className={styles.label} /></label>
+              <div className={styles.label}><BiInline ar="الرمز البريدي" he="מיקוד" /></div>
               <input name="mailZip" className={styles.inputControl} inputMode="numeric" />
             </div>
-
             <div className={styles.actions}>
-              <button type="button" className="btnPrimary" onClick={goNext}>
+              <button type="button" className={styles.btnPrimary} onClick={goNext}>
                 <BiInline ar="التالي" he="המשך" />
               </button>
-              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
                 <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
               </button>
            </div>
@@ -377,69 +490,94 @@ export default function Step3FormClient({
 
         {/* --- Screen 4: Employment --- */}
         <div className={screen === 4 ? styles.screenShow : styles.screenHide}>
-             <div className={styles.titleBlock}>
-                 <BiInline ar="العمل" he="תעסוקה" className={styles.label} style={{fontSize: 18}} />
+             <div className={styles.sectionHead}>
+                 <div className={styles.sectionTitle}><BiInline ar="العمل" he="תעסוקה" /></div>
                  <div className={styles.subtitle}><BiInline ar="مهنة في البلاد" he="עיסוק בארץ" /></div>
              </div>
 
              <div className={styles.field}>
-                  <label><BiInline ar="الوضع" he="סטטוס" className={styles.label} /></label>
-                  <div className={styles.selectWrapper}>
-                    <select 
-                      name="employmentStatus" 
-                      value={empStatus} 
-                      onChange={e => setEmpStatus(e.target.value)} 
-                      className={styles.inputControl}
-                    >
-                      <option value="" disabled hidden>اختر / בחר</option>
-                      <option value="selfEmployed">مستقل / עצמאי</option>
-                      <option value="employee">موظف / שכיר</option>
-                      <option value="notWorking">لا يعمل / לא עובד</option>
-                    </select>
-                  </div>
+                  <div className={styles.label}><BiInline ar="الوضع" he="סטטוס" /></div>
+                  <CustomSelect
+                    value={empStatus}
+                    onChange={setEmpStatus}
+                    options={[
+                      { value: "selfEmployed", labelAr: "مستقل", labelHe: "עצמאי" },
+                      { value: "employee", labelAr: "موظف", labelHe: "שכיר" },
+                      { value: "notWorking", labelAr: "غير موظف لا يعمل", labelHe: "לא עובד" },
+                    ]}
+                  />
+                  <input type="hidden" name="employmentStatus" value={empStatus} />
              </div>
 
-             {/* Logic for Employee */}
+             {/* Not Working */}
+             {empStatus === 'notWorking' && (
+               <div className={styles.field}>
+                 <div className={styles.label}><BiInline ar="هل لديك دخل؟" he="האם יש הכנסות?" /></div>
+                 <div style={{display: 'flex', flexDirection: 'column', gap: 12}}>
+                    <div 
+                       className={`${styles.assetItem} ${notWorkingSub === 'income' ? styles.checked : ''}`}
+                       onClick={() => setNotWorkingSub('income')}
+                    >
+                       <div className={styles.assetLabel}><BiInline ar="لدي دخل (غير العمل)" he="יש לי הכנסה (שלא מעבודה)" /></div>
+                       <input type="radio" name="notWorkingSub" value="income" checked={notWorkingSub === 'income'} readOnly />
+                    </div>
+
+                    <div 
+                       className={`${styles.assetItem} ${notWorkingSub === 'no_income' ? styles.checked : ''}`}
+                       onClick={() => setNotWorkingSub('no_income')}
+                    >
+                       <div className={styles.assetLabel}><BiInline ar="ليس لدي دخل أين لي (دخل)" he="אין לי הכנסה כלל" /></div>
+                       <input type="radio" name="notWorkingSub" value="no_income" checked={notWorkingSub === 'no_income'} readOnly />
+                    </div>
+                 </div>
+               </div>
+             )}
+
+             {/* Employee */}
              {empStatus === 'employee' && (
                  <>
                    <div className={styles.field}>
-                     <label><BiInline ar="اسم صاحب العمل" he="שם המעסיק" className={styles.label} /></label>
+                     <div className={styles.label}><BiInline ar="اسم صاحب العمل" he="שם המעסיק" /></div>
                      <input name="employerName" defaultValue={defaults.employerName} className={styles.inputControl} />
                    </div>
                    <div className={styles.field}>
-                     <label><BiInline ar="عنوان صاحب العمل" he="כתובת המעסיק" className={styles.label} /></label>
+                     <div className={styles.label}><BiInline ar="عنوان صاحب العمل" he="כתובת המעסיק" /></div>
                      <input name="workAddress" defaultValue={defaults.workAddress} className={styles.inputControl} />
                    </div>
-                   <div className={styles.field}>
-                     <label><BiInline ar="تاريخ بدء العمل" he="תאריך תחילת העבודה" className={styles.label} /></label>
-                     <input type="date" name="workStartDate" defaultValue={defaults.workStartDate} className={styles.inputControl} />
-                   </div>
+                   <DateField 
+                      labelAr="تاريخ بدء العمل" 
+                      labelHe="תאריך תחילת העבודה" 
+                      name="workStartDate"
+                      defaultValue={defaults.workStartDate}
+                   />
                  </>
              )}
 
-             {/* Logic for Self Employed */}
+             {/* Self Employed */}
              {empStatus === 'selfEmployed' && (
                  <>
                    <div className={styles.field}>
-                      <label><BiInline ar="اسم المصلحة" he="שם העסק" className={styles.label} /></label>
+                      <div className={styles.label}><BiInline ar="اسم صاحب العمل" he="שם המעסיק" /></div>
                       <input name="businessName" defaultValue={defaults.employerName} className={styles.inputControl} />
                    </div>
                    <div className={styles.field}>
-                      <label><BiInline ar="عنوان المصلحة" he="כתובת העסק" className={styles.label} /></label>
+                      <div className={styles.label}><BiInline ar="عنوان المصلحة" he="כתובת העסק" /></div>
                       <input name="workAddress" defaultValue={defaults.workAddress} className={styles.inputControl} />
                    </div>
-                   <div className={styles.field}>
-                      <label><BiInline ar="تاريخ الافتتاح" he="תאריך פתיחה" className={styles.label} /></label>
-                      <input type="date" name="workStartDate" defaultValue={defaults.workStartDate} className={styles.inputControl} />
-                   </div>
+                   <DateField 
+                      labelAr="تاريخ الافتتاح" 
+                      labelHe="תאריך פתיחה" 
+                      name="workStartDate"
+                      defaultValue={defaults.workStartDate}
+                   />
                  </>
              )}
 
              <div className={styles.actions}>
-              <button type="button" className="btnPrimary" onClick={goNext}>
+              <button type="button" className={styles.btnPrimary} onClick={goNext}>
                 <BiInline ar="التالي" he="המשך" />
               </button>
-              <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
                 <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
               </button>
            </div>
@@ -447,8 +585,8 @@ export default function Step3FormClient({
 
         {/* --- Screen 5: Assets --- */}
         <div className={screen === 5 ? styles.screenShow : styles.screenHide}>
-            <div className={styles.titleBlock}>
-                 <BiInline ar="ممتلكات" he="רכוש" className={styles.label} style={{fontSize: 18}} />
+            <div className={styles.sectionHead}>
+                 <div className={styles.sectionTitle}><BiInline ar="ممتلكات" he="רכוש" /></div>
                  <div className={styles.subtitle}><BiInline ar="إذا كنت تملك أحد ما يلي" he="האם בבעלותך אחד מהבאים" /></div>
             </div>
 
@@ -463,32 +601,293 @@ export default function Step3FormClient({
                         key={item.val} 
                         className={`${styles.assetItem} ${assets.includes(item.val) ? styles.checked : ''}`}
                       >
-                         <BiInline ar={item.ar} he={item.he} className={styles.assetLabel} />
-                         <input 
-                           type="checkbox" 
-                           name="assets" 
-                           value={item.val} 
-                           checked={assets.includes(item.val)}
-                           onChange={() => toggleAsset(item.val)}
-                         />
+                         <BiInline ar={item.ar} he={item.he} />
+                         <input type="checkbox" name="assets" value={item.val} checked={assets.includes(item.val)} onChange={() => toggleAsset(item.val)} />
                       </label>
                     ))}
                  </div>
             </div>
 
             <div className={styles.actions}>
-                <button type="submit" className="btnPrimary">
+                <button type="submit" className={styles.btnPrimary}>
                   <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
                 </button>
-                <button type="submit" formAction={saveDraftAction} className="btnSecondary">
+                <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
                   <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
-                </button>
-                {/* כאן אפשר להוסיף כפתור שמור וחזור אם נדרש, ולקשר ל-saveDraftAndBackAction */}
-                <button type="submit" formAction={saveDraftAndBackAction} className="btnSecondary" style={{border: 'none', fontSize: '13px', color: '#666'}}>
-                  <BiInline ar="حفظ والعودة" he="שמור וחזור" />
                 </button>
             </div>
         </div>
+
+        {/* --- Screen 6: Summary --- */}
+        {/* --- Screen 6: Summary --- */}
+        {screen === 6 && (
+           <div className={styles.screenShow}>
+              <div className={styles.summaryHeader}>
+                <div className={styles.summaryTitle} style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+                  <span>نهاية المرحلة 3</span>
+                  <span>סוף שלב 3</span>
+                </div>
+                <div className={styles.summarySub} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                   <span>يرجى التحقق من صحة التفاصيل وترجمتها</span>
+                   <span>אנא וודא/י כי כל הפרטים ותרגומם נכונים</span>
+                </div>
+              </div>
+
+              {/* --- 1. שדות מתורגמים (יופיעו למעלה לבדיקה) --- */}
+              {[
+                  { key: "regStreet", labelAr: "الشارع (السكن)", labelHe: "רחוב (מגורים)" },
+                  { key: "employerName", labelAr: "اسم صاحب العمل", labelHe: "שם המעסיק" },
+                  { key: "businessName", labelAr: "اسم المصلحة", labelHe: "שם העסק" },
+                  { key: "workAddress", labelAr: "عنوان العمل", labelHe: "כתובת העבודה" },
+              ].map(field => {
+                  const data = translations[field.key];
+                  // מציג רק אם יש ערך מקורי
+                  if (!data || !data.original) return null;
+                  
+                  const isHeToAr = data.direction === "he-to-ar";
+                  const originalName = isHeToAr ? `${field.key}He` : `${field.key}Ar`;
+                  const translatedName = isHeToAr ? `${field.key}Ar` : `${field.key}He`;
+                  
+                  return (
+                    <div className={styles.summaryPair} key={field.key}>
+                      <div className={styles.summaryPairLabel}>
+                         <span>{field.labelAr} / {field.labelHe}</span>
+                      </div>
+                      <div className={styles.summaryInputs}>
+                         <input className={styles.originalInput} defaultValue={data.original} readOnly tabIndex={-1} />
+                         <input type="hidden" name={originalName} value={data.original} />
+                         <input className={styles.translatedInput} defaultValue={data.translated} name={translatedName} />
+                      </div>
+                      <input type="hidden" name={field.key} value={data.original} />
+                    </div>
+                  );
+              })}
+
+              {/* --- 2. מצב משפחתי --- */}
+              <div className={styles.sectionHead} style={{marginTop: 30}}>
+                 <div className={styles.sectionTitle}><BiInline ar="الحالة الاجتماعية" he="מצב משפחתי" /></div>
+              </div>
+
+              <div className={styles.summaryField}>
+                 <div className={styles.readOnlyInputWrap}>
+                    <input className={styles.readOnlyInput} 
+                       value={
+                         formDataState.maritalStatus === 'single' ? 'רווק/ה / أعزب/ة' :
+                         formDataState.maritalStatus === 'married' ? 'נשוי/ה / متزوج/ة' :
+                         formDataState.maritalStatus === 'divorced' ? 'גרוש/ה / مطلق/ة' :
+                         formDataState.maritalStatus === 'widowed' ? 'אלמן/ה / أرمل/ة' : ''
+                       } 
+                       readOnly 
+                    />
+                 </div>
+              </div>
+
+              {/* תאריך נישואין/גירושין (אם רלוונטי) */}
+              {formDataState.statusDate && (
+                <div className={styles.summaryField}>
+                   <div className={styles.label}>
+                      {formDataState.maritalStatus === 'married' ? <BiInline ar="تاريخ الزواج" he="תאריך נישואין" /> : <BiInline ar="تاريخ الطلاق" he="תאריך גירושין" />}
+                   </div>
+                   <div className={styles.readOnlyInputWrap}>
+                      <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      <input className={styles.readOnlyInput} value={formDataState.statusDate.split('-').reverse().join('.')} readOnly style={{paddingLeft: 40, direction: 'ltr'}} />
+                   </div>
+                </div>
+              )}
+
+              {/* --- 3. כתובת מגורים (כל הפרטים) --- */}
+              <div className={styles.sectionHead} style={{marginTop: 20}}>
+                 <div className={styles.sectionTitle}><BiInline ar="عنوان السكن" he="כתובת מגורים" /></div>
+              </div>
+
+              <div className={styles.summaryField}>
+                 <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
+                 <div className={styles.readOnlyInputWrap}>
+                    <input className={styles.readOnlyInput} value={formDataState.regCity} readOnly />
+                 </div>
+              </div>
+
+              {/* (הרחוב מופיע למעלה בתרגומים, כאן נציג את המספרים) */}
+              <div className={styles.gridRow} style={{marginBottom: 20}}>
+                 <div>
+                   <div className={styles.label}><BiInline ar="منزل" he="בית" /></div>
+                   <input className={styles.readOnlyInput} value={formDataState.regHouseNumber} readOnly style={{textAlign: 'center'}} />
+                 </div>
+                 <div>
+                   <div className={styles.label}><BiInline ar="دخول" he="כניסה" /></div>
+                   <input className={styles.readOnlyInput} value={formDataState.regEntry} readOnly style={{textAlign: 'center'}} />
+                 </div>
+                 <div>
+                   <div className={styles.label}><BiInline ar="شقة" he="דירה" /></div>
+                   <input className={styles.readOnlyInput} value={formDataState.regApartment} readOnly style={{textAlign: 'center'}} />
+                 </div>
+              </div>
+
+              <div className={styles.summaryField}>
+                  <div className={styles.label}><BiInline ar="الرمز البريدي" he="מיקוד" /></div>
+                  <div className={styles.readOnlyInputWrap}>
+                     <input className={styles.readOnlyInput} value={formDataState.regZip} readOnly />
+                  </div>
+              </div>
+
+              <div className={styles.summaryField}>
+                 <div className={styles.label}><BiInline ar="شقة مستأجرة / بملكية" he="דירה שכורה / בבעלות" /></div>
+                 <div className={styles.readOnlyInputWrap}>
+                    <input className={styles.readOnlyInput} 
+                       value={
+                          formDataState.housingType === 'rented' ? 'דירה שכורה / شقة مستأجرة' :
+                          formDataState.housingType === 'owned' ? 'דירה בבעלות / شقة بملكية' :
+                          formDataState.housingType === 'other' ? 'אחר / آخر' : ''
+                       }
+                       readOnly
+                    />
+                 </div>
+              </div>
+
+              {/* --- 4. כתובת למכתבים (אם שונה) --- */}
+              {formDataState.mailingDifferent === "true" && (
+                <>
+                  <div className={styles.sectionHead} style={{marginTop: 20}}>
+                     <div className={styles.sectionTitle}><BiInline ar="عنوان المراسلات" he="כתובת למכתבים" /></div>
+                  </div>
+                  
+                  <div className={styles.summaryField}>
+                     <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
+                     <div className={styles.readOnlyInputWrap}>
+                        <input className={styles.readOnlyInput} value={formDataState.mailCity} readOnly />
+                     </div>
+                  </div>
+                  <div className={styles.summaryField}>
+                     <div className={styles.label}><BiInline ar="شارع" he="רחוב" /></div>
+                     <div className={styles.readOnlyInputWrap}>
+                        <input className={styles.readOnlyInput} value={formDataState.mailStreet} readOnly />
+                     </div>
+                  </div>
+                  <div className={styles.gridRow} style={{marginBottom: 20}}>
+                     <div>
+                       <div className={styles.label}><BiInline ar="منزل" he="בית" /></div>
+                       <input className={styles.readOnlyInput} value={formDataState.mailHouseNumber} readOnly style={{textAlign: 'center'}} />
+                     </div>
+                     <div>
+                       <div className={styles.label}><BiInline ar="دخول" he="כניסה" /></div>
+                       <input className={styles.readOnlyInput} value={formDataState.mailEntry} readOnly style={{textAlign: 'center'}} />
+                     </div>
+                     <div>
+                       <div className={styles.label}><BiInline ar="شقة" he="דירה" /></div>
+                       <input className={styles.readOnlyInput} value={formDataState.mailApartment} readOnly style={{textAlign: 'center'}} />
+                     </div>
+                  </div>
+                  <div className={styles.summaryField}>
+                      <div className={styles.label}><BiInline ar="الرمز البريدي" he="מיקוד" /></div>
+                      <div className={styles.readOnlyInputWrap}>
+                         <input className={styles.readOnlyInput} value={formDataState.mailZip} readOnly />
+                      </div>
+                  </div>
+                </>
+              )}
+
+              {/* --- 5. תעסוקה --- */}
+              <div className={styles.sectionHead} style={{marginTop: 20}}>
+                 <div className={styles.sectionTitle}><BiInline ar="العمل" he="תעסוקה" /></div>
+              </div>
+
+              <div className={styles.summaryField}>
+                 <div className={styles.readOnlyInputWrap}>
+                    <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    <input className={styles.readOnlyInput} 
+                       value={
+                          formDataState.employmentStatus === 'employee' ? 'שכיר / موظف' :
+                          formDataState.employmentStatus === 'selfEmployed' ? 'עצמאי / مستقل' :
+                          formDataState.employmentStatus === 'notWorking' ? 'לא עובד / لا يعمل' : ''
+                       }
+                       readOnly 
+                       style={{paddingLeft: 40}}
+                    />
+                 </div>
+              </div>
+              
+              {/* סטטוס הכנסה למי שלא עובד */}
+              {formDataState.employmentStatus === 'notWorking' && formDataState.notWorkingSub && (
+                  <div className={styles.summaryField}>
+                    <div className={styles.readOnlyInputWrap}>
+                        <input className={styles.readOnlyInput} 
+                          value={formDataState.notWorkingSub === 'income' ? 'יש לי הכנסה / لدي دخل' : 'אין לי הכנסה / ليس لدي دخل'}
+                          readOnly
+                        />
+                    </div>
+                  </div>
+              )}
+
+              {/* תאריך התחלה (לעובדים/עצמאים) */}
+              {formDataState.workStartDate && (
+                <div className={styles.summaryField}>
+                   <div className={styles.label}>
+                      {formDataState.employmentStatus === 'selfEmployed' ? <BiInline ar="تاريخ الافتتاح" he="תאריך פתיחה" /> : <BiInline ar="تاريخ بدء العمل" he="תאריך תחילת העבודה" />}
+                   </div>
+                   <div className={styles.readOnlyInputWrap}>
+                      <svg className={`${styles.fieldIcon} ${styles.fieldIconLeft}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      <input className={styles.readOnlyInput} value={formDataState.workStartDate.split('-').reverse().join('.')} readOnly style={{paddingLeft: 40, direction: 'ltr'}} />
+                   </div>
+                </div>
+              )}
+
+              {/* --- 6. רכוש --- */}
+              {assets.length > 0 && (
+                 <>
+                   <div className={styles.sectionHead} style={{marginTop: 20}}>
+                      <div className={styles.sectionTitle}><BiInline ar="ممتلكات" he="רכוש" /></div>
+                   </div>
+                   <div className={styles.summaryField}>
+                      <div className={styles.readOnlyInputWrap}>
+                         <input className={styles.readOnlyInput} 
+                           value={assets.map(a => 
+                             a === 'business' ? 'עסק / عمل' : 
+                             a === 'apartment' ? 'דירה / شقة' : 
+                             'רכוש אחר / ممتلكات أخرى'
+                           ).join(', ')} 
+                           readOnly
+                         />
+                      </div>
+                   </div>
+                 </>
+              )}
+
+              {/* Hidden Inputs for Submission */}
+              <input type="hidden" name="maritalStatus" value={formDataState.maritalStatus || ""} />
+              <input type="hidden" name="statusDate" value={formDataState.statusDate || ""} />
+              <input type="hidden" name="regCity" value={formDataState.regCity || ""} />
+              <input type="hidden" name="regHouseNumber" value={formDataState.regHouseNumber || ""} />
+              <input type="hidden" name="regEntry" value={formDataState.regEntry || ""} />
+              <input type="hidden" name="regApartment" value={formDataState.regApartment || ""} />
+              <input type="hidden" name="regZip" value={formDataState.regZip || ""} />
+              <input type="hidden" name="housingType" value={formDataState.housingType || ""} />
+              <input type="hidden" name="mailingDifferent" value={formDataState.mailingDifferent || "false"} />
+              {formDataState.mailingDifferent === "true" && (
+                <>
+                  <input type="hidden" name="mailCity" value={formDataState.mailCity || ""} />
+                  <input type="hidden" name="mailStreet" value={formDataState.mailStreet || ""} />
+                  <input type="hidden" name="mailHouseNumber" value={formDataState.mailHouseNumber || ""} />
+                  <input type="hidden" name="mailEntry" value={formDataState.mailEntry || ""} />
+                  <input type="hidden" name="mailApartment" value={formDataState.mailApartment || ""} />
+                  <input type="hidden" name="mailZip" value={formDataState.mailZip || ""} />
+                </>
+              )}
+              <input type="hidden" name="employmentStatus" value={formDataState.employmentStatus || ""} />
+              <input type="hidden" name="notWorkingSub" value={formDataState.notWorkingSub || ""} />
+              <input type="hidden" name="workStartDate" value={formDataState.workStartDate || ""} />
+              {assets.map(a => <input key={a} type="hidden" name="assets" value={a} />)}
+
+              <div className={styles.actions}>
+                  <button type="submit" className={styles.btnPrimary}>
+                    <BiInline ar="موافقة" he="אישור וסיום" />
+                  </button>
+                  <button type="button" onClick={() => setScreen(5)} className={styles.btnSecondary}>
+                    <BiInline ar="تعديل" he="חזור לעריכה" />
+                  </button>
+              </div>
+
+           </div>
+        )}
 
       </form>
 
