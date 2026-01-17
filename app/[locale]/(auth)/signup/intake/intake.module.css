@@ -1,31 +1,36 @@
 /* app/[locale]/(auth)/login/signup/intake/intake.module.css */
 
 .container {
-  /* --- שבירת הגבולות הלבנים --- */
-  position: fixed;
-  inset: 0; /* נמתח על כל המסך: למעלה, למטה, ימין, שמאל */
-  z-index: 9999; /* מעל הכל */
+  /* שימוש ב-dvh מתאים את הגובה למסך האמיתי באייפון */
+  min-height: 100dvh; 
+  width: 100%;
   
+  position: relative;
   background-color: var(--mint, #DFFC8E);
   
   display: flex;
   flex-direction: column;
-  align-items: center; /* התמונה במרכז */
+  align-items: center;
   
-  overflow-y: auto; /* מאפשר גלילה במסכים נמוכים */
+  /* מאפשר גלילה אם התוכן גולש */
+  overflow-y: auto;
+  overflow-x: hidden;
   
-  /* Padding פנימי */
-  padding-top: 80px; 
-  padding-bottom: 40px;
+  padding-top: 60px; /* קצת פחות רווח למעלה */
   padding-left: 24px;
   padding-right: 24px;
+  
+  /* רווח תחתון גדול במיוחד - זה מה שיקפיץ את הכפתור מעל הכתובת של ספארי */
+  padding-bottom: 140px; 
 }
 
 .illustration {
+  /* הקטנו את התמונה כדי לפנות מקום */
+  height: 180px; 
   width: auto;
-  height: 240px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   object-fit: contain;
+  flex-shrink: 0; /* מונע מהתמונה להימעך */
 }
 
 /* קונטיינר לטקסטים */
@@ -34,16 +39,15 @@
   flex-direction: column;
   width: 100%;
   max-width: 360px;
-  gap: 16px;
+  gap: 12px; /* רווחים קצת יותר צפופים */
   
-  /* === יישור לימין === */
   text-align: right; 
-  align-items: flex-start; /* ב-Flex column, זה מצמיד לימין ב-RTL */
+  align-items: flex-start;
 }
 
 .title {
   font-family: var(--font-simpler), sans-serif;
-  font-size: 36px;
+  font-size: 32px; /* קצת יותר קטן */
   font-weight: 700;
   color: #011429;
   line-height: 1.2;
@@ -51,8 +55,8 @@
   
   display: flex;
   gap: 10px;
-  flex-direction: row-reverse; /* ערבית מימין */
-  justify-content: flex-start; /* יישור להתחלה (ימין) */
+  flex-direction: row-reverse;
+  justify-content: flex-start;
 }
 
 .subtitle {
@@ -66,7 +70,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  align-items: flex-start; /* יישור לימין */
+  align-items: flex-start;
 }
 
 .bodyText {
@@ -77,11 +81,11 @@
   line-height: 1.5;
   opacity: 0.9;
   
-  margin-top: 10px;
+  margin-top: 5px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  align-items: flex-start; /* יישור לימין */
+  gap: 12px;
+  align-items: flex-start;
 }
 
 .startButton {
@@ -102,10 +106,12 @@
   justify-content: center;
   gap: 12px;
   
-  margin-top: 40px;
-  align-self: center; /* הכפתור נשאר במרכז רוחב הקונטיינר */
+  /* מרווח מלמעלה - מרחיק מהטקסט */
+  margin-top: 30px; 
+  align-self: center;
   
   transition: transform 0.1s;
+  flex-shrink: 0; /* חשוב! שלא יתכווץ אם חסר מקום */
 }
 
 .startButton:active {

@@ -15,8 +15,11 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
 
   useEffect(() => {
     if (currentScreen === "splash") {
-      const exitTimer = setTimeout(() => { setIsExiting(true); }, 4000);
-      const switchTimer = setTimeout(() => { setCurrentScreen("onboarding"); }, 4500);
+      // כאן השינוי: 2.5 שניות במקום 4
+      const exitTimer = setTimeout(() => { setIsExiting(true); }, 2500);
+      // חצי שנייה אחרי זה מבצעים את המעבר (סה"כ 3 שניות)
+      const switchTimer = setTimeout(() => { setCurrentScreen("onboarding"); }, 3000);
+      
       return () => { clearTimeout(exitTimer); clearTimeout(switchTimer); };
     }
   }, [currentScreen]);
@@ -108,7 +111,6 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
         <div className={`${styles.loginScreen} ${styles.fadeIn}`}>
           <div className={styles.loginCard}>
             
-            {/* Header: Google Logo + Text */}
             <div className={styles.googleHeader}>
               <Image src="https://authjs.dev/img/providers/google.svg" alt="Google" width={18} height={18} />
               <span className={styles.googleHeaderText}>
@@ -117,7 +119,6 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
             </div>
 
             <div className={styles.loginContent}>
-                {/* App Logo */}
                 <Image 
                   src="/images/logo-refuge.svg" 
                   alt="ReFuge" 
@@ -128,13 +129,11 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
                 
                 <h2 className={styles.loginTitle}>בחר חשבון</h2>
                 
-                {/* כפתור ההתחברות עם האייקון של גוגל בפנים */}
                 <button onClick={handleGoogleLogin} disabled={loading} className={styles.googleBtn}>
                   {loading ? (
                     <span className="w-full text-center">מתחבר...</span>
                   ) : (
                     <>
-                      {/* כאן השינוי: אייקון גוגל במקום העיגול הסגול */}
                       <Image 
                         src="https://authjs.dev/img/providers/google.svg" 
                         alt="G" 
