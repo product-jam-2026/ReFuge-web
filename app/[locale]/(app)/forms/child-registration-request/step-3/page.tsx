@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useWizard } from "../WizardProvider";
+import { useSearchParams } from "next/navigation";
 
 type MaritalStatus =
   | "married"
@@ -50,6 +51,9 @@ function Field({
 
 export default function Step3() {
   const router = useRouter();
+  const sp = useSearchParams();
+  const instanceId = sp.get("instanceId");
+
   const { draft, extras, setExtras, update } = useWizard();
 
   // In case your WizardProvider loads draft async
@@ -60,6 +64,8 @@ export default function Step3() {
       </main>
     );
   }
+
+  const nextUrl = instanceId ? `./step-4?instanceId=${instanceId}` : "./step-4";
 
   const kids = draft.intake.step6.children ?? [];
 
@@ -165,7 +171,10 @@ export default function Step3() {
         <select
           value={(draft.intake.step3.maritalStatus ?? "") as MaritalStatus}
           onChange={(e) =>
-            update("intake.step3.maritalStatus", e.target.value as MaritalStatus)
+            update(
+              "intake.step3.maritalStatus",
+              e.target.value as MaritalStatus,
+            )
           }
           style={inputStyle}
         >
@@ -280,7 +289,8 @@ export default function Step3() {
           ← הקודם
         </button>
 
-        <button type="button" onClick={() => router.push("./step-4")}>
+        {/* <button type="button" onClick={() => router.push("./step-4")}> */}
+        <button type="button" onClick={() => router.push(nextUrl)}>
           הבא →
         </button>
       </div>

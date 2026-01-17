@@ -165,7 +165,7 @@ export default function Review() {
     const storagePath = await uploadPdf(outBytes, fileName);
 
     // console.log("uploaded:", storagePath);
-    downloadLatestPdfForCurrentUser();
+    // downloadLatestPdfForCurrentUser();
   }
 
   return (
@@ -189,7 +189,7 @@ export default function Review() {
         <button type="button" onClick={() => router.back()}>
           ← הקודם
         </button>
-        <button type="button" onClick={onGenerate}>
+        <button type="button" onClick={downloadLatestPdfForCurrentUser}>
           הפק PDF
         </button>
       </div>

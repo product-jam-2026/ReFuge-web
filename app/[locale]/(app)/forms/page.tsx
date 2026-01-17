@@ -50,3 +50,51 @@ export default function FormsPage() {
     </main>
   );
 }
+
+
+
+// "use client";
+// import { useEffect, useState } from "react";
+// import { createBrowserClient } from "@supabase/ssr";
+
+// const supabase = createBrowserClient(
+//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// );
+
+// type PdfRow = { id: string; path: string; bucket: string; created_at: string };
+
+// export default function MyPdfs() {
+//   const [rows, setRows] = useState<PdfRow[]>([]);
+
+//   useEffect(() => {
+//     (async () => {
+//       const { data, error } = await supabase
+//         .from("generated_pdfs")
+//         .select("id, path, bucket, created_at")
+//         .order("created_at", { ascending: false });
+//       if (!error) setRows(data ?? []);
+//     })();
+//   }, []);
+
+//   async function download(row: PdfRow) {
+//     const { data, error } = await supabase.storage
+//       .from(row.bucket)
+//       .createSignedUrl(row.path, 60);
+//     if (error) throw error;
+//     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+//   }
+
+//   return (
+//     <div style={{ padding: 24 }}>
+//       <h1>My PDFs</h1>
+//       {rows.map((r) => (
+//         <div key={r.id} style={{ display: "flex", gap: 8, marginTop: 8 }}>
+//           <code style={{ flex: 1 }}>{r.path}</code>
+//           <button onClick={() => download(r)}>Download</button>
+//         </div>
+//       ))}
+//     </div>
+//   );
+// }
+
