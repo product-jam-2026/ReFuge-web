@@ -63,9 +63,12 @@ export default async function HomePage({
 
   const hour = getHourInTimeZone('Asia/Jerusalem');
   const greeting = t(`greetings.${getGreetingKey(hour)}`);
-  const greetingLine = t.has?.('greetingLine')
-    ? t('greetingLine', { greeting, name: firstName })
-    : `${greeting}, ${firstName}`;
+  const greetingLineRaw = t('greetingLine', { greeting, name: firstName });
+  const greetingLine =
+    greetingLineRaw.includes('HomePage.greetingLine') ||
+    greetingLineRaw.includes('greetingLine')
+      ? `${greeting}, ${firstName}`
+      : greetingLineRaw;
 
   // routes
   const hrefProfile = `/${locale}/profile`;
