@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import styles from "./page.module.css";
 
 // type GeneratedPdfRow = {
 //   id: string;
@@ -169,152 +170,261 @@ export default function ChildRegistrationHomePage() {
     })();
   }, []);
 
+  //   return (
+  //     <main
+  //       style={{ maxWidth: 820, margin: "0 auto", padding: 24, direction: "rtl" }}
+  //     >
+  //       <hr style={{ margin: "24px 0" }} />
+
+  //       <h2 style={{ fontSize: 20, fontWeight: 800 }}>מסמכים שהופקו (PDF)</h2>
+
+  //       {pdfLoading ? (
+  //         <p style={{ marginTop: 12 }}>טוען…</p>
+  //       ) : pdfErr ? (
+  //         <p style={{ marginTop: 12, color: "crimson" }}>{pdfErr}</p>
+  //       ) : pdfRows.length === 0 ? (
+  //         <p style={{ marginTop: 12 }}>אין PDFים עדיין.</p>
+  //       ) : (
+  //         <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+  //           <div style={tileGrid}>
+  //             {pdfRows.map((p) => {
+  //               // const title =
+  //               //   (p.form_instances?.[0]?.title ?? "").trim() ||
+  //               //   fileNameFromPath(p.path);
+
+  //               // const title =
+  //               //   (p.form_instance?.title ?? "").trim() ||
+  //               //   fileNameFromPath(p.path);
+  //               const title =
+  //                 (p.pdf_title ?? "").trim() || fileNameFromPath(p.path);
+  //               return (
+  //                 <button
+  //                   key={p.id}
+  //                   type="button"
+  //                   style={tile}
+  //                   onClick={async () => {
+  //                     try {
+  //                       await downloadPdfFromStorage(supabase, p.bucket, p.path);
+  //                     } catch (e: any) {
+  //                       alert(e?.message ?? "Download failed");
+  //                     }
+  //                   }}
+  //                   aria-label={`הורד PDF: ${title}`}
+  //                   title={title}
+  //                 >
+  //                   {title}
+  //                 </button>
+  //               );
+  //             })}
+  //           </div>
+  //         </div>
+  //       )}
+
+  //       <h1 style={{ fontSize: 22, fontWeight: 800 }}>
+  //         טיוטות — בקשה לרישום ילד
+  //       </h1>
+
+  //       <div
+  //         style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}
+  //       >
+  //         <button
+  //           type="button"
+  //           onClick={() => router.push("child-registration-request/step-1")}
+  //           style={btnPrimary}
+  //         >
+  //           + טופס חדש
+  //         </button>
+
+  //         <button
+  //           type="button"
+  //           onClick={() => window.location.reload()}
+  //           style={btnSecondary}
+  //         >
+  //           רענן
+  //         </button>
+  //       </div>
+
+  //       {loading ? (
+  //         <p style={{ marginTop: 16 }}>טוען…</p>
+  //       ) : err ? (
+  //         <p style={{ marginTop: 16, color: "crimson" }}>{err}</p>
+  //       ) : rows.length === 0 ? (
+  //         <p style={{ marginTop: 16 }}>אין טיוטות עדיין.</p>
+  //       ) : (
+  //         <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
+  //           <div style={tileGrid}>
+  //             {rows.map((r) => {
+  //               const title = (r.title ?? "").trim() || "טיוטה ללא שם";
+
+  //               return (
+  //                 <button
+  //                   key={r.id}
+  //                   type="button"
+  //                   style={tile}
+  //                   onClick={() => {
+  //                     // choose what clicking a draft should do:
+  //                     router.push(
+  //                       `child-registration-request/step-3?instanceId=${r.id}`,
+  //                     );
+  //                   }}
+  //                   aria-label={`המשך עריכה: ${title}`}
+  //                   title={title}
+  //                 >
+  //                   {title}
+  //                 </button>
+  //               );
+  //             })}
+  //           </div>
+  //         </div>
+  //       )}
+  //     </main>
+  //   );
+  // }
+
+  // const card: React.CSSProperties = {
+  //   border: "1px solid #ddd",
+  //   borderRadius: 12,
+  //   padding: 12,
+  // };
+
+  // const btnPrimary: React.CSSProperties = {
+  //   padding: "10px 12px",
+  //   borderRadius: 12,
+  //   border: "none",
+  //   cursor: "pointer",
+  // };
+
+  // const btnSecondary: React.CSSProperties = {
+  //   padding: "10px 12px",
+  //   borderRadius: 12,
+  //   border: "1px solid #ccc",
+  //   background: "transparent",
+  //   cursor: "pointer",
+  // };
+
+  // const tile: React.CSSProperties = {
+  //   width: "100%",
+  //   textAlign: "right",
+  //   border: "1px solid #ddd",
+  //   borderRadius: 12,
+  //   padding: 14,
+  //   background: "#fff",
+  //   cursor: "pointer",
+  //   fontWeight: 800,
+  //   fontSize: 16,
+  // };
+
+  // const tileGrid: React.CSSProperties = {
+  //   display: "grid",
+  //   gap: 10,
+  //   marginTop: 12,
+  // };
+
   return (
-    <main
-      style={{ maxWidth: 820, margin: "0 auto", padding: 24, direction: "rtl" }}
-    >
-      <hr style={{ margin: "24px 0" }} />
-
-      <h2 style={{ fontSize: 20, fontWeight: 800 }}>מסמכים שהופקו (PDF)</h2>
-
-      {pdfLoading ? (
-        <p style={{ marginTop: 12 }}>טוען…</p>
-      ) : pdfErr ? (
-        <p style={{ marginTop: 12, color: "crimson" }}>{pdfErr}</p>
-      ) : pdfRows.length === 0 ? (
-        <p style={{ marginTop: 12 }}>אין PDFים עדיין.</p>
-      ) : (
-        <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-          <div style={tileGrid}>
-            {pdfRows.map((p) => {
-              // const title =
-              //   (p.form_instances?.[0]?.title ?? "").trim() ||
-              //   fileNameFromPath(p.path);
-
-              // const title =
-              //   (p.form_instance?.title ?? "").trim() ||
-              //   fileNameFromPath(p.path);
-              const title =
-                (p.pdf_title ?? "").trim() || fileNameFromPath(p.path);
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  style={tile}
-                  onClick={async () => {
-                    try {
-                      await downloadPdfFromStorage(supabase, p.bucket, p.path);
-                    } catch (e: any) {
-                      alert(e?.message ?? "Download failed");
-                    }
-                  }}
-                  aria-label={`הורד PDF: ${title}`}
-                  title={title}
-                >
-                  {title}
-                </button>
-              );
-            })}
-          </div>
+    <main className={styles.page}>
+      <div className={styles.topBar}>
+        {/* <div className={styles.langSwitcher}>
+          <LangSwitcher />
+        </div> */}
+        <div className={styles.arrowBox}>
+          <img className={styles.backArrow} src="/images/backArrow.svg"></img>
         </div>
-      )}
 
-      <h1 style={{ fontSize: 22, fontWeight: 800 }}>
-        טיוטות — בקשה לרישום ילד
-      </h1>
+        <div className={styles.bigTitles}>תביעה לקצבת ילדים</div>
+        <img className={styles.readButton} src="/images/readButton.svg"></img>
+      </div>
+      <div className={styles.subTextSection}>
+        בקשה לתשלום חודשי לסיוע בהוצאות גידול ילדים עד גיל 18. הטופס מיועד
+        למבוטחים שאינם מקבלים קצבת ילדים וכן במקרים בהם ילד/ים עוברים מהורה
+        להורה או מהורה לאפוטרופוס/ ממונה.
+      </div>
 
-      <div
-        style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}
-      >
+      <div className={styles.buttonRow}>
+        {/* <div className={styles.buttonContainer}></div> */}
         <button
           type="button"
           onClick={() => router.push("child-registration-request/step-1")}
-          style={btnPrimary}
+          className={styles.btnPrimary}
         >
-          + טופס חדש
-        </button>
-
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          style={btnSecondary}
-        >
-          רענן
+          <div>מילוי טופס חדש</div>
+          <img src="/images/forwardArrow.png"></img>
         </button>
       </div>
 
-      {loading ? (
-        <p style={{ marginTop: 16 }}>טוען…</p>
-      ) : err ? (
-        <p style={{ marginTop: 16, color: "crimson" }}>{err}</p>
-      ) : rows.length === 0 ? (
-        <p style={{ marginTop: 16 }}>אין טיוטות עדיין.</p>
-      ) : (
-        <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
-          <div style={tileGrid}>
-            {rows.map((r) => {
-              const title = (r.title ?? "").trim() || "טיוטה ללא שם";
+      <h2 className={styles.sectionTitle}>הטפסים שלי</h2>
+      <div className={styles.dividerContainer}>
+        <hr className={styles.divider} />
+      </div>
 
-              return (
-                <button
-                  key={r.id}
-                  type="button"
-                  style={tile}
-                  onClick={() => {
-                    // choose what clicking a draft should do:
-                    router.push(
-                      `child-registration-request/step-3?instanceId=${r.id}`,
-                    );
-                  }}
-                  aria-label={`המשך עריכה: ${title}`}
-                  title={title}
-                >
-                  {title}
-                </button>
-              );
-            })}
-          </div>
+      {pdfLoading ? (
+        <p className={styles.statusText}></p>
+      ) : pdfErr ? (
+        <p className={`${styles.statusText} ${styles.errorText}`}>{pdfErr}</p>
+      ) : pdfRows.length === 0 ? (
+        <p className={styles.statusText}></p>
+      ) : (
+        <div className={styles.tileGrid}>
+          {pdfRows.map((p) => {
+            const title =
+              (p.pdf_title ?? "").trim() || fileNameFromPath(p.path);
+
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={styles.pdfTile}
+                onClick={async () => {
+                  try {
+                    await downloadPdfFromStorage(supabase, p.bucket, p.path);
+                  } catch (e: any) {
+                    alert(e?.message ?? "Download failed");
+                  }
+                }}
+                aria-label={`הורד PDF: ${title}`}
+                title={title}
+              >
+                {title}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <h2 className={styles.sectionTitle}>טיוטות</h2>
+      <div className={styles.dividerContainer}>
+        <hr className={styles.divider} />
+      </div>
+
+      {loading ? (
+        <p className={styles.statusTextLarge}></p>
+      ) : err ? (
+        <p className={`${styles.statusTextLarge} ${styles.errorText}`}>{err}</p>
+      ) : rows.length === 0 ? (
+        <p className={styles.statusTextLarge}></p>
+      ) : (
+        <div className={styles.tileGrid}>
+          {rows.map((r) => {
+            const title = (r.title ?? "").trim() || "טיוטה ללא שם";
+
+            return (
+              <button
+                key={r.id}
+                type="button"
+                className={styles.draftTile}
+                onClick={() => {
+                  router.push(
+                    `child-registration-request/step-3?instanceId=${r.id}`,
+                  );
+                }}
+                aria-label={`המשך עריכה: ${title}`}
+                title={title}
+              >
+                {title}
+              </button>
+            );
+          })}
         </div>
       )}
     </main>
   );
 }
-
-const card: React.CSSProperties = {
-  border: "1px solid #ddd",
-  borderRadius: 12,
-  padding: 12,
-};
-
-const btnPrimary: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "none",
-  cursor: "pointer",
-};
-
-const btnSecondary: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #ccc",
-  background: "transparent",
-  cursor: "pointer",
-};
-
-const tile: React.CSSProperties = {
-  width: "100%",
-  textAlign: "right",
-  border: "1px solid #ddd",
-  borderRadius: 12,
-  padding: 14,
-  background: "#fff",
-  cursor: "pointer",
-  fontWeight: 800,
-  fontSize: 16,
-};
-
-const tileGrid: React.CSSProperties = {
-  display: "grid",
-  gap: 10,
-  marginTop: 12,
-};
