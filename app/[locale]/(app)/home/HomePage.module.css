@@ -51,8 +51,8 @@
   opacity: 0.9;
   text-align: right;
   max-width: 320px;
-  padding-right: 12px;
-  margin-inline: 12px;
+  padding-right: 25px;
+  margin-inline: 0;
   white-space: pre-line;
   margin-top: -40px;
 }
@@ -166,6 +166,9 @@ align-content: start;
   line-height: 1.25;
   color: #0b1b2b;
   opacity: 0.9;
+  max-width: 56%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .cardBlue{ background: #9bbcff; }
