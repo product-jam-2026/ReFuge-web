@@ -18,11 +18,11 @@ type FaqItem = {
 };
 
 const CATEGORY_LABELS: Record<CategoryKey, { he: string; ar: string }> = {
-  status: { he: 'מעמד', ar: 'الوضع القانوني والتأشيرات' },
-  work: { he: 'עבודה', ar: 'العمل والحقوق الاجتماعية' },
-  health: { he: 'בריאות', ar: 'الصحة والرفاه' },
-  education: { he: 'חינוך', ar: 'التعليم والبيروقراطية' },
-  help: { he: 'סיוע', ar: 'المساعدة والمجتمع' },
+  status: { he: 'מעמד', ar: 'وضع' },
+  work: { he: 'עבודה', ar: 'عمل' },
+  health: { he: 'בריאות', ar: 'صحة' },
+  education: { he: 'חינוך', ar: 'تعليم' },
+  help: { he: 'סיוע', ar: 'مساعدة' },
 };
 
 const FAQS: FaqItem[] = [
@@ -63,7 +63,7 @@ const FAQS: FaqItem[] = [
     id: 'work-legal',
     category: 'work',
     question: { he: 'האם מותר לי לעבוד באופן חוקי עם אשרת 2(א)5?', ar: 'هل يسمح لي بالعمل قانونياً؟' },
-    answer: { he: 'כן, המדינה אינה קונסת מעסיקים של סודנים.', ar: 'نعم، يُسمح بتوظيف طالبي اللجوء من السودان وإريتريا.' },
+    answer: { he: 'כן, המדינה אינה קונסת מעסיקים של פליטים.', ar: 'نعم، يُسمح بتوظيف طالبي اللجوء من السودان وإريتريا.' },
   },
   {
     id: 'work-unpaid',
