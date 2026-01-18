@@ -1,5 +1,5 @@
 .root{
-  padding: 18px 18px;
+  padding: 18px 10px;
   padding-bottom: calc(var(--screen-bottom-padding) + env(safe-area-inset-bottom));
   min-height: 100dvh;
   background: var(--c-surface);
@@ -12,10 +12,10 @@
   align-items: center;
   text-align: right;        /* ✅ יישור טקסט */
   width: 100%;          
-    padding-right: 50px; /* כדי שלא תידבק לחץ */
+  padding-right: 50px; /* כדי שלא תידבק לחץ */
   min-height: 44px;
-  margin-top: 16px;
-  margin-bottom: 14px;
+  margin-top: 56px;
+  margin-bottom: 24px;
 }
 
 .title{
@@ -50,55 +50,88 @@
 
 /* ✅ filter should sit on the right (RTL) */
 .topControls{
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
+  justify-content: stretch;
+  justify-items: center;
+  width: 100%;
+  align-items: center;
+  margin-bottom: 16px;
+  margin-top: 85px;
 }
 
 .filterPill{
-  height: 34px;
-  padding: 0 14px;
-  margin-left: auto;
-  border-radius: 999px;
-  border: 0;
+  display: inline-flex;
+  width: 93px;
+  height: 40px;
+  padding: 12px 24px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 30px;
+  border: 0.5px solid rgba(1, 20, 41, 0.50);
   background: var(--c-blue-2);
   color: #fff;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
+  flex-direction: row-reverse;
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
+  justify-self: center;
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .filterPill:active{
   transform: translateY(1px);
 }
 
-/* ✅ tags appear only when filter is open (in TSX) */
-.tagsRow{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
 /* chip default = white with light border */
 .tag{
-  height: 34px;
-  padding: 0 14px;
-  border-radius: 999px;
-
-  border: 1px solid rgba(20, 30, 50, 0.22);
+  display: inline-flex;
+  width: 93px;
+  height: 40px;
+  padding: 12px 24px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 30px;
+  border: 0.5px solid rgba(1, 20, 41, 0.50);
   background: #fff;
   color: rgba(20, 30, 50, 0.88);
-
   font-weight: 800;
   font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.filtersClosed .tag{
+  display: none;
+}
+
+.tagWork{
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.tagEducation{
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.tagHelp{
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.tagHealth{
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.tagStatus{
+  grid-column: 3;
+  grid-row: 2;
 }
 
 /* ✅ selected = outline (like figma) */

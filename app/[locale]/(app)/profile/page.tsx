@@ -38,7 +38,7 @@ export default async function ProfilePage({
   // ✅ אם ה-guard פעיל ואין משתמש — מציגים הודעה (בפרודקשן/כשאת מפעילה true)
   if (!user && guardEnabled) {
     return (
-      <>
+      <div className={styles.profilePage}>
         <div className={styles.profileHeader}>
           <h1 className={styles.profileTitle}>{t("title")}</h1>
           <Link
@@ -69,7 +69,7 @@ export default async function ProfilePage({
             {t("goToLogin")}
           </Link>
         </p>
-      </>
+      </div>
     );
   }
 
@@ -104,7 +104,7 @@ export default async function ProfilePage({
     fullName ?? [firstName, lastName].filter(Boolean).join(" ") ?? "";
 
   return (
-    <>
+    <div className={styles.profilePage}>
       <div className={styles.profileHeader}>
         <h1 className={styles.profileTitle}>{t("title")}</h1>
         <Link
@@ -181,6 +181,6 @@ export default async function ProfilePage({
           DB error: {dbError}
         </p>
       ) : null}
-    </>
+    </div>
   );
 }

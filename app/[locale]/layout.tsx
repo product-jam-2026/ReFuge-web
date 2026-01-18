@@ -16,6 +16,12 @@ const simplerPro = localFont({
   display: "swap",
 });
 
+const simplerProArabic = localFont({
+  src: [{ path: "../../public/fonts/SimplerPro_HLAR_Mono-Regular.ttf", weight: "400", style: "normal" }],
+  variable: "--font-simpler-ar",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "ReFuge",
   description: "Assisting refugees with bureaucracy and rights.",
@@ -32,7 +38,7 @@ export default async function RootLayout({
   const dir = locale === "en" ? "ltr" : "rtl";
 
   return (
-    <html lang={locale} dir={dir} className={simplerPro.variable}>
+    <html lang={locale} dir={dir} className={`${simplerPro.variable} ${simplerProArabic.variable}`}>
       <head>
         <link rel="icon" href="/icons/favicon.png" />
         <link rel="manifest" href="/manifest.json" />

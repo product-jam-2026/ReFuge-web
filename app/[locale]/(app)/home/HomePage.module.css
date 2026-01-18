@@ -178,3 +178,7 @@ align-content: start;
 .cardBlue{ background: #9bbcff; }
 .cardGreen{ background: var(--c-mint); }
 .cardOrange{ background: var(--c-orange); }
+
+.root :global(.langFab){
+  background: #E6F2FF;
+}

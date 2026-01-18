@@ -150,15 +150,7 @@ const FAQS: FaqItem[] = [
 
 function FilterIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
-      <path
-        d="M3 5h18l-7 8v5l-4 2v-7L3 5z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <img src="/illustrations/Filter.svg" alt="" width="16" height="16" />
   );
 }
 
@@ -241,8 +233,8 @@ export default function RightsPage() {
         </Link>
       </header>
 
-      {/* ✅ filter pill on the RIGHT */}
-      <div className={styles.topControls}>
+      {/* ✅ filter + tags as one aligned grid */}
+      <div className={`${styles.topControls} ${filterOpen ? styles.filtersOpen : styles.filtersClosed}`}>
         <button
           type="button"
           className={styles.filterPill}
@@ -252,23 +244,20 @@ export default function RightsPage() {
           <FilterIcon />
           <span>{lang === 'he' ? 'סינון' : 'تصفية'}</span>
         </button>
-      </div>
 
-      {/* ✅ tags only when filterOpen */}
-      {filterOpen && (
-        <div className={styles.tagsRow}>
-          {(['status', 'work', 'health', 'education', 'help'] as CategoryKey[]).map((k) => (
-            <button
-              key={k}
-              type="button"
-              className={`${styles.tag} ${selected.includes(k) ? styles.tagSelected : ''}`}
-              onClick={() => toggleCategory(k)}
-            >
-              {CATEGORY_LABELS[k][lang]}
-            </button>
-          ))}
-        </div>
-      )}
+        {(['work', 'education', 'help', 'health', 'status'] as CategoryKey[]).map((k) => (
+          <button
+            key={k}
+            type="button"
+            className={`${styles.tag} ${styles[`tag${k[0].toUpperCase()}${k.slice(1)}`]} ${
+              selected.includes(k) ? styles.tagSelected : ''
+            }`}
+            onClick={() => toggleCategory(k)}
+          >
+            {CATEGORY_LABELS[k][lang]}
+          </button>
+        ))}
+      </div>
 
       <section className={styles.list}>
         {visibleFaqs.map((item) => {

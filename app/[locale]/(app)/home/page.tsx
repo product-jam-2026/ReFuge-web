@@ -80,7 +80,9 @@ export default async function HomePage({
     : '/illustrations/family%20male.svg';
 
   return (
-<main className={`${styles.root} homeFullBleed`}>
+    <>
+      <style>{`:root{ --langFabBg: #E6F2FF; }`}</style>
+      <main className={`${styles.root} homeFullBleed`}>
       {/* ✅ תכלת למעלה (full width) */}
       <section className={styles.topCard}>
         <h1 className={styles.title}>
@@ -91,7 +93,7 @@ export default async function HomePage({
 
       {/* ✅ כל מה שמתחת לתכלת */}
       <div className={styles.content}>
-        {/* איור באזור הלבן */}
+        {/* איור באיזור הלבן */}
         <div className={styles.illustrationArea} aria-hidden="true">
           <div className={styles.illustrationWrap}>
             <Image
@@ -156,6 +158,7 @@ export default async function HomePage({
           <p className={styles.muted}>DB error: {dbError}</p>
         )}
       </div>
-    </main>
+      </main>
+    </>
   );
 }

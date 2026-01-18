@@ -8,9 +8,15 @@
   width: 100%;
   text-align: right;
   min-height: 44px;
-  margin-top: 16px;
-  margin-bottom: 14px;
+  margin-top: 85px;
+  margin-bottom: 50px;
   padding-right: 52px; /* space for back button */
+}
+
+.profilePage{
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 .profileTitle {
@@ -85,21 +91,23 @@
 }
 
 .profileActions {
-  margin-top: clamp(18px, 5vw, 26px);
+  margin-top: auto;
   display: grid;
   gap: clamp(10px, 3vw, 14px);
-  padding-bottom: 0;
+  padding-bottom: calc(var(--screen-bottom-padding) + env(safe-area-inset-bottom));
 }
 
 .bigOrangeBtn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(14px, 4vw, 18px) clamp(18px, 5vw, 22px);
-  border-radius: 999px;
-  background: #f07a2b;
+  height: 66px;
+  padding: 8px 16px;
+  border-radius: 30px;
+  background: #ff8d29;
   color: #111;
   font-weight: 800;
   text-decoration: none;
   font-size: clamp(16px, 4vw, 18px);
+  align-self: stretch;
 }

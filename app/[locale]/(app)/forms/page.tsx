@@ -29,7 +29,7 @@ export default function FormsPage() {
         <img className={styles.readButton} src="/images/readButton.svg"></img>
       </div>
       <div className={styles.subTextSection}>
-        מכן נתן לגשת לאזור של כל אחד מהטפסים הקיימים במאגר. בכל אזור קיימים
+        מכן נתן לגשת לאיזור של כל אחד מהטפסים הקיימים במאגר. בכל איזור קיימים
         הטפסים המלאים, טיוטות, ומלוי חדש של הטופס
       </div>
       <div className={styles.imageContainer}>

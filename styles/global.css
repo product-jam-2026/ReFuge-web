@@ -8,6 +8,11 @@
   --font-family-heading: var(--font-simpler), system-ui, sans-serif;
 }
 
+html[lang="ar"]{
+  --font-family-app: var(--font-simpler-ar), var(--font-simpler), system-ui, sans-serif;
+  --font-family-heading: var(--font-simpler-ar), var(--font-simpler), system-ui, sans-serif;
+}
+
 html, body, button, input, select, textarea{
   font-family: var(--font-family-app) !important;
 }
@@ -272,7 +277,7 @@ button:focus {
   padding: 0 16px;
   border-radius: 999px;
 
-  background: var(--c-surface);
+  background: var(--langFabBg, var(--c-surface));
   border: 1px solid rgba(20, 30, 50, 0.35);
   color: var(--c-blue-2);
 

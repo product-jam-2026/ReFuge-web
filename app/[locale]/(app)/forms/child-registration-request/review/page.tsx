@@ -125,7 +125,7 @@ export default function Review() {
         تم ملء نموذجك بنجاح! وهو موجود في منطقة قاعدة النماذج
       </h1>
       <h1 className={styles.title}>
-        הטופס שלך מולא בהצלחה! ונמצא באזור מאגר הטפסים
+        הטופס שלך מולא בהצלחה! ונמצא באיזור מאגר הטפסים
       </h1>
 
       {/* <pre className={styles.jsonBox}>
