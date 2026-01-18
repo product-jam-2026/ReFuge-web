@@ -166,9 +166,13 @@ align-content: start;
   line-height: 1.25;
   color: #0b1b2b;
   opacity: 0.9;
-  max-width: 56%;
+  max-width: none;
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+.cardWide .cardDesc{
+  max-width: 56%;
 }
 
 .cardBlue{ background: #9bbcff; }
