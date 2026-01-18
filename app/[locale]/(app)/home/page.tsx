@@ -69,6 +69,7 @@ export default async function HomePage({
     greetingLineRaw.includes('greetingLine')
       ? `${greeting}, ${firstName}`
       : greetingLineRaw;
+  const greetingSeparator = locale === 'ar' ? '، ' : ', ';
 
   // routes
   const hrefProfile = `/${locale}/profile`;
@@ -86,7 +87,9 @@ export default async function HomePage({
       {/* ✅ תכלת למעלה (full width) */}
       <section className={styles.topCard}>
         <h1 className={styles.title}>
-          {greetingLine}
+          <span>{greeting}</span>
+          <span>{greetingSeparator}</span>
+          <bdi className={styles.greetingName}>{firstName}</bdi>
         </h1>
         <p className={styles.subtitle}>{t('subtitle')}</p>
       </section>

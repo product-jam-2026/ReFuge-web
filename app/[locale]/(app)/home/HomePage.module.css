@@ -39,8 +39,14 @@
   letter-spacing: -0.02em;
   color: #0b1b2b;
   text-align: right;
+  direction: rtl;
+  unicode-bidi: plaintext;
   padding-right: 25px; /* תוסיפי/תקטיני כדי להזיז שמאלה/ימינה */
   overflow-wrap: anywhere;
+}
+
+.greetingName{
+  unicode-bidi: isolate;
 }
 
 .subtitle{
