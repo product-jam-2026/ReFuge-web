@@ -26,6 +26,8 @@ export default async function Step7Page({
   const step7 = profile?.data?.intake?.step7 || {};
   const docs = step7.documents || {};
 
+  // אנחנו מעבירים רק את שמות הקבצים (או אינדיקציה שיש קובץ)
+  // כי אי אפשר להעביר קבצים בינאריים חזרה ללקוח בצורה הזו
   const defaults = {
     passportCopy: docs.passportCopy || "",
     rentalContract: docs.rentalContract || "",

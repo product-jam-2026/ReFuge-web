@@ -2,37 +2,29 @@
 
 import { useMemo, useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import styles from "./step4.module.css";
+// שימוש ב-CSS הכללי
+import styles from "@/lib/styles/IntakeForm.module.css";
 import { translateStep4Data } from "@/app/[locale]/(auth)/signup/actions"; 
 
-// הנתיב לתמונה לפי צילום המסך שלך
 const STEP_IMAGE = "/images/step4-intro-umbrella.svg"; 
+const TOTAL_SCREENS = 3; 
 
 // --- Visual Helpers ---
 function BiInline({ ar, he }: { ar: string; he: string }) {
   return (
-    <div className={styles.biLine}>
-      <span className={styles.biAr}>{ar}</span>
-      <span className={styles.biHe}>{he}</span>
-    </div>
+    <>
+      <span>{ar}</span>
+      <span>{he}</span>
+    </>
   );
 }
 
-// --- Custom Select Component ---
+// --- Custom Select Component (עם התיקונים המבוקשים) ---
 function CustomSelect({ 
-  value, 
-  onChange, 
-  options, 
-  placeholderAr = "اختر", 
-  placeholderHe = "בחר",
-  disabled = false
+  labelAr, labelHe, value, onChange, options, placeholder 
 }: { 
-  value: string; 
-  onChange: (val: string) => void; 
-  options: { value: string; labelAr: string; labelHe: string }[];
-  placeholderAr?: string;
-  placeholderHe?: string;
-  disabled?: boolean;
+  labelAr: string, labelHe: string, value: string, onChange: (val: string) => void, 
+  options: { value: string, labelAr: string, labelHe: string }[], placeholder: string 
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,40 +42,54 @@ function CustomSelect({
   const selectedOption = options.find(o => o.value === value);
 
   return (
-    <div className={styles.customSelectWrap} ref={containerRef}>
-      <div 
-        className={styles.customSelectTrigger} 
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        data-open={isOpen}
-        style={{opacity: disabled ? 0.6 : 1, cursor: disabled ? 'not-allowed' : 'pointer'}}
-      >
-        <span>
-          {selectedOption ? (
-            <BiInline ar={selectedOption.labelAr} he={selectedOption.labelHe} />
-          ) : (
-             <span style={{color: '#9CA3AF'}}>{placeholderAr} / {placeholderHe}</span>
-          )}
-        </span>
-        <div className={styles.customSelectArrow} />
-      </div>
-
-      {isOpen && !disabled && (
-        <div className={styles.customSelectOptions}>
-           {options.map((opt) => (
-             <div 
-               key={opt.value} 
-               className={styles.customOption}
-               data-selected={value === opt.value}
-               onClick={() => {
-                 onChange(opt.value);
-                 setIsOpen(false);
-               }}
-             >
-                <BiInline ar={opt.labelAr} he={opt.labelHe} />
+    <div className={styles.fieldGroup} ref={containerRef}>
+      <div className={styles.label}><BiInline ar={labelAr} he={labelHe} /></div>
+      <div className={styles.comboboxWrap}>
+        <div 
+          className={styles.inputBase} 
+          onClick={() => setIsOpen(!isOpen)}
+          style={{ 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            height: 'auto', // גובה אוטומטי כדי להכיל שתי שורות
+            minHeight: '56px',
+            paddingTop: '8px',
+            paddingBottom: '8px'
+          }}
+        >
+           {selectedOption ? (
+             // כאן התיקון: תצוגה בשתי שורות כשיש בחירה
+             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: '1.2' }}>
+                <span style={{ fontWeight: 600, color: '#0B1B2B' }}>{selectedOption.labelAr}</span>
+                <span style={{ fontSize: '0.9em', color: '#6B7280' }}>{selectedOption.labelHe}</span>
              </div>
-           ))}
+           ) : (
+             <span style={{ color: '#9CA3AF' }}>{placeholder}</span>
+           )}
+           
+           <svg width="12" height="12" viewBox="0 0 12 12" style={{ transform: 'rotate(270deg)', opacity: 0.5, flexShrink: 0 }}>
+              <path d="M4 2L0 6L4 10" stroke="currentColor" fill="none" strokeWidth="1.5"/>
+           </svg>
         </div>
-      )}
+
+        {isOpen && (
+          <ul className={styles.comboboxMenu} style={{ zIndex: 100 }}>
+            {options.map((opt) => (
+              <li 
+                key={opt.value} 
+                className={styles.comboboxItem} 
+                onClick={() => { onChange(opt.value); setIsOpen(false); }}
+              >
+                {/* כאן התיקון: אחד ליד השני, ערבית מימין */}
+                <span style={{ fontWeight: 500 }}>{opt.labelAr}</span>
+                <span style={{ opacity: 0.8 }}>{opt.labelHe}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
@@ -148,12 +154,14 @@ export default function Step4FormClient({
   const [getsAllowance, setGetsAllowance] = useState<HasYesNo>(defaults.getsAllowance || "");
   const [allowanceType, setAllowanceType] = useState(defaults.allowanceType || "");
 
+  // --- Progress Logic ---
   const progress = useMemo(() => {
     if (screen === 0) return 0;
-    return Math.round((screen / 4) * 100);
+    if (screen > TOTAL_SCREENS) return 100;
+    return Math.round((screen / TOTAL_SCREENS) * 100);
   }, [screen]);
 
-  const goNext = () => setScreen((s) => Math.min(4, s + 1));
+  const goNext = () => setScreen((s) => Math.min(TOTAL_SCREENS + 1, s + 1));
   const goBack = () => setScreen((s) => Math.max(0, s - 1));
 
   const handleFinishStep4 = async (e: React.FormEvent) => {
@@ -168,10 +176,10 @@ export default function Step4FormClient({
     setIsTranslating(true);
     try {
       await translateStep4Data(formData);
-      setScreen(4);
+      setScreen(TOTAL_SCREENS + 1); 
     } catch (error) {
       console.error(error);
-      setScreen(4);
+      setScreen(TOTAL_SCREENS + 1);
     } finally {
       setIsTranslating(false);
     }
@@ -179,88 +187,84 @@ export default function Step4FormClient({
 
   const getLabel = (list: any[], val: string) => {
     const found = list.find(i => i.value === val);
-    return found ? `${found.labelHe} / ${found.labelAr}` : val;
+    return found ? `${found.labelAr} / ${found.labelHe}` : val;
   };
 
   return (
-    <div className={styles.wrap} dir="rtl">
+    <div className={styles.pageContainer} dir="rtl">
       
       {isTranslating && (
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-             <BiInline ar="جاري المعالجة..." he="מעבד נתונים..." />
+             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים...</p>
+             <p style={{fontSize: 14, color: '#666'}}>جاري المعالجة...</p>
           </div>
         </div>
       )}
 
       {/* Intro Screen (0) */}
       {screen === 0 && (
-        <div className={styles.introFull}>
+        <div className={styles.stepSplashContainer}>
           <Image 
             src={STEP_IMAGE} 
             alt="Intro Umbrella" 
             width={280} 
             height={200} 
-            className={styles.introImage}
+            className={styles.stepSplashImage}
             priority 
           />
-          <div className={styles.introContent} style={{marginTop: 'auto'}}>
-            <h1 className={styles.introTitle}><BiInline ar="المرحلة 4" he="שלב 4" /></h1>
-            <h2 className={styles.introSubtitle}><BiInline ar="جهات رسمية" he="מוסדות" /></h2>
-            <div className={styles.introBody}>
+          <div className={styles.stepSplashContent}>
+            <div className={styles.stepNumberTitle}><span>المرحلة 4</span><span>שלב 4</span></div>
+            <div className={styles.stepMainTitle}><span>جهات رسمية</span><span>מוסדות</span></div>
+            <div className={styles.stepDescription}>
                <p dir="rtl">بهالمرحلة بنسأل عن صندوق المرضى، البنك، والتأمين الوطني<br/>الوقت المتوقع للتعبئة: 5 دقائق</p>
+               <br/>
                <p dir="rtl">בשלב זה נשאל על קופת חולים, בנק וביטוח לאומי<br/>זמן מילוי משוער: 5 דקות</p>
             </div>
           </div>
-          <button type="button" className={styles.introButton} onClick={goNext}>
+          <button type="button" className={styles.btnDark} onClick={goNext}>
             <BiInline ar="ابدأ" he="התחל" />
           </button>
         </div>
       )}
 
-      {/* Form Container */}
+      {/* --- FORM 1: Input Screens (1-3) --- */}
+      {screen > 0 && screen <= TOTAL_SCREENS && (
       <form 
         ref={formRef}
-        className={screen > 0 ? styles.form : styles.screenHide} 
-        action={saveAndNextAction}
-        onSubmit={(e) => {
-            if (screen === 3) handleFinishStep4(e);
-        }}
+        className={styles.scrollableContent} 
+        onSubmit={(e) => e.preventDefault()}
       >
-        
-        {screen < 4 && (
-        <div className={styles.headerArea}>
+        <div className={styles.topBar}>
             <div className={styles.topRow}>
                <button type="button" className={styles.backBtn} onClick={goBack}>
                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                </button>
-               <div className={styles.stepMeta}><span>المرحلة 4 من 7</span><span> | </span><span>שלב 4 מתוך 7</span></div>
+               <div className={styles.stepMeta}><span>المرحلة 4 من 7</span> <span>שלב 4 מתוך 7</span></div>
             </div>
-            <div className={styles.progressTrack}><div className={styles.progressFill} style={{ width: `${progress}%` }} /></div>
+            <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
             <div className={styles.titleBlock}>
-                <div className={styles.h1}><BiInline ar="جهات رسمية" he="מוסדות" /></div>
+                <h1 className={styles.formTitle} style={{justifyContent:'flex-start'}}><BiInline ar="جهات رسمية" he="מוסדות" /></h1>
             </div>
         </div>
-        )}
 
         {/* --- Screen 1: Health Fund --- */}
-        <div className={screen === 1 ? styles.screenShow : styles.screenHide}>
+        <div style={{ display: screen === 1 ? 'block' : 'none' }}>
            <div className={styles.sectionHead}>
              <div className={styles.sectionTitle}><BiInline ar="صندوق المرضى" he="קופת חולים" /></div>
            </div>
            
-           <div className={styles.field}>
-              <div className={styles.label}><BiInline ar="اختر" he="בחר" /></div>
-              <CustomSelect 
-                value={healthFund} 
-                onChange={setHealthFund} 
-                options={healthFunds} 
-              />
-              <input type="hidden" name="healthFund" value={healthFund} />
-           </div>
+           <CustomSelect 
+             labelAr="اختر" labelHe="בחר"
+             value={healthFund} 
+             onChange={setHealthFund} 
+             options={healthFunds} 
+             placeholder="בחר / اختر"
+           />
+           <input type="hidden" name="healthFund" value={healthFund} />
 
-           <div className={styles.actions}>
+           <div className={styles.fixedFooter}>
               <button type="button" className={styles.btnPrimary} onClick={goNext}>
                 <BiInline ar="التالي" he="המשך" />
               </button>
@@ -271,32 +275,33 @@ export default function Step4FormClient({
         </div>
 
         {/* --- Screen 2: Bank Details --- */}
-        <div className={screen === 2 ? styles.screenShow : styles.screenHide}>
+        <div style={{ display: screen === 2 ? 'block' : 'none' }}>
             <div className={styles.sectionHead}>
                <div className={styles.sectionTitle}><BiInline ar="تفاصيل حساب بنكي" he="פרטי חשבון בנק" /></div>
             </div>
 
-            <div className={styles.field}>
-              <div className={styles.label}><BiInline ar="بنك" he="בנק" /></div>
-              <CustomSelect 
+            <CustomSelect 
+                labelAr="بنك" labelHe="בנק"
                 value={bankName} 
                 onChange={setBankName} 
                 options={banks} 
-              />
-              <input type="hidden" name="bankName" value={bankName} />
-            </div>
+                placeholder="בחר / اختر"
+            />
+            <input type="hidden" name="bankName" value={bankName} />
 
-            <div className={styles.field}>
-              <div className={styles.label}><BiInline ar="اسم ورقم الفرع" he="מספר סניף" /></div>
-              <input name="branch" defaultValue={defaults.branch} className={styles.inputControl} inputMode="numeric" />
-            </div>
+            {/* שדה סניף - שורה נפרדת */}
+<div className={styles.fieldGroup}>
+  <div className={styles.label}><BiInline ar="اسم ورقم الفرع" he="מספר סניף" /></div>
+  <input name="branch" defaultValue={defaults.branch} className={styles.inputBase} inputMode="numeric" />
+</div>
 
-            <div className={styles.field}>
-              <div className={styles.label}><BiInline ar="رقم الحساب" he="מספר חשבון" /></div>
-              <input name="accountNumber" defaultValue={defaults.accountNumber} className={styles.inputControl} inputMode="numeric" />
-            </div>
+{/* שדה חשבון - שורה נפרדת מתחתיו */}
+<div className={styles.fieldGroup}>
+  <div className={styles.label}><BiInline ar="رقم الحساب" he="מספר חשבון" /></div>
+  <input name="accountNumber" defaultValue={defaults.accountNumber} className={styles.inputBase} inputMode="numeric" />
+</div>
 
-            <div className={styles.actions}>
+            <div className={styles.fixedFooter}>
               <button type="button" className={styles.btnPrimary} onClick={goNext}>
                 <BiInline ar="التالي" he="המשך" />
               </button>
@@ -307,90 +312,74 @@ export default function Step4FormClient({
         </div>
 
         {/* --- Screen 3: National Insurance --- */}
-        <div className={screen === 3 ? styles.screenShow : styles.screenHide}>
+        <div style={{ display: screen === 3 ? 'block' : 'none' }}>
             <div className={styles.sectionHead}>
                <div className={styles.sectionTitle}><BiInline ar="التأمين الوطني" he="ביטוח לאומי" /></div>
             </div>
 
             {/* Q1: File Exists? */}
-            <div className={styles.field}>
+            <div className={styles.fieldGroup}>
               <div className={styles.label}>
                 <BiInline ar="هل أنت بدفع أو دفعت قبل هيك تأمين وطني؟" he="האם את.ה משלמ.ת / שילמת בעבר ביטוח לאומי?" />
               </div>
-              <div className={styles.toggleRow}>
-                <button 
-                  type="button" 
-                  className={styles.toggleBtn} 
-                  data-active={hasFile === 'yes'}
-                  onClick={() => setHasFile('yes')}
-                >
-                  <BiInline ar="نعم" he="כן" />
-                </button>
-                <button 
-                  type="button" 
-                  className={styles.toggleBtn} 
-                  data-active={hasFile === 'no'}
-                  onClick={() => setHasFile('no')}
-                >
-                  <BiInline ar="لا" he="לא" />
-                </button>
-                <input type="hidden" name="hasFile" value={hasFile} />
+              
+              {/* שימוש בעיצוב בחירה אליפטי (כמו בשלב 1) */}
+              <div className={styles.selectionRow}>
+                <label className={styles.selectionLabel}>
+                  <input type="radio" name="hasFile" value="yes" checked={hasFile === "yes"} onChange={() => setHasFile("yes")} />
+                  <span className={styles.selectionSpan}><BiInline ar="نعم" he="כן" /></span>
+                </label>
+                <label className={styles.selectionLabel}>
+                  <input type="radio" name="hasFile" value="no" checked={hasFile === "no"} onChange={() => setHasFile("no")} />
+                  <span className={styles.selectionSpan}><BiInline ar="لا" he="לא" /></span>
+                </label>
               </div>
             </div>
 
             {hasFile === 'yes' && (
-              <div className={styles.field} style={{animation: 'fadeIn 0.3s'}}>
+              <div className={styles.fieldGroup}>
                 <div className={styles.label}><BiInline ar="رقم ملف التحصيل" he="מספר תיק גבייה" /></div>
-                <input name="fileNumber" defaultValue={defaults.fileNumber} className={styles.inputControl} />
+                <input name="fileNumber" defaultValue={defaults.fileNumber} className={styles.inputBase} />
               </div>
             )}
 
             {/* Q2: Allowance? */}
-            <div className={styles.field}>
+            <div className={styles.fieldGroup}>
               <div className={styles.label}>
                 <BiInline ar="هل استلمت أو عم تستلم معاش من التأمين الوطني؟" he="האם קיבלת או שהינך מקבל כעת קצבה מביטוח לאומי?" />
               </div>
-              <div className={styles.toggleRow}>
-                <button 
-                  type="button" 
-                  className={styles.toggleBtn} 
-                  data-active={getsAllowance === 'yes'}
-                  onClick={() => setGetsAllowance('yes')}
-                >
-                  <BiInline ar="نعم" he="כן" />
-                </button>
-                <button 
-                  type="button" 
-                  className={styles.toggleBtn} 
-                  data-active={getsAllowance === 'no'}
-                  onClick={() => setGetsAllowance('no')}
-                >
-                  <BiInline ar="لا" he="לא" />
-                </button>
-                <input type="hidden" name="getsAllowance" value={getsAllowance} />
+              <div className={styles.selectionRow}>
+                <label className={styles.selectionLabel}>
+                  <input type="radio" name="getsAllowance" value="yes" checked={getsAllowance === "yes"} onChange={() => setGetsAllowance("yes")} />
+                  <span className={styles.selectionSpan}><BiInline ar="نعم" he="כן" /></span>
+                </label>
+                <label className={styles.selectionLabel}>
+                  <input type="radio" name="getsAllowance" value="no" checked={getsAllowance === "no"} onChange={() => setGetsAllowance("no")} />
+                  <span className={styles.selectionSpan}><BiInline ar="لا" he="לא" /></span>
+                </label>
               </div>
             </div>
 
             {getsAllowance === 'yes' && (
-              <div style={{animation: 'fadeIn 0.3s'}}>
-                <div className={styles.field}>
-                  <div className={styles.label}><BiInline ar="نوع المعاش" he="סוג הקצבה" /></div>
-                  <CustomSelect 
+              <>
+                <CustomSelect 
+                    labelAr="نوع المعاش" labelHe="סוג הקצבה"
                     value={allowanceType} 
                     onChange={setAllowanceType} 
                     options={allowanceTypes} 
-                  />
-                  <input type="hidden" name="allowanceType" value={allowanceType} />
-                </div>
-                <div className={styles.field}>
+                    placeholder="בחר / اختر"
+                />
+                <input type="hidden" name="allowanceType" value={allowanceType} />
+
+                <div className={styles.fieldGroup}>
                   <div className={styles.label}><BiInline ar="رقم الملف في التأمين الوطني" he="מספר תיק בביטוח לאומי" /></div>
-                  <input name="allowanceFileNumber" defaultValue={defaults.allowanceFileNumber} className={styles.inputControl} />
+                  <input name="allowanceFileNumber" defaultValue={defaults.allowanceFileNumber} className={styles.inputBase} />
                 </div>
-              </div>
+              </>
             )}
 
-            <div className={styles.actions}>
-              <button type="submit" className={styles.btnPrimary}>
+            <div className={styles.fixedFooter}>
+              <button type="button" className={styles.btnPrimary} onClick={handleFinishStep4}>
                 <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
               </button>
               <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
@@ -398,29 +387,35 @@ export default function Step4FormClient({
               </button>
            </div>
         </div>
+      </form>
+      )}
 
-        {/* --- Screen 4: Summary --- */}
-        {screen === 4 && (
-           <div className={styles.screenShow}>
-              <div className={styles.summaryHeader}>
-                <div className={styles.summaryTitle} style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+      {/* --- FORM 2: Summary Screen (4) --- */}
+      {screen === 4 && (
+        <form className={styles.scrollableContent} action={saveAndNextAction} style={{paddingTop: 0}}>
+              <div className={styles.reviewHeader}>
+                <div className={styles.reviewTitle}>
                   <span>نهاية المرحلة 4</span>
                   <span>סוף שלב 4</span>
                 </div>
-                <div className={styles.summarySub} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div className={styles.summarySub} style={{ lineHeight: '1.6' }}>
                    <span>يرجى التحقق من صحة التفاصيل وترجمتها</span>
+                   <br />
                    <span>אנא וודא/י כי כל הפרטים ותרגומם נכונים</span>
                 </div>
               </div>
 
               {/* Health Fund */}
-              <div className={styles.summaryField}>
+              <div className={styles.fieldGroup}>
                  <div className={styles.label}><BiInline ar="صندوق المرضى" he="קופת חולים" /></div>
-                 <div className={styles.readOnlyInputWrap}>
-                    <input className={styles.readOnlyInput} 
-                       value={getLabel(healthFunds, formDataState.healthFund)} 
-                       readOnly 
-                    />
+                 {/* תצוגת שתי שורות גם בסיכום */}
+                 <div className={styles.readOnlyInput} style={{height: 'auto', padding: '12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center'}}>
+                    {healthFund ? (
+                        <>
+                            <span style={{fontWeight: 600}}>{healthFunds.find(x=>x.value===healthFund)?.labelAr}</span>
+                            <span style={{fontSize: '0.9em', color:'#666'}}>{healthFunds.find(x=>x.value===healthFund)?.labelHe}</span>
+                        </>
+                    ) : '-'}
                  </div>
               </div>
 
@@ -428,57 +423,60 @@ export default function Step4FormClient({
               <div className={styles.sectionHead} style={{marginTop: 20}}>
                  <div className={styles.sectionTitle}><BiInline ar="تفاصيل حساب بنكي" he="פרטי חשבון בנק" /></div>
               </div>
-              <div className={styles.summaryField}>
+              <div className={styles.fieldGroup}>
                  <div className={styles.label}><BiInline ar="بنك" he="בנק" /></div>
-                 <div className={styles.readOnlyInputWrap}>
-                    <input className={styles.readOnlyInput} value={getLabel(banks, formDataState.bankName)} readOnly />
+                 <div className={styles.readOnlyInput} style={{height: 'auto', padding: '12px 20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center'}}>
+                    {bankName ? (
+                        <>
+                            <span style={{fontWeight: 600}}>{banks.find(x=>x.value===bankName)?.labelAr}</span>
+                            <span style={{fontSize: '0.9em', color:'#666'}}>{banks.find(x=>x.value===bankName)?.labelHe}</span>
+                        </>
+                    ) : '-'}
                  </div>
               </div>
-              <div className={styles.gridRow}>
-                 <div>
-                   <div className={styles.label}><BiInline ar="رقم الحساب" he="חשבון" /></div>
-                   <input className={styles.readOnlyInput} value={formDataState.accountNumber} readOnly style={{textAlign:'center'}} />
-                 </div>
-                 <div>
-                   <div className={styles.label}><BiInline ar="فرع" he="סניף" /></div>
-                   <input className={styles.readOnlyInput} value={formDataState.branch} readOnly style={{textAlign:'center'}} />
-                 </div>
-              </div>
+              
+              {/* סיכום חשבון */}
+<div className={styles.summaryField}>
+   <div className={styles.label}><BiInline ar="رقم الحساب" he="חשבון" /></div>
+   <div className={styles.readOnlyInputWrap}>
+      <input className={styles.readOnlyInput} value={formDataState.accountNumber} readOnly />
+   </div>
+</div>
+
+{/* סיכום סניף */}
+<div className={styles.summaryField}>
+   <div className={styles.label}><BiInline ar="فرع" he="סניף" /></div>
+   <div className={styles.readOnlyInputWrap}>
+      <input className={styles.readOnlyInput} value={formDataState.branch} readOnly />
+   </div>
+</div>
 
               {/* National Insurance */}
               <div className={styles.sectionHead} style={{marginTop: 20}}>
                  <div className={styles.sectionTitle}><BiInline ar="التأمين الوطني" he="ביטוח לאומי" /></div>
               </div>
               
-              <div className={styles.summaryField}>
-                 <div className={styles.readOnlyInputWrap}>
-                    <input className={styles.readOnlyInput} 
-                       value={formDataState.hasFile === 'yes' ? 'משלם/ת ביטוח לאומי' : 'לא משלם/ת ביטוח לאומי'}
-                       readOnly 
-                    />
-                 </div>
+              <div className={styles.fieldGroup}>
+                 <input className={styles.readOnlyInput} 
+                    value={formDataState.hasFile === 'yes' ? 'משלם/ת ביטוח לאומי / يدفع تأمين وطني' : 'לא משלם/ת ביטוח לאומי / لا يدفع تأمين وطني'}
+                    readOnly 
+                 />
               </div>
               {formDataState.hasFile === 'yes' && (
-                 <div className={styles.summaryField}>
+                 <div className={styles.fieldGroup}>
                     <div className={styles.label}><BiInline ar="رقم ملف التحصيل" he="מספר תיק גבייה" /></div>
-                    <div className={styles.readOnlyInputWrap}>
-                       <input className={styles.readOnlyInput} value={formDataState.fileNumber} readOnly />
-                    </div>
+                    <input className={styles.readOnlyInput} value={formDataState.fileNumber} readOnly />
                  </div>
               )}
 
               {formDataState.getsAllowance === 'yes' && (
                  <>
-                   <div className={styles.summaryField}>
-                      <div className={styles.readOnlyInputWrap}>
-                         <input className={styles.readOnlyInput} value={`מקבל קצבה: ${getLabel(allowanceTypes, formDataState.allowanceType)}`} readOnly />
-                      </div>
+                   <div className={styles.fieldGroup}>
+                      <input className={styles.readOnlyInput} value={`מקבל קצבה: ${getLabel(allowanceTypes, formDataState.allowanceType)}`} readOnly />
                    </div>
-                   <div className={styles.summaryField}>
-                      <div className={styles.label}><BiInline ar="رقم الملف" he="מספר תיק" /></div>
-                      <div className={styles.readOnlyInputWrap}>
-                         <input className={styles.readOnlyInput} value={formDataState.allowanceFileNumber} readOnly />
-                      </div>
+                   <div className={styles.fieldGroup}>
+                      <div className={styles.label}><BiInline ar="رقم الملف في التأمين الوطني" he="מספר תיק בביטוח לאומי" /></div>
+                      <input className={styles.readOnlyInput} value={formDataState.allowanceFileNumber} readOnly />
                    </div>
                  </>
               )}
@@ -494,7 +492,7 @@ export default function Step4FormClient({
               <input type="hidden" name="allowanceType" value={formDataState.allowanceType || ""} />
               <input type="hidden" name="allowanceFileNumber" value={formDataState.allowanceFileNumber || ""} />
 
-              <div className={styles.actions}>
+              <div className={styles.fixedFooter}>
                   <button type="submit" className={styles.btnPrimary}>
                     <BiInline ar="موافقة" he="אישור וסיום" />
                   </button>
@@ -502,11 +500,8 @@ export default function Step4FormClient({
                     <BiInline ar="تعديل" he="חזור לעריכה" />
                   </button>
               </div>
-
-           </div>
-        )}
-
-      </form>
+        </form>
+      )}
 
     </div>
   );

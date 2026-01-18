@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { submitStep6 } from "../actions"; 
 import Step6FormClient from "./Step6FormClient";
 
 export default async function Step6Page({
@@ -25,26 +24,7 @@ export default async function Step6Page({
 
   // שליפת נתונים
   const step6 = profile?.data?.intake?.step6 || {};
-  const child0 = step6.children?.[0] || {};
-
-  const defaults = {
-    childLastName: child0.lastName || "",
-    childFirstName: child0.firstName || "",
-    childGender: child0.gender || "",
-    childBirthDate: child0.birthDate || "",
-    childNationality: child0.nationality || "",
-    childIsraeliId: child0.israeliId || "",
-    childResidenceCountry: child0.residenceCountry || "",
-    childEntryDate: child0.entryDate || "",
-    childBirthCity: child0.birthCity || "",
-    childArrivalToIsraelDate: child0.arrivalToIsraelDate || "",
-    childArrivalToIsraelReason: child0.arrivalToIsraelReason || "",
-  };
-
-  const saveDraftAction = submitStep6.bind(null, params.locale, "draft");
-  const saveDraftAndBackAction = submitStep6.bind(null, params.locale, "back");
-  const finishAction = submitStep6.bind(null, params.locale, "finish");
-  const addAnotherAction = submitStep6.bind(null, params.locale, "add_another");
+  const existingChildren = Array.isArray(step6.children) ? step6.children : [];
 
   return (
     <div className="appShell" dir="rtl">
@@ -52,11 +32,7 @@ export default async function Step6Page({
         <Step6FormClient
           locale={params.locale}
           saved={searchParams?.saved === "1"}
-          defaults={defaults}
-          saveDraftAction={saveDraftAction}
-          saveDraftAndBackAction={saveDraftAndBackAction}
-          finishAction={finishAction}
-          addAnotherAction={addAnotherAction}
+          existingChildren={existingChildren}
         />
       </div>
     </div>
