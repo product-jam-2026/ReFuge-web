@@ -1,8 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useWizard } from "../WizardProvider";
-import { useSearchParams } from "next/navigation";
+import styles from "./page.module.css";
 
 type MaritalStatus =
   | "married"
@@ -12,26 +13,8 @@ type MaritalStatus =
   | "bigamist"
   | "";
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 12px",
-  borderRadius: 10,
-  border: "1px solid #ccc",
-  fontSize: 16,
-};
-
-const cardStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
-  borderRadius: 12,
-  padding: 12,
-  display: "grid",
-  gap: 10,
-};
-
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 style={{ fontSize: 18, fontWeight: 800, marginTop: 10 }}>{children}</h2>
-  );
+  return <h2 className={styles.sectionTitle}>{children}</h2>;
 }
 
 function Field({
@@ -42,8 +25,8 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label style={{ display: "grid", gap: 6 }}>
-      <span>{label}</span>
+    <label className={styles.field}>
+      <span className={styles.fieldLabel}>{label}</span>
       {children}
     </label>
   );
@@ -56,119 +39,96 @@ export default function Step3() {
 
   const { draft, extras, setExtras, update } = useWizard();
 
-  // In case your WizardProvider loads draft async
   if (!draft) {
-    return (
-      <main style={{ maxWidth: 820, margin: "0 auto", padding: 24 }}>
-        Loading…
-      </main>
-    );
+    return <main className={styles.page}>Loading…</main>;
   }
 
   const nextUrl = instanceId ? `./step-4?instanceId=${instanceId}` : "./step-4";
-
   const kids = draft.intake.step6.children ?? [];
 
   function updateChild(i: number, key: string, value: string) {
-    // uses the generic update() you already have
     update(`intake.step6.children.${i}.${key}`, value);
   }
 
-  // function addChildRow() {
-  //   const nextChildren = [
-  //     ...(draft.intake.step6.children ?? []),
-  //     {
-  //       lastName: "",
-  //       firstName: "",
-  //       gender: "",
-  //       birthDate: "",
-  //       nationality: "",
-  //       israeliId: "",
-  //       residenceCountry: "",
-  //       entryDate: "",
-  //     },
-  //   ];
-  //   update("intake.step6.children", nextChildren);
-  // }
-
   return (
-    <main
-      style={{ maxWidth: 820, margin: "0 auto", padding: 24, direction: "rtl" }}
-    >
-      <h1 style={{ fontSize: 22, fontWeight: 800 }}>
+    <main className={styles.page}>
+      <div className={styles.header}>
+        <div className={styles.headerText}>
+          لتسجيل مولود ولد في اسرائيل لوالد/ة مواطن اسرائيلي
+        </div>
+
+        <div className={styles.headerText}>
+          בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי
+        </div>
+      </div>
+
+      {/* <h1 className={styles.mainTitle}>
         שלב 2: פרטים כלליים + המבקש + הורה זר + ילדים
-      </h1>
+      </h1> */}
 
-      {/* GENERAL */}
-      {/* <SectionTitle>כללי</SectionTitle>
+      <SectionTitle>بيانات مقدم الطلب פרטי המבקש</SectionTitle>
 
-      <Field label="תאריך הטופס (PDF בלבד)">
+      <Field label="الاسم الشخصي    שם פרטי">
         <input
-          type="date"
-          value={extras.formDate}
-          onChange={(e) =>
-            setExtras((p) => ({ ...p, formDate: e.target.value }))
-          }
-          style={inputStyle}
-        />
-      </Field> */}
-
-      {/* APPLICANT */}
-      <SectionTitle>פרטי המבקש הישראלי</SectionTitle>
-
-      <Field label="שם פרטי">
-        <input
+          className={styles.input}
           value={draft.intake.step1.firstName}
           onChange={(e) => update("intake.step1.firstName", e.target.value)}
-          style={inputStyle}
         />
       </Field>
 
-      <Field label="שם משפחה">
+      <Field label="اسم العائلة   שם משפחה">
         <input
+          className={styles.input}
           value={draft.intake.step1.lastName}
           onChange={(e) => update("intake.step1.lastName", e.target.value)}
-          style={inputStyle}
         />
       </Field>
 
-      <Field label="מספר זהות">
+      <Field label="رقم بطاقة الهوية الإسرائيلية    מספר תעודת זהות   ">
         <input
+          className={styles.input}
           value={draft.intake.step1.israeliId}
           onChange={(e) => update("intake.step1.israeliId", e.target.value)}
-          style={inputStyle}
         />
       </Field>
 
-      <Field label="כתובת מגורים (DB: step2.residenceAddress)">
+      <Field label="الاسم الشخصي    כתובת מגורים ">
         <input
+          className={styles.input}
           value={draft.intake.step2.residenceAddress}
           onChange={(e) =>
             update("intake.step2.residenceAddress", e.target.value)
           }
-          style={inputStyle}
         />
       </Field>
 
-      <Field label="טלפון-פלאפון">
+      <Field label="هاتف   טלפון">
         <input
+          className={styles.input}
           value={draft.intake.step1.phone}
           onChange={(e) => update("intake.step1.phone", e.target.value)}
-          style={inputStyle}
           inputMode="tel"
         />
       </Field>
 
-      <Field label="תא דואר (PDF בלבד)">
+      <Field label="صندوق بريد   תא דואר">
         <input
+          className={styles.input}
           value={extras.poBox}
           onChange={(e) => setExtras((p) => ({ ...p, poBox: e.target.value }))}
-          style={inputStyle}
         />
       </Field>
 
-      <Field label="מצב אישי (DB: step3.maritalStatus)">
+      <SectionTitle>
+        الحالة الشخصية للوالد الإسرائيلي<br></br> מצב אישי של ההורה הישראלי
+      </SectionTitle>
+
+      <Field
+        label="الحالة الشخصية 
+מצב אישי "
+      >
         <select
+          className={styles.input}
           value={(draft.intake.step3.maritalStatus ?? "") as MaritalStatus}
           onChange={(e) =>
             update(
@@ -176,7 +136,6 @@ export default function Step3() {
               e.target.value as MaritalStatus,
             )
           }
-          style={inputStyle}
         >
           <option value="">בחר</option>
           <option value="married">נשוי/אה</option>
@@ -187,111 +146,87 @@ export default function Step3() {
         </select>
       </Field>
 
-      {/* FOREIGN PARENT */}
-      <SectionTitle>פרטי ההורה הזר (DB: step5.person)</SectionTitle>
+      <SectionTitle> بيانات الوالد الأجنبي   פרטי ההורה הזר</SectionTitle>
 
-      <Field label="שם פרטי">
+      <Field label="الاسم الشخصي    שם פרטי">
         <input
+          className={styles.input}
           value={draft.intake.step5.person.firstName}
           onChange={(e) =>
             update("intake.step5.person.firstName", e.target.value)
           }
-          style={inputStyle}
         />
       </Field>
 
-      <Field label="שם משפחה">
+      <Field label="اسم العائلة   שם משפחה   ">
         <input
+          className={styles.input}
           value={draft.intake.step5.person.lastName}
           onChange={(e) =>
             update("intake.step5.person.lastName", e.target.value)
           }
-          style={inputStyle}
         />
       </Field>
 
-      <Field label="מספר זהות / דרכון (DB: step5.person.passportNumber)">
+      <Field label="رقم الهوية   מספר זהות ">
         <input
+          className={styles.input}
           value={draft.intake.step5.person.passportNumber}
           onChange={(e) =>
             update("intake.step5.person.passportNumber", e.target.value)
           }
-          style={inputStyle}
         />
       </Field>
 
-      {/* CHILDREN */}
-      <SectionTitle>פרטי הילדים (DB: step6.children)</SectionTitle>
+      <SectionTitle>بيانات الوالد الأجنبي פרטי הילדים שרישומם מבוקש</SectionTitle>
 
-      {kids.map((child, i) => (
-        <div key={i} style={cardStyle}>
-          <div style={{ fontWeight: 700 }}>ילד/ה #{i + 1}</div>
+      <div className={styles.childrenGrid}>
+        {kids.map((child, i) => (
+          <div key={i} className={styles.childCard}>
+            {/* <div className={styles.childHeader}>ילד/ה #{i + 1}</div> */}
 
-          <Field label="שם פרטי">
-            <input
-              value={child.firstName}
-              onChange={(e) => updateChild(i, "firstName", e.target.value)}
-              style={inputStyle}
-            />
-          </Field>
+            <Field label="الاسم الشخصي    שם פרטי">
+              <input
+                className={styles.input}
+                value={child.firstName}
+                onChange={(e) => updateChild(i, "firstName", e.target.value)}
+              />
+            </Field>
 
-          <Field label="תאריך לידה">
-            <input
-              type="date"
-              value={child.birthDate}
-              onChange={(e) => updateChild(i, "birthDate", e.target.value)}
-              style={inputStyle}
-            />
-          </Field>
+            <Field label="تاريخ الميلاد   תאריך לידה  ">
+              <input
+                className={styles.input}
+                type="date"
+                value={child.birthDate}
+                onChange={(e) => updateChild(i, "birthDate", e.target.value)}
+              />
+            </Field>
 
-          <Field label='מקום לידה (ל-PDF בלבד; נשמר ב-DB בשדה "nationality")'>
-            <input
-              value={child.nationality}
-              onChange={(e) => updateChild(i, "nationality", e.target.value)}
-              style={inputStyle}
-            />
-          </Field>
-        </div>
-      ))}
+            <Field label='بلد الميلاد   ארץ לידה '>
+              <input
+                className={styles.input}
+                value={child.nationality}
+                onChange={(e) => updateChild(i, "nationality", e.target.value)}
+              />
+            </Field>
+          </div>
+        ))}
+      </div>
 
-      {/* <button
-        type="button"
-        onClick={addChildRow}
-        style={{
-          marginTop: 8,
-          padding: "10px 12px",
-          borderRadius: 12,
-          border: "1px solid #ccc",
-          background: "transparent",
-          fontSize: 15,
-          cursor: "pointer",
-        }}
-      >
-        + הוסף ילד/ה נוסף/ת
-      </button> */}
-
-      {/* SIGNATURE */}
-      {/* <SectionTitle>חתימה (אופציונלי)</SectionTitle>
-
-      <Field label="שם חתימה (לא נשמר ב-DB template כרגע)">
-        <input
-          value={extras.applicantSignatureName}
-          onChange={(e) =>
-            setExtras((p) => ({ ...p, applicantSignatureName: e.target.value }))
-          }
-          style={inputStyle}
-        />
-      </Field> */}
-
-      {/* NAV */}
-      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        <button type="button" onClick={() => router.back()}>
+      <div className={styles.footer}>
+        {/* <button
+          type="button"
+          className={styles.navBtn}
+          onClick={() => router.back()}
+        >
           ← הקודם
-        </button>
-
-        {/* <button type="button" onClick={() => router.push("./step-4")}> */}
-        <button type="button" onClick={() => router.push(nextUrl)}>
-          הבא →
+        </button> */}
+        <button
+          type="button"
+          className={styles.primaryButton}
+          onClick={() => router.push(nextUrl)}
+        >
+          לחתימה ואישור 
         </button>
       </div>
     </main>

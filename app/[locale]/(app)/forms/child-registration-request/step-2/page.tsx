@@ -1,51 +1,49 @@
 "use client";
+
 import { useRouter } from "next/navigation";
 import { useWizard } from "../WizardProvider";
+import styles from "./page.module.css";
 
 export default function Step2() {
   const router = useRouter();
   const { draft, extras, setExtras, update } = useWizard();
 
   return (
-    <main style={{ maxWidth: 820, margin: "0 auto", padding: 24, direction: "rtl" }}>
-      {/* <h1 style={{ fontSize: 22, fontWeight: 800 }}>שלב 1: פרטים כלליים + המבקש</h1>
+    <main className={styles.page}>
+      <div className={styles.imageContainer}>
+        <img
+          className={styles.imageRight}
+          src="/images/child-registration-step2-right.svg"
+        ></img>
+        <img
+          className={styles.imageLeft}
+          src="/images/child-registration-step2-left.svg"
+        ></img>
+      </div>
+      <div className={styles.textContainer}>
+        <div className={styles.mainTextContainer}>
+          <div className={styles.mainText}>نموذجك جاهز</div>
+          <div className={styles.mainText}>הטופס שלך מוכן</div>
+        </div>
+        <div className={styles.subTextContainer}>
+          <div className={styles.subText}>
+            يرجى التأكد من أن جميع البيانات صحيحة قبل الموافقة،يمكنك في أي وقت
+            التحديث وإجراء التغييرات
+          </div>
+          <div className={styles.subText}>
+            אנא וודא כי כל הפרטים נכונים לפני שאתה מאשר, תוכל בכל רגע לעדכן
+            ולבצע שינויים
+          </div>
+        </div>
+      </div>
 
-      <label>
-        תאריך הטופס (PDF בלבד)
-        <input
-          type="date"
-          value={extras.formDate}
-          onChange={(e) => setExtras((p) => ({ ...p, formDate: e.target.value }))}
-        />
-      </label>
-
-      <label>
-        שם פרטי
-        <input
-          value={draft.intake.step1.firstName}
-          onChange={(e) => update("intake.step1.firstName", e.target.value)}
-        />
-      </label>
-
-      <label>
-        שם משפחה
-        <input
-          value={draft.intake.step1.lastName}
-          onChange={(e) => update("intake.step1.lastName", e.target.value)}
-        />
-      </label>
-
-      <label>
-        מספר זהות
-        <input
-          value={draft.intake.step1.israeliId}
-          onChange={(e) => update("intake.step1.israeliId", e.target.value)}
-        />
-      </label> */}
-
-      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-        <button type="button" onClick={() => router.push("./step-3")}>
-          הבא →
+      <div className={styles.footerRow}>
+        <button
+          type="button"
+          className={styles.primaryButton}
+          onClick={() => router.push("./step-3")}
+        >
+          המשך
         </button>
       </div>
     </main>

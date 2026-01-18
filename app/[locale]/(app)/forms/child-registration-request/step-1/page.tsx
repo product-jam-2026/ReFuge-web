@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWizard } from "../WizardProvider";
+import styles from "./page.module.css";
 
 export default function Step1() {
   const router = useRouter();
@@ -10,10 +11,8 @@ export default function Step1() {
 
   const kids = draft?.intake?.step6?.children ?? [];
 
-  // keep selection as a Set of indexes
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
-  // Default: select all children when the page loads / kids change
   useEffect(() => {
     setSelected(new Set(kids.map((_, i) => i)));
   }, [kids.length]);
@@ -37,48 +36,35 @@ export default function Step1() {
   }
 
   function onNext() {
-    // Filter children based on selection
     const filtered = kids.filter((_, i) => selected.has(i));
-
-    // Persist into wizard draft so step-1 sees only chosen kids
     update("intake.step6.children", filtered);
-
-    // Go to sibling step-2 (relative navigation keeps locale segment)
     router.push("./step-2");
   }
 
+  const disableNext = options.length > 0 && selected.size === 0;
+
   return (
-    <main
-      style={{ maxWidth: 820, margin: "0 auto", padding: 24, direction: "rtl" }}
-    >
-      <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 12 }}>
-        שלב 0: בחירת ילדים
-      </h1>
+    <main className={styles.page}>
+      <div className={styles.header}>
+        <div className={styles.headerText}>
+          בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי
+        </div>
+      </div>
 
-      <div style={{ display: "grid", gap: 10 }}>
+      <h2 className={styles.title}>בחר עבור מי מילדך הינך ממלא את הטופס</h2>
+
+      <div className={styles.container}>
         {options.length === 0 ? (
-          <div>לא נמצאו ילדים ב- intake.step6.children</div>
+          <div className={styles.emptyText}>
+            לא נמצאו ילדים ב- intake.step6.children
+          </div>
         ) : (
-          <fieldset
-            style={{ border: "1px solid #ddd", borderRadius: 12, padding: 12 }}
-          >
-            <legend style={{ padding: "0 8px", fontWeight: 700 }}>
-              בחר ילדים להמשך התהליך
-            </legend>
+          <fieldset className={styles.fieldset}>
+            {/* <legend className={styles.legend}>בחר ילדים להמשך התהליך</legend> */}
 
-            <div style={{ display: "grid", gap: 10, marginTop: 8 }}>
+            {/* <div className={styles.optionsList}>
               {options.map(({ i, label }) => (
-                <label
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "8px 10px",
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                  }}
-                >
+                <label key={i} className={styles.optionRow}>
                   <input
                     type="checkbox"
                     checked={selected.has(i)}
@@ -87,64 +73,58 @@ export default function Step1() {
                   <span>{label}</span>
                 </label>
               ))}
+            </div> */}
+
+            <div className={styles.optionsList}>
+              {options.map(({ i, label }) => {
+                const isSelected = selected.has(i);
+
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`${styles.optionBtn} ${isSelected ? styles.optionBtnActive : ""}`}
+                    onClick={() => toggle(i)}
+                    aria-pressed={isSelected}
+                    title={isSelected ? "נבחר" : "לא נבחר"}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
 
-            <div
-              style={{
-                marginTop: 12,
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
-              }}
-            >
+            {/* <div className={styles.actionsRow}>
               <button
                 type="button"
                 onClick={() => setSelected(new Set(kids.map((_, i) => i)))}
-                style={secondaryButtonStyle}
+                className={styles.secondaryButton}
               >
                 בחר הכל
               </button>
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
-                style={secondaryButtonStyle}
+                className={styles.secondaryButton}
               >
                 נקה בחירה
               </button>
-            </div>
+            </div> */}
           </fieldset>
         )}
 
-        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <div className={styles.footerRow}>
           <button
             type="button"
             onClick={onNext}
-            style={buttonStyle}
-            disabled={options.length > 0 && selected.size === 0}
-            title={selected.size === 0 ? "בחר לפחות ילד אחד" : undefined}
+            className={styles.primaryButton}
+            disabled={disableNext}
+            title={disableNext ? "בחר לפחות ילד אחד" : undefined}
           >
-            הבא →
+            המשך
           </button>
         </div>
-
       </div>
     </main>
   );
 }
-
-const buttonStyle: React.CSSProperties = {
-  padding: "12px 14px",
-  borderRadius: 12,
-  border: "none",
-  fontSize: 16,
-  cursor: "pointer",
-};
-
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #ccc",
-  background: "transparent",
-  fontSize: 15,
-  cursor: "pointer",
-};

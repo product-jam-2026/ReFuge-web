@@ -6,8 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 import Link from "next/link";
 
-
-
 // type GeneratedPdfRow = {
 //   id: string;
 //   bucket: string;
@@ -89,7 +87,6 @@ export default function ChildRegistrationHomePage() {
 
   const params = useParams();
   const locale = params.locale as string;
-
 
   // final pdf loading logic
   useEffect(() => {
@@ -343,13 +340,14 @@ export default function ChildRegistrationHomePage() {
           />{" "}
         </div>
 
-        <div className={styles.bigTitles}>תביעה לקצבת ילדים</div>
+        <div className={styles.bigTitles}>
+          בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי
+        </div>
         <img className={styles.readButton} src="/images/readButton.svg"></img>
       </div>
       <div className={styles.subTextSection}>
-        בקשה לתשלום חודשי לסיוע בהוצאות גידול ילדים עד גיל 18. הטופס מיועד
-        למבוטחים שאינם מקבלים קצבת ילדים וכן במקרים בהם ילד/ים עוברים מהורה
-        להורה או מהורה לאפוטרופוס/ ממונה.
+        הסדרת רישום הילד במרשם האוכלוסין הישראלי - קבלת מעמד בישראל לילד. בהמשך
+        ישלח להורים ספח לתעודת זהות{" "}
       </div>
 
       <div className={styles.buttonRow}>
