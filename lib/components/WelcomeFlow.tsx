@@ -1,83 +1,162 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation'; // ייבוא הניווט
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { createClient } from "@/lib/supabase/client"; 
+import styles from "./WelcomeFlow.module.css";
+
+type ScreenState = "splash" | "onboarding" | "login";
 
 const WelcomeFlow = ({ locale }: { locale: string }) => {
-  const [showForm, setShowForm] = useState(false);
-  const router = useRouter(); // הוק לניווט
+  const [currentScreen, setCurrentScreen] = useState<ScreenState>("splash");
+  const [isExiting, setIsExiting] = useState(false); 
+  const [loading, setLoading] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
-    // טיימר ל-2 שניות להצגת ה-Splash Screen
-    const timer = setTimeout(() => {
-      setShowForm(true);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
+    if (currentScreen === "splash") {
+      // כאן השינוי: 2.5 שניות במקום 4
+      const exitTimer = setTimeout(() => { setIsExiting(true); }, 2500);
+      // חצי שנייה אחרי זה מבצעים את המעבר (סה"כ 3 שניות)
+      const switchTimer = setTimeout(() => { setCurrentScreen("onboarding"); }, 3000);
+      
+      return () => { clearTimeout(exitTimer); clearTimeout(switchTimer); };
+    }
+  }, [currentScreen]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // כאן תהיה בעתיד הלוגיקה של שליחת המייל ובדיקה בשרת
-    // כרגע, לצורך הדגמה, אנחנו מעבירים את המשתמש ישירות לדאשבורד
-    router.push(`/${locale}/dashboard`);
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    const origin = window.location.origin;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${origin}/${locale}/callback`,
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
+    });
+    if (error) { console.error("Login failed:", error.message); setLoading(false); }
   };
 
   return (
-    <div className="relative w-full h-screen bg-white overflow-hidden font-sans" dir="rtl">
+    <div className={styles.container} dir="rtl">
       
-      {/* --- שכבה 1: תמונת פתיחה (Splash) --- */}
-      <div 
-        className={`absolute inset-0 z-20 flex items-center justify-center bg-[#C8E3FF] transition-opacity duration-1000 ease-in-out ${
-          showForm ? 'opacity-0 pointer-events-none' : 'opacity-100'
-        }`}
-      >
-        {/* ודאי שהתמונה קיימת בתיקיית public/images */}
-        <Image
-          src="/public/images/welcome-splash.png" 
-          alt="Welcome"
-          fill
-          style={{ objectFit: 'cover' }}
-          priority
-        />
-      </div>
-
-      {/* --- שכבה 2: טופס כניסה --- */}
-      <div className="absolute inset-0 z-10 flex flex-col justify-center px-6 pt-20">
-        <div className="text-right mb-8">
-          <h1 className="text-2xl font-bold text-[#1A1A1A] mb-2">כניסה</h1>
-          <p className="text-[#4A4A4A] text-sm">
-            כדי להתחבר לאפליקציה, יש להזין את שמך המלא והאימייל שלך ולאחר מכן למלא את הקוד שקיבלת
-          </p>
+      {/* --- מצב 1: Splash --- */}
+      {currentScreen === "splash" && (
+        <div className={`${styles.splashScreen} ${isExiting ? styles.fadeOut : ''}`}>
+           <Image 
+             src="/images/logo-refuge.svg" 
+             alt="ReFuge Logo" 
+             width={81} 
+             height={76} 
+             priority
+             className={styles.logoImage}
+           />
+           <div className={styles.bottomGroup}>
+             <Image 
+               src="/images/welcome-hands.png" 
+               alt="Welcome Hands"
+               width={380}
+               height={200}
+               className={styles.handsImage}
+               priority
+             />
+             <h1 className={styles.splashTitle}>
+               نحن ري-فيوج <br /> אנחנו רה-פיוג׳
+             </h1>
+           </div>
         </div>
+      )}
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-right text-xs text-[#4A4A4A] mb-1 pr-2">שם משפחה</label>
-              <input type="text" className="w-full border border-gray-300 rounded-full py-3 px-4 text-right focus:outline-none focus:border-blue-500" />
-            </div>
-            <div className="flex-1">
-              <label className="block text-right text-xs text-[#4A4A4A] mb-1 pr-2">שם פרטי</label>
-              <input type="text" className="w-full border border-gray-300 rounded-full py-3 px-4 text-right focus:outline-none focus:border-blue-500" />
-            </div>
+      {/* --- מצב 2: Onboarding --- */}
+      {currentScreen === "onboarding" && (
+        <div className={`${styles.onboardingScreen} ${styles.fadeIn}`}>
+          <Image 
+            src="/images/logos-hias-refuge.svg" 
+            alt="HIAS & ReFuge"
+            width={155}
+            height={60}
+            className={styles.topLogos}
+          />
+          <Image 
+            src="/images/onboarding-envelope.png" 
+            alt="Onboarding"
+            width={280}
+            height={280}
+            className={styles.envelopeImage}
+            priority
+          />
+          <div className={styles.textContainer}>
+            <h2 className={styles.obTitle}>
+              التطبيق دا بيرافقك في الاجراءات الورقية لتسهيل العملية عليك
+            </h2>
+            <h2 className={styles.obTitle}>
+              האפליקציה נועדה ללוות אותך בתהליכים בירוקרטיים
+            </h2>
+            <p className={styles.obBody}>
+              بتقدر تحفظ معلوماتك، تعرف على حقوقك، وتعبّي الاستمارات بطريقة سهلة وبسيطة
+            </p>
+            <p className={styles.obBody}>
+              אפשר לשמור מידע אישי, לקרוא על זכויות, ולמלא טפסים בצורה פשוטה
+            </p>
           </div>
+          <button className={styles.startButton} onClick={() => setCurrentScreen("login")}>
+            <span>ابدأ</span>
+            <span>התחל</span>
+          </button>
+        </div>
+      )}
 
-          <div>
-            <label className="block text-right text-xs text-[#4A4A4A] mb-1 pr-2">אימייל</label>
-            <input type="email" required className="w-full border border-gray-300 rounded-full py-3 px-4 text-right focus:outline-none focus:border-blue-500" />
-          </div>
+      {/* --- מצב 3: Login --- */ }
+      {currentScreen === "login" && (
+        <div className={`${styles.loginScreen} ${styles.fadeIn}`}>
+          <div className={styles.loginCard}>
             
-          <div className="mt-10">
-            <button
-              type="submit"
-              className="w-full bg-[#0A1428] text-white rounded-full py-4 font-medium hover:bg-opacity-90 transition-colors"
-            >
-              שלח קוד
-            </button>
+            <div className={styles.googleHeader}>
+              <Image src="https://authjs.dev/img/providers/google.svg" alt="Google" width={18} height={18} />
+              <span className={styles.googleHeaderText}>
+                 تسجيل الدخول باستخدام جوجل | התחברות באמצעות גוגל
+              </span>
+            </div>
+
+            <div className={styles.loginContent}>
+                <Image 
+                  src="/images/logo-refuge.svg" 
+                  alt="ReFuge" 
+                  width={50} 
+                  height={50} 
+                  className={styles.loginLogo}
+                />
+                
+                <h2 className={styles.loginTitle}>בחר חשבון</h2>
+                
+                <button onClick={handleGoogleLogin} disabled={loading} className={styles.googleBtn}>
+                  {loading ? (
+                    <span className="w-full text-center">מתחבר...</span>
+                  ) : (
+                    <>
+                      <Image 
+                        src="https://authjs.dev/img/providers/google.svg" 
+                        alt="G" 
+                        width={28} 
+                        height={28} 
+                        className={styles.googleIconInBtn}
+                      />
+                      
+                      <div className={styles.userInfo}>
+                         <span className={styles.userName}>התחברות עם חשבון Google</span>
+                         <span className={styles.userEmail}>לחץ כאן כדי להמשיך</span>
+                      </div>
+                    </>
+                  )}
+                </button>
+
+                <div className={styles.termsText}>
+                 אם בחרת להשתמש בשירותים שלנו, המשמעות היא שנתת בנו אמון לטפל באופן הולם במידע שמסרת לנו. אנחנו מבינים שמדובר באחריות גדולה ואנחנו עושים מאמצים רבים כדי להגן על המידע שלך ולתת לך שליטה.
+                </div>
+            </div>
           </div>
-        </form>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

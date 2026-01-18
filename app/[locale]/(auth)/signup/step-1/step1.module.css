@@ -1,273 +1,738 @@
+/* app/[locale]/(auth)/signup/step-1/step1.module.css */
+
+.wrap, .wrap * {
+  box-sizing: border-box;
+}
+
 .wrap {
   width: 100%;
   position: relative;
+  font-family: var(--font-simpler), sans-serif;
+  overflow-x: hidden;
 }
 
-/* ===== Intro (orange full screen) ===== */
+/* ========================================= */
+/* ===== Intro Screen ====================== */
+/* ========================================= */
+
 .introFull {
-  min-height: 100svh;
-  background: var(--c-orange);
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: #EE8548;
   display: flex;
-  align-items: flex-end;
-  padding: 26px 18px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end; 
+  padding: 0 20px 65px 20px;
+  overflow-y: auto;
+}
+
+.introHandImage {
+  margin-bottom: auto; 
+  margin-top: 40px; 
+  width: 100%;
+  max-width: 280px; 
+  height: auto;
+  object-fit: contain;
+  max-height: 40vh; 
 }
 
 .introContent {
   width: 100%;
-  color: #fff;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px; 
 }
 
-.introTop {
-  margin-bottom: 12px;
-}
-
-.introStep .biAr,
-.introStep .biHe {
-  color: rgba(255,255,255,0.95);
-  font-family: var(--font-family-body);
+.introTitle {
+  font-family: var(--font-simpler), sans-serif;
+  font-size: 32px;
   font-weight: 700;
-  font-size: 16px;
+  color: #FFFFFF;
+  margin: 0;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  line-height: 1.2;
 }
 
-.introMain {
-  margin-bottom: 12px;
-}
-
-.introH1 .biAr,
-.introH1 .biHe {
-  color: #fff;
-  font-size: 30px;
-  font-weight: 900;
-}
-
-.introText {
-  margin: 14px 0 18px;
-  font-size: 13px;
-  line-height: 1.55;
-  opacity: 0.98;
-}
-
-.introMeta {
-  margin-top: 12px;
+.introSubtitle {
+  font-family: var(--font-simpler), sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #FFFFFF;
   opacity: 0.95;
+  margin: 0;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  line-height: 1.2;
 }
 
-/* ===== Header area (white screens) ===== */
+.introBody {
+  font-family: var(--font-simpler), sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #FFFFFF;
+  opacity: 0.9;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 16px; 
+  max-width: 340px;
+  text-align: right; 
+}
+
+.introButton {
+  width: 100%;
+  max-width: 353px; 
+  height: 56px;
+  border-radius: 30px;
+  background-color: #011429; 
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: transform 0.1s;
+  flex-shrink: 0; 
+}
+
+.introButton:active {
+  transform: scale(0.98);
+}
+
+/* ========================================= */
+/* ===== Form Screens ====================== */
+/* ========================================= */
+
+.form {
+  padding: 0 24px 40px;
+  max-width: 430px;
+  margin: 0 auto;
+}
+
 .headerArea {
-  padding: 18px 18px 8px;
+  padding-top: 20px;
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.topMeta {
-  margin-bottom: 12px;
+.topRow {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 12px;
 }
 
 .stepMeta {
-  font-size: 12px;
-  color: var(--c-muted);
-  margin-bottom: 8px;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #011429;
 }
 
 .progressTrack {
   height: 6px;
   width: 100%;
-  background: rgba(240, 122, 58, 0.35);
+  background: rgba(238, 133, 72, 0.2);
   border-radius: 999px;
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  background: var(--c-orange);
+  background: #EE8548;
   border-radius: 999px;
-}
-
-/* back arrow */
-.backBtn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  border: 1px solid var(--c-border);
-  background: #fff;
-  color: var(--c-blue-2);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  line-height: 1;
-}
-
-/* ===== Bilingual ===== */
-.biLine {
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.biStack {
-  display: block;
-}
-
-.biAr,
-.biHe {
-  font-family: var(--font-family-heading);
-  font-weight: 800;
-  letter-spacing: 0.2px;
-  color: var(--c-blue-2);
+  transition: width 0.3s ease;
 }
 
 .titleBlock {
-  text-align: center;
-  margin: 6px 0 14px;
+  text-align: right;
+  margin-top: 16px;
+  margin-bottom: 24px;
 }
 
-.h1 .biAr,
-.h1 .biHe {
-  font-size: 26px;
-  line-height: 1.1;
+.h1 {
+  display: flex;
+  justify-content: flex-start;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #011429;
+  line-height: 1.2;
 }
 
 .subtitle {
-  margin-top: 8px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 6px;
   font-size: 14px;
-}
-
-.subtitle .biAr,
-.subtitle .biHe {
-  font-family: var(--font-family-body);
-  font-weight: 600;
-  color: rgba(11, 42, 74, 0.7);
-}
-
-/* saved note */
-.savedNote {
-  margin-top: 10px;
-  font-size: 12px;
-  color: #1f6f3d;
-  background: #e9f7ef;
-  padding: 10px 12px;
-  border-radius: 12px;
-  text-align: center;
-}
-
-/* ===== Form screens ===== */
-.form {
-  padding-bottom: 18px;
-}
-
-.screenShow {
-  display: block;
-  padding: 0 18px 0;
-}
-
-.screenHide {
-  display: none;
+  color: #6b7280;
+  margin-top: 6px;
 }
 
 .sectionHead {
-  margin: 10px 0 10px;
   text-align: right;
+  margin-bottom: 16px;
 }
 
-.sectionTitle .biAr,
-.sectionTitle .biHe {
-  font-size: 14px;
-  font-weight: 900;
-  color: rgba(11, 42, 74, 0.7);
+.sectionTitle {
+  font-size: 16px;
+  color: #666;
+  font-weight: 600;
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
 }
 
 .field {
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
-.label .biLine {
-  justify-content: flex-end;
+.label {
+  display: flex;
+  justify-content: flex-start; 
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 4px;
+  gap: 15px; 
 }
 
-.label .biAr,
-.label .biHe {
-  font-size: 12px;
-  font-weight: 800;
-  color: rgba(11, 42, 74, 0.55);
+.label span {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
-/* gender pills */
+.field input {
+  width: 100%;
+  height: 54px;
+  border: 1px solid #D1D5DB;
+  border-radius: 27px;
+  padding: 0 20px;
+  font-size: 16px;
+  text-align: right;
+  outline: none;
+  background: #fff;
+  transition: all 0.2s;
+  color: #011429;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.field input:focus {
+  border-color: #011429;
+  box-shadow: 0 0 0 1px #011429;
+}
+
+.actions {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 20px;
+}
+
+.btnPrimary {
+  width: 100%;
+  height: 56px;
+  background: #011429;
+  color: white;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.1s;
+}
+.btnPrimary:active { transform: scale(0.98); }
+
+.btnSecondary {
+  width: 100%;
+  height: 56px;
+  background: transparent;
+  color: #EE8548;
+  border: 1px solid #EE8548;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+.btnSecondary:active { background-color: #fff8f5; }
+
+.biLine {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.screenShow { display: block; animation: fadeIn 0.4s ease-out; }
+.screenHide { display: none; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Gender Selection Rows (Pills) */
 .genderRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  display: flex;
+  gap: 12px;
+  width: 100%;
 }
 
 .pillRadio {
-  height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--c-border);
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* שיהיה קומפקטי */
-  gap: 10px;
-  background: #fff;
-}
-
-.pillRadio span {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.05;
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  margin: 0;
 }
 
 .pillRadio input {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  accent-color: var(--c-blue-2);
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  appearance: none;
+  display: none;
 }
 
+.pillRadio > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px; 
+  width: 100%;
+  height: 54px;
+  border: 1px solid #D1D5DB;
+  border-radius: 27px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
 
-/* date field */
+.pillRadio input:checked + span {
+  border-color: #EE8548;
+  color: #011429;
+  background-color: #fff;
+  box-shadow: 0 0 0 1px #EE8548;
+  font-weight: 700;
+}
+
+/* Date Field Styling */
 .dateWrap {
   position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .dateInput {
   width: 100%;
-  height: 44px;
-  border-radius: 999px;
-  border: 1px solid var(--c-border);
-  padding: 10px 14px;
+  height: 54px;
+  border: 1px solid #D1D5DB;
+  border-radius: 27px;
+  padding: 0 20px 0 50px; 
+  font-family: inherit;
+  font-size: 16px;
   background: #fff;
-  color: var(--c-text);
+  outline: none;
+  direction: rtl; 
+  text-align: right;
+  color: #011429;
+  font-weight: 500;
+  appearance: none;
 }
 
-.datePlaceholder {
-  pointer-events: none;
+.calendarIcon {
   position: absolute;
-  inset-inline-start: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(11, 42, 74, 0.35);
+  left: 20px;
+  pointer-events: none;
+  color: #011429;
+  z-index: 2;
+}
+
+.dateInput::-webkit-calendar-picker-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Combobox */
+.comboboxWrap {
+  position: relative;
+  width: 100%;
+}
+
+.comboboxInput {
+  width: 100%;
+  height: 54px;
+  border: 1px solid #D1D5DB;
+  border-radius: 27px;
+  padding: 0 20px;
+  font-family: inherit;
+  font-size: 16px;
+  text-align: right;
+  background: #fff;
+  color: #011429;
+  font-weight: 500;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.comboboxInput:focus {
+  border-color: #011429;
+}
+
+.comboboxMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.comboboxItem {
+  padding: 12px 24px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: #374151;
+  transition: background-color 0.2s;
+}
+
+.comboboxItem span:first-child {
+  font-weight: 500;
+  color: #011429;
+}
+
+.comboboxItem span:last-child {
+  color: #6b7280;
   font-size: 14px;
 }
 
-/* bottom actions */
-.actions {
-  margin-top: 16px;
-  display: grid;
-  gap: 10px;
-  padding-bottom: 6px;
+.comboboxItem:hover {
+  background-color: #F3F4F6;
 }
 
-.dateInput.isEmpty {
-  color: transparent; /* מסתיר את הטקסט של הדפדפן */
-  caret-color: transparent;
+/* --- Phone Fields (Split Design) --- */
+.phoneRow {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  direction: ltr; 
 }
 
-.dateInput.isEmpty::-webkit-datetime-edit {
-  color: transparent;
+.prefixWrapper {
+  position: relative;
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.prefixBtn {
+  width: 100%;
+  height: 54px;
+  border: 1px solid #D1D5DB;
+  border-radius: 27px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #011429;
+  cursor: pointer;
+  direction: ltr;
+}
+
+.phoneBodyWrapper {
+  flex-grow: 1;
+}
+
+.phoneBodyInput {
+  width: 100%;
+  height: 54px;
+  border: 1px solid #D1D5DB;
+  border-radius: 27px;
+  padding: 0 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #011429;
+  background: #fff;
+  outline: none;
+  direction: ltr; 
+  text-align: left;
+}
+
+.phoneBodyInput:focus,
+.prefixBtn:focus {
+  border-color: #011429;
+}
+
+.phoneDropdown {
+  position: absolute;
+  top: 105%;
+  left: 0;
+  width: 280px;
+  max-height: 250px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 50;
+  list-style: none;
+  padding: 8px 0;
+  text-align: left;
+}
+
+.phoneItem {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  direction: ltr;
+}
+
+.phoneItem:hover {
+  background-color: #EE8548;
+  color: white;
+}
+
+.arrowIcon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
+}
+
+/* ========================================= */
+/* ===== Loading Screen ==================== */
+/* ========================================= */
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #EE8548;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  text-align: center;
+}
+
+/* ========================================= */
+/* ===== Summary Screen (Screen 5) ========= */
+/* ========================================= */
+
+/* app/[locale]/(auth)/signup/step-1/step1.module.css */
+
+/* ... (כל החלק העליון נשאר ללא שינוי עד Summary Screen) ... */
+
+/* ========================================= */
+/* ===== Summary Screen (Screen 5) ========= */
+/* ========================================= */
+
+.summaryHeader {
+  background-color: #FF8D29;
+  padding: 56px 40px 16px 40px;
+  border-radius: 0 0 30px 30px;
+  text-align: center;
+  margin: -20px -24px 30px -24px;
+  box-shadow: 0 4px 12px rgba(238, 133, 72, 0.2);
+  color: white;
+}
+
+.summaryTitle {
+  font-family: var(--font-simpler), sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.summarySub {
+  font-family: var(--font-simpler), sans-serif;
+  font-size: 14px;
+  opacity: 0.95;
+  font-weight: 500;
+}
+
+/* --- Split Fields (Translated names) --- */
+.summaryPair {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.summaryPairLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+  padding: 0 4px;
+}
+
+.summaryInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.originalInput {
+  width: 100%;
+  height: 60px;
+  border: none;
+  border-bottom: 1px solid #E5E7EB;
+  padding: 0 20px;
+  font-size: 16px;
+  color: #011429;
+  background: #fff;
+  text-align: right;
+  outline: none;
+}
+
+.translatedInput {
+  width: 100%;
+  height: 60px;
+  border: none;
+  padding: 0 20px;
+  font-size: 16px;
+  color: #011429;
+  font-weight: 700;
+  background: #FFF0E6;
+  text-align: right;
+  outline: none;
+}
+
+/* --- Read Only Standard Fields (כמו שדות רגילים) --- */
+
+/* מעטפת שדה רגיל בתוך הסיכום */
+.summaryField {
+  margin-bottom: 20px;
+}
+
+/* עיצוב הקלט בתוך שדה הסיכום - זהה לשדה רגיל אבל ללא אפשרות עריכה */
+.readOnlyInputWrap {
+  position: relative;
+  width: 100%;
+}
+
+.readOnlyInput {
+  width: 100%;
+  height: 54px;
+  border: 1px solid #D1D5DB;
+  border-radius: 27px;
+  padding: 0 20px;
+  font-size: 16px;
+  text-align: right;
+  outline: none;
+  background: #fff; /* רקע לבן כמו בתמונה */
+  color: #011429;
+  font-weight: 500;
+  font-family: inherit;
+  pointer-events: none; /* מונע לחיצה */
+}
+
+/* במקרה של תאריך - ריווח לאייקון */
+.readOnlyInput[data-icon="date"] {
+  padding-right: 50px; /* מקום לאייקון אם צריך, או צד שמאל תלוי ב-RTL */
+}
+
+/* מיקום האייקונים בתוך השדות הקבועים */
+.fieldIcon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #011429;
+  pointer-events: none;
+}
+
+/* ב-RTL האייקון בצד שמאל בדרך כלל (כמו ב-select) או ימין (כמו ב-date) */
+/* נתאים לפי העיצוב הקיים שלך: Date icon בצד שמאל */
+.fieldIconLeft {
+  left: 20px; 
+}
+.fieldIconRight {
+  right: 20px;
 }

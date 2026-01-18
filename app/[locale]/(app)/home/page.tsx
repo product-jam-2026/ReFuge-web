@@ -39,6 +39,7 @@ export default async function HomePage({
 
   let firstName = t('fallbackName');
   let dbError: string | null = null;
+  let gender: string | null = null;
 
   if (user) {
     const { data: profileRow, error } = await supabase
@@ -49,26 +50,41 @@ export default async function HomePage({
 
     if (error) dbError = error.message;
 
-    firstName =
-      (profileRow as any)?.data?.intake?.step1?.firstName ||
-      (profileRow as any)?.data?.intake?.step1?.first_name ||
-      firstName;
+    const step1 = (profileRow as any)?.data?.intake?.step1 ?? {};
+    const nameFromDb =
+      step1?.firstName?.[locale] ||
+      step1?.first_name?.[locale] ||
+      step1?.firstName ||
+      step1?.first_name;
+
+    firstName = nameFromDb || firstName;
+    gender = step1?.gender || (profileRow as any)?.data?.gender || null;
   }
 
   const hour = getHourInTimeZone('Asia/Jerusalem');
   const greeting = t(`greetings.${getGreetingKey(hour)}`);
+  const greetingLineRaw = t('greetingLine', { greeting, name: firstName });
+  const greetingLine =
+    greetingLineRaw.includes('HomePage.greetingLine') ||
+    greetingLineRaw.includes('greetingLine')
+      ? `${greeting}, ${firstName}`
+      : greetingLineRaw;
 
   // routes
   const hrefProfile = `/${locale}/profile`;
   const hrefForms = `/${locale}/forms`;
   const hrefRights = `/${locale}/rights`;
+  const isFemale = gender === 'female';
+  const familyIllustration = isFemale
+    ? '/illustrations/family%20female.svg'
+    : '/illustrations/family%20male.svg';
 
   return (
 <main className={`${styles.root} homeFullBleed`}>
       {/* ✅ תכלת למעלה (full width) */}
       <section className={styles.topCard}>
         <h1 className={styles.title}>
-          {t('greetingLine', { greeting, name: firstName })}
+          {greetingLine}
         </h1>
         <p className={styles.subtitle}>{t('subtitle')}</p>
       </section>
@@ -79,7 +95,7 @@ export default async function HomePage({
         <div className={styles.illustrationArea} aria-hidden="true">
           <div className={styles.illustrationWrap}>
             <Image
-              src="/illustrations/family.svg"
+              src={familyIllustration}
               alt=""
               width={520}
               height={520}
@@ -96,7 +112,9 @@ export default async function HomePage({
             className={`${styles.card} ${styles.cardBlue} ${styles.cardWide}`}
           >
             <span className={styles.chev} aria-hidden="true">
-              ‹
+              <svg xmlns="http://www.w3.org/2000/svg" width="27" height="26" viewBox="0 0 27 26" fill="none">
+                <path d="M16.2012 18.6892L10.2012 12.6892L16.2012 6.68921" stroke="#011429" strokeWidth="1.5" />
+              </svg>
             </span>
             <div className={styles.cardText}>
               <div className={styles.cardTitle}>{t('cards.forms.title')}</div>
@@ -110,7 +128,9 @@ export default async function HomePage({
             className={`${styles.card} ${styles.cardOrange}`}
           >
             <span className={styles.chev} aria-hidden="true">
-              ‹
+              <svg xmlns="http://www.w3.org/2000/svg" width="27" height="26" viewBox="0 0 27 26" fill="none">
+                <path d="M16.2012 18.6892L10.2012 12.6892L16.2012 6.68921" stroke="#011429" strokeWidth="1.5" />
+              </svg>
             </span>
             <div className={styles.cardText}>
               <div className={styles.cardTitle}>{t('cards.profile.title')}</div>
@@ -121,7 +141,9 @@ export default async function HomePage({
           {/* ירוק */}
           <Link href={hrefRights} className={`${styles.card} ${styles.cardGreen}`}>
             <span className={styles.chev} aria-hidden="true">
-              ‹
+              <svg xmlns="http://www.w3.org/2000/svg" width="27" height="26" viewBox="0 0 27 26" fill="none">
+                <path d="M16.2012 18.6892L10.2012 12.6892L16.2012 6.68921" stroke="#011429" strokeWidth="1.5" />
+              </svg>
             </span>
             <div className={styles.cardText}>
               <div className={styles.cardTitle}>{t('cards.rights.title')}</div>

@@ -29,6 +29,7 @@ export default function LangSwitcher() {
       }
 
       const titleEl =
+        (document.querySelector('main h1') as HTMLElement | null) ||
         (document.querySelector('main.page h1') as HTMLElement | null) ||
         (document.querySelector('.dashboardTitle') as HTMLElement | null);
 
