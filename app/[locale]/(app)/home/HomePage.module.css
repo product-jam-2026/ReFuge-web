@@ -106,7 +106,7 @@
 .cardsGrid{
   width: min(100%, 390px);
   margin-inline: auto;
-
+align-content: start;
   display: grid;
   grid-template-columns: 1fr 1fr;
   justify-content: center;
