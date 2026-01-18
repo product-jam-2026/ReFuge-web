@@ -234,6 +234,11 @@ export default function Step4() {
   }
 
   async function onGenerate() {
+    if (!draft) {
+      // still loading / wizard not ready
+      return;
+    }
+
     const pdfTitle =
       (extras as any).formTitle?.trim() ||
       `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
