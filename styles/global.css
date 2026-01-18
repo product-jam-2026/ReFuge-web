@@ -121,7 +121,9 @@ a {
 
 /* content area inside frame */
 .page {
-  padding: 16px 18px;
+  --page-pad-x: 18px;
+  --page-pad-y: 16px;
+  padding: var(--page-pad-y) var(--page-pad-x);
   overflow-x: hidden;
 
   /* ברירת מחדל: 65 למטה */
@@ -224,7 +226,12 @@ button:focus {
 /* 9) Small phones tweaks */
 @media (max-width: 360px) {
   .appShell { padding: 10px; }
-  .page { padding: 16px 14px; padding-bottom: calc(var(--screen-bottom-padding) + env(safe-area-inset-bottom)); }
+  .page {
+    --page-pad-x: 14px;
+    --page-pad-y: 16px;
+    padding: var(--page-pad-y) var(--page-pad-x);
+    padding-bottom: calc(var(--screen-bottom-padding) + env(safe-area-inset-bottom));
+  }
 }
 
 /* Remove the desktop "frame" on smaller devices */
@@ -377,16 +384,8 @@ button:focus {
 
 /* Only for pages that explicitly opt-in */
 .homeFullBleed{
-  width: 100%;
-}
-
-/* אם יש אצלך appFrame/appShell שעושים מסגרת לבנה במרכז */
-.homeFullBleed{
-  margin: 0 !important;
+  width: calc(100% + var(--page-pad-x) + var(--page-pad-x));
+  margin: calc(0px - var(--page-pad-y)) calc(0px - var(--page-pad-x));
   border-radius: 0 !important;
   box-shadow: none !important;
-}
-
-.page:has(.homeFullBleed) {
-  padding: 0 !important;
 }
