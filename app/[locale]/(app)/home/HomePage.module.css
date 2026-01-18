@@ -110,7 +110,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   justify-content: center;
-  row-gap: 1px;
+  row-gap: clamp(8px, 2.2vw, 12px);
   column-gap: 10px; 
   margin-top: clamp(18px, 4vw, 26px);
 }
