@@ -171,7 +171,7 @@ export default async function ProfilePage({
           {t("actions.savedForms")}
         </Link>
 
-        <Link href={`/${locale}/intake`} className={styles.bigOrangeBtn}>
+        <Link href={`/${locale}/signup/step-1`} className={styles.bigOrangeBtn}>
           {t("actions.editIntake")}
         </Link>
       </section>

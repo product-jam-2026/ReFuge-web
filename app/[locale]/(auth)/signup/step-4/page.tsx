@@ -21,8 +21,6 @@ export default async function Step4Page({
     .eq("id", data.user.id)
     .single();
 
-  if (profile?.registration_completed) redirect(`/${params.locale}/home`);
-
   // Data fetching
   const step4 = profile?.data?.intake?.step4 || {};
   const bank = step4.bank || {};

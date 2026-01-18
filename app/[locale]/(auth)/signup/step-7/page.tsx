@@ -21,8 +21,6 @@ export default async function Step7Page({
     .eq("id", data.user.id)
     .single();
 
-  if (profile?.registration_completed) redirect(`/${params.locale}/home`);
-
   const step7 = profile?.data?.intake?.step7 || {};
   const docs = step7.documents || {};
 

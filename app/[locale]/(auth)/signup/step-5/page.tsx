@@ -21,8 +21,6 @@ export default async function Step5Page({
     .eq("id", data.user.id)
     .single();
 
-  if (profile?.registration_completed) redirect(`/${params.locale}/home`);
-
   const step5 = profile?.data?.intake?.step5 || {};
   const p = step5.person || {};
 
