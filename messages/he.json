@@ -1,12 +1,26 @@
 {
   "HomePage": {
-  "fallbackName": "חבר/ה",
-  "greetingLine": "{greeting}, {name}",
-  "greetings": {
-    "morning": "בוקר טוב",
-    "noon": "צהריים טובים",
-    "evening": "ערב טוב",
-    "night": "לילה טוב"
+    "fallbackName": "חבר/ה",
+    "greetingLine": "{greeting}, {name}",
+    "greetings": {
+      "morning": "בוקר טוב",
+      "noon": "צהריים טובים",
+      "evening": "ערב טוב",
+      "night": "לילה טוב"
+    },
+    "subtitle": "מכאן ניתן לגשת לכל האיזורים באפליקציה\nמה תרצה לעשות כעת?",
+    "cards": {
+      "profile": { "title": "אזור אישי", "desc": "עריכת פרטים אישיים" },
+      "forms": {
+        "title": "טפסים למילוי",
+        "desc": "כל המידע משאלון הכניסה מתמלא אוטומטית - ניתן להוסיף או לערוך שדות חסרים"
+      },
+      "rights": {
+        "title": "זכויות",
+        "desc": "מאגר שאלות ותשובות בנושא זכויות חשובות"
+      },
+      "myForms": { "title": "הטפסים שלי", "desc": "צפייה בטפסים מלאים" }
+    }
   },
   "subtitle": "מכאן ניתן לגשת לכל האיזורים באפליקציה\nמה תרצה לעשות כעת?",
   "cards": {
@@ -24,17 +38,19 @@
   },
   "FormsPage": {
     "forms": {
-      "childRegistrationRequest": {
-        "title": "טופס רישום ילד"
-      },
       "childAllowanceRequest": {
-        "title": "טופס תביעה לקצבת ילדים"
+        "title": "תביעה לקצבת ילדים",
+        "subtitle": "בקשה לתשלום חודשי לסיוע בהוצאות גידול ילדים עד גיל 18"
       },
-            "personRegistrationRequest": {
-        "title": "שאלון לרישום נפש"
-      }
+      "childRegistrationRequest": {
+        "title": "בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי",
+        "subtitle": "הסדרת מעמד הילד בישראל"
+      },
 
-      
+      "personRegistrationRequest": {
+        "title": "שאלון לרישום נפש",
+        "subtitle": "הכרה במוסד לביטוח לאומי"
+      }
     }
   },
   "RightsPage": {
@@ -390,7 +406,7 @@
       "finish": "סיום הרשמה",
       "saveDraftBack": "שמור וחזור"
     }
-  }, 
+  },
   "ProfilePage": {
     "title": "איזור אישי",
     "notLoggedIn": "על מנת לצפות בפרטים האישיים יש להתחבר למערכת",
@@ -415,4 +431,3 @@
     }
   }
 }
-

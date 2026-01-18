@@ -27,7 +27,7 @@ export type FieldSpec = {
   minFontSize?: number;
 
   // ✅ Checkbox support
-  kind?: "text" | "checkbox";
+  kind?: "text" | "checkbox" | "signature";
   boxSize?: number;
   strokeWidth?: number;
 };
@@ -46,6 +46,22 @@ export type FillOptionsClient = {
   dateFormat?: "iso" | "dmy"; // default "iso"
   isDateField?: (fieldName: string, spec: FieldSpec) => boolean; // optional filter
 };
+
+
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.split(",")[1] ?? "";
+  const bin = atob(base64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+function isPngDataUrl(s: string) {
+  return /^data:image\/png;base64,/i.test(s);
+}
+function isJpgDataUrl(s: string) {
+  return /^data:image\/jpe?g;base64,/i.test(s);
+}
 
 export async function fillFieldsToNewPdfBytesClient(
   inputPdfBytes: Uint8Array,
@@ -99,6 +115,45 @@ export async function fillFieldsToNewPdfBytesClient(
     }
 
     const page = pdfDoc.getPage(spec.pageIndex);
+
+      // ✅ Signature image
+  if (spec.kind === "signature") {
+    if (!rawValue) continue;
+
+    // You should set width/height in fieldMap for signature fields
+    const w = spec.width ?? 180;
+    const h = spec.height ?? 60;
+
+    // rawValue can be a data URL (recommended) or even a URL (optional)
+    let imgBytes: Uint8Array;
+    if (rawValue.startsWith("data:image/")) {
+      imgBytes = dataUrlToBytes(rawValue);
+    } else if (/^https?:\/\//i.test(rawValue)) {
+      const res = await fetch(rawValue);
+      imgBytes = new Uint8Array(await res.arrayBuffer());
+    } else {
+      // unknown format
+      continue;
+    }
+
+    const img =
+      isJpgDataUrl(rawValue)
+        ? await pdfDoc.embedJpg(imgBytes)
+        : await pdfDoc.embedPng(imgBytes); // default to PNG
+
+    // IMPORTANT: your text y is baseline-ish. For images we usually want "top-left" mapping.
+    // If your mapped y is top of the box, use (y - h). If it's bottom, use y as-is.
+    const y = spec.y - h;
+
+    page.drawImage(img, {
+      x: spec.x,
+      y,
+      width: w,
+      height: h,
+    });
+
+    continue;
+  }
 
     const direction =
       spec.direction ??
