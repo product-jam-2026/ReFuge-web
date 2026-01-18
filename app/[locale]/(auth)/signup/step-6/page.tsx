@@ -20,8 +20,6 @@ export default async function Step6Page({
     .eq("id", data.user.id)
     .single();
 
-  if (profile?.registration_completed) redirect(`/${params.locale}/home`);
-
   // שליפת נתונים
   const step6 = profile?.data?.intake?.step6 || {};
   const existingChildren = Array.isArray(step6.children) ? step6.children : [];

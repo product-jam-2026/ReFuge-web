@@ -28,8 +28,6 @@ export default async function Step3Page({
     .eq("id", data.user.id)
     .single();
 
-  if (profile?.registration_completed) redirect(`/${params.locale}/home`);
-
   // שליפת נתונים קיימים
   const step3 = profile?.data?.intake?.step3 || {};
   const reg = step3.registeredAddress || {};
