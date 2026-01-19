@@ -1,0 +1,198 @@
+.page {
+  /* max-width: 820px;
+  margin: 0;
+  /* padding: 24px; */
+  /* direction: rtl; */
+  display: flex;
+  flex-direction: column;
+  margin: 0; /* wasJS: was "0 auto" */
+  padding: 0; /* remove top padding that creates a gap */
+  direction: rtl;
+}
+
+.header {
+  /* main titles */
+
+  display: flex;
+  /* width: 393px; */
+  height: 192px;
+  padding: 82px 36px 24px 36px;
+  flex-direction: column;
+  align-items: center;
+  margin-left: -18px;
+  margin-right: -18px;
+  margin-top: -18px;
+  margin-bottom: 70px;
+
+  /* gap: 20px; */
+  /* flex-shrink: 0; */
+
+  border-radius: 0 0 30px 30px;
+  background: #88aeff;
+
+  /* width: 100%; */
+}
+
+.headerText {
+  color: var(--text, #011429);
+  text-align: right;
+
+  font-family: SimplerPro;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 25px; /* 125% */
+}
+
+.title {
+  color: #000;
+  text-align: right;
+
+  /* text */
+  font-family: SimplerPro;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 21px; /* 131.25% */
+  letter-spacing: -0.32px;
+}
+
+.container {
+  display: grid;
+  gap: 10px;
+}
+
+.emptyText {
+  /* optional */
+}
+
+.fieldset {
+  /* border: 1px solid #ddd; */
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.legend {
+  padding: 0 8px;
+  font-weight: 700;
+}
+
+/* .optionsList {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+} */
+
+.optionsList {
+  display: grid;
+  gap: 15px;
+  margin-top: 8px;
+}
+
+/* button look */
+.optionBtn {
+  width: 100%;
+  text-align: right;
+  direction: rtl;
+
+  padding: 12px 14px;
+  border-radius: 30px;
+  border: 2px solid rgba(1, 20, 41, 0.7);
+  background: #fff;
+
+  cursor: pointer;
+  /* font-size: 15px; */
+  /* font-weight: 700; */
+
+  color: var(--text, #011429);
+
+  /* text */
+  font-family: SimplerPro;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 21px; /* 131.25% */
+  letter-spacing: -0.32px;
+}
+
+/* selected state: border color changes */
+.optionBtnActive {
+  border-color: #88aeff; /* pick your color */
+}
+
+/* nice keyboard focus */
+.optionBtn:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+.optionBtn:active {
+  transform: scale(0.99);
+}
+
+.optionRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+}
+
+.actionsRow {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.footerRow {
+  display: flex;
+  /* gap: 8px; */
+  margin-top: 355px;
+  justify-content: center;
+
+}
+
+.primaryButton {
+  /* padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px; */
+  cursor: pointer;
+
+  display: flex;
+  width: 353px;
+  height: 56px;
+  padding: 0 16px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 30px;
+  background: var(--text, #011429);
+
+  color: #fff;
+  text-align: center;
+
+  /* buttons */
+  font-family: SimplerPro;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 21px; /* 116.667% */
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.secondaryButton {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  background: transparent;
+  font-size: 15px;
+  cursor: pointer;
+}

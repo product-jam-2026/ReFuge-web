@@ -8,7 +8,6 @@ import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
 
-
 function safePart(s: string) {
   return (
     (s ?? "")
