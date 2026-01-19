@@ -130,6 +130,7 @@ type Props = {
 };
 
 export default function Step3FormClient({
+  locale,
   saved,
   defaults,
   saveDraftAction,

@@ -211,7 +211,7 @@ function PhoneField({ labelAr, labelHe, name, defaultValue, prefixes }: {
 }
 
 // --- Main Component ---
-export default function Step5FormClient({ saved, defaults, saveDraftAction, saveAndNextAction, saveDraftAndBackAction }: Props) {
+export default function Step5FormClient({ locale, saved, defaults, saveDraftAction, saveAndNextAction, saveDraftAndBackAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
   

@@ -185,7 +185,7 @@ function CountrySelect({ defaultValue, name, labelAr, labelHe }: { defaultValue:
 
 // --- Main Component ---
 
-export default function Step2FormClient({ saved, defaults, saveDraftAction, saveAndNextAction }: Props) {
+export default function Step2FormClient({ locale, saved, defaults, saveDraftAction, saveAndNextAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
   const [formDataState, setFormDataState] = useState<any>({});
