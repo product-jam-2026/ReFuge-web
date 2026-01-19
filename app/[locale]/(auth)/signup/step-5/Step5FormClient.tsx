@@ -11,9 +11,9 @@ const TOTAL_SCREENS = 4; // מסכי מילוי
 
 // --- Phone Prefixes ---
 const MOBILE_PREFIXES = [
-  { label: "🇮🇱 ישראל (+972)", value: "+972" },
-  { label: "🇵🇸 רשות פלסטינית (+970)", value: "+970" },
-  { label: "🇺🇸 ארה\"ב (+1)", value: "+1" },
+  { label: "ישראל (+972) – إسرائيل", value: "+972" },
+  { label: "רשות פלסטינית (+970) – فلسطين", value: "+970" },
+  { label: "ארה\"ב (+1) – الولايات المتحدة", value: "+1" },
 ];
 
 type Props = {
@@ -262,8 +262,9 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-            <p style={{fontSize: 14, color: '#666'}}>جاري ترجمة البيانات</p>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם נתונים</p>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+            <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
+             
           </div>
         </div>
       )}
@@ -311,10 +312,10 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
           {/* Screen 1: Names */}
           <div style={{ display: screen === 1 ? 'block' : 'none' }}>
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input name="lastName" defaultValue={val("lastName")} className={styles.inputBase} /></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div><input name="firstName" defaultValue={val("firstName")} className={styles.inputBase} /></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة السابق" he="שם משפחה קודם" /></div><input name="oldLastName" defaultValue={val("oldLastName")} className={styles.inputBase} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input name="lastName" defaultValue={val("lastName")} className={styles.inputBase} /></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي السابق" he="שם פרטי קודם" /></div><input name="oldFirstName" defaultValue={val("oldFirstName")} className={styles.inputBase} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة السابق" he="שם משפחה קודם" /></div><input name="oldLastName" defaultValue={val("oldLastName")} className={styles.inputBase} /></div>
             <div className={styles.fixedFooter}>
                 <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
                 <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>

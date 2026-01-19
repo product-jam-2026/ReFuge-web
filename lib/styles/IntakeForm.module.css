@@ -3,7 +3,7 @@
 /* --- משתנים מקומיים --- */
 .pageContainer {
   --c-blue: #011429;
-  --c-orange: #EE7248;
+  --c-orange: #EE8548;
   --c-gray-border: #E5E7EB;
   --c-text: #0B1B2B;
   --c-bg: #FFFFFF;
@@ -86,7 +86,15 @@
 
 /* פרוגרס בר - מתמלא מימין לשמאל */
 .progressBarTrack {
-  width: 100%; height: 6px; 
+  /* 1. משנים את הרוחב ל-100% ועוד פעמיים ה-Padding של ההורה (24*2 = 48) */
+  width: calc(100% + 48px); 
+  
+  /* 2. מושכים את האלמנט החוצה ימינה ושמאלה כדי לבטל את הפאדינג */
+  margin-right: -24px;
+  margin-left: -24px;
+
+  /* --- שאר ההגדרות נשארות כפי שהן --- */
+  height: 6px; 
   background-color: rgba(238, 133, 72, 0.2);
   border-radius: 999px; 
   overflow: hidden; 
@@ -124,7 +132,7 @@
   
   /* === הוספה: מצמיד לימין === */
   display: flex; 
-  gap: 8px; 
+  gap: 4px; 
   justify-content: flex-start; /* ב-RTL זה אומר ימין */
 }
 

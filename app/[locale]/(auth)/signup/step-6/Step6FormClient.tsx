@@ -178,8 +178,8 @@ export default function Step6FormClient({ locale, saved }: Props) {
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים...</p>
-             <p style={{fontSize: 14, color: '#666'}}>جاري المعالجة...</p>
+             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+             <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
           </div>
         </div>
       )}
@@ -214,7 +214,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
                <button type="button" className={styles.backBtn} onClick={goBack}>
                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                </button>
-               <div className={styles.stepMeta} style={{marginRight: 10}}><span>المرحلة 6 من 7</span><span> | </span><span>שלב 6 מתוך 7</span></div>
+               <div className={styles.stepMeta} style={{marginRight: 10}}><span>المرحلة 6 من 7</span> <span>שלב 6 מתוך 7</span></div>
             </div>
             <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
             <div className={styles.titleBlock}>
@@ -233,8 +233,8 @@ export default function Step6FormClient({ locale, saved }: Props) {
           {/* Screen 1: General A */}
           <div style={{ display: screen === 1 ? 'block' : 'none' }}>
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input name="childLastName" className={styles.inputBase} /></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div><input name="childFirstName" className={styles.inputBase} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input name="childLastName" className={styles.inputBase} /></div>
             
             <div className={styles.fieldGroup}>
                 <div className={styles.label}><BiInline ar="النوع" he="מין" /></div>
@@ -276,7 +276,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
 
             <div className={styles.fixedFooter}>
                {/* כפתור הוספת ילד - שומר ומנקה את הטופס */}
-               <button type="button" onClick={handleAddAnother} className={styles.btnPrimary} style={{marginBottom: 10, background: '#0b2a4a'}}>
+               <button type="button" onClick={handleAddAnother} className={styles.btnPrimary} style={{marginBottom: 10}}>
                  <BiInline ar="إضافة طفل/طفلة" he="הוספת ילד.ה" />
                </button>
 
@@ -343,7 +343,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
                     </div>
                     {child.israeliId && (
                         <div className={styles.fieldGroup}>
-                            <div className={styles.label}><BiInline ar="رقم الهوية" he="ת.ז ישראלית" /></div>
+                            <div className={styles.label}><BiInline ar="رقم الهوية" he="ת.ז" /></div>
                             <input className={styles.readOnlyInput} value={child.israeliId} readOnly style={{direction: 'ltr', textAlign: 'right'}} />
                         </div>
                     )}
@@ -361,7 +361,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
                     <BiInline ar="موافقة" he="אישור וסיום" />
                 </button>
                 <button type="button" onClick={() => window.location.reload()} className={styles.btnSecondary}>
-                    <BiInline ar="تعديل (إعادة تعيين)" he="עריכה (איפוס)" />
+                    <BiInline ar="تعديل" he="עריכה" />
                 </button>
             </div>
         </div>

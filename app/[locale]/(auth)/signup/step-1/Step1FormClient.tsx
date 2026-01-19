@@ -10,19 +10,18 @@ const HAND_IMAGE = "/images/step1-intro-hand.svg";
 
 // --- Phone Prefixes ---
 const MOBILE_PREFIXES = [
-  { label: "🇮🇱 ישראל (+972)", value: "+972" },
-  { label: "🇵🇸 רשות פלסטינית (+970)", value: "+970" },
-  { label: "🇺🇸 ארה\"ב (+1)", value: "+1" },
-  // ... (שאר הרשימה שלך)
+  { label: "ישראל (+972) – إسرائيل", value: "+972" },
+  { label: "רשות פלסטינית (+970) – فلسطين", value: "+970" },
+  { label: "ארה\"ב (+1) – الولايات المتحدة", value: "+1" },
 ];
 
 const LANDLINE_PREFIXES = [
-  { label: "02 (ירושלים)", value: "02" },
-  { label: "03 (תל אביב)", value: "03" },
-  { label: "04 (חיפה והצפון)", value: "04" },
-  { label: "08 (השפלה והדרום)", value: "08" },
-  { label: "09 (השרון)", value: "09" },
-  { label: "077 (כללי)", value: "077" },
+  { label: "02 (ירושלים) – القدس", value: "02" },
+  { label: "03 (תל אביב) – تل أبيب", value: "03" },
+  { label: "04 (חיפה והצפון) – حيفا والشمال", value: "04" },
+  { label: "08 (השפלה והדרום) – الجنوب والسهل الساحلي", value: "08" },
+  { label: "09 (השרון) – منطقة الشارون", value: "09" },
+  { label: "077 (כללי) – عام", value: "077" },
 ];
 
 type Props = {
@@ -240,12 +239,11 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
   const formRef = useRef<HTMLFormElement>(null);
 
   const progress = useMemo(() => screen <= 0 ? 0 : Math.min(100, Math.round((screen / 7) * 100)), [screen]);
-  const goNext = () => setScreen(s => Math.min(5, s + 1));
+  const goNext = () => setScreen(s => Math.min(4, s + 1));
   const goBack = () => setScreen(s => Math.max(0, s - 1));
 
-  // כאן שינוי 1: מקבל אירוע כללי ומבטל ברירת מחדל אם קיים
-  const handleFinishStep1 = async (e?: React.BaseSyntheticEvent) => {
-    e?.preventDefault();
+  const handleFinishStep1 = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!formRef.current) return;
 
     const formData = new FormData(formRef.current);
@@ -294,7 +292,7 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם את הנתונים</p>
+             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
              <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
           </div>
         </div>
@@ -321,18 +319,25 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
       {/* טפסים */}
       {screen > 0 && screen < 5 && (
         <form 
-          ref={formRef} 
-          className={styles.scrollableContent} 
-          // כאן שינוי 2: חסימה מוחלטת של שליחת טופס אוטומטית ע"י הדפדפן
-          onSubmit={(e) => e.preventDefault()} 
-        >
+  ref={formRef} 
+  className={styles.scrollableContent} 
+  onSubmit={(e) => {
+     e.preventDefault(); // <--- שורה קריטית! עוצרת את הדפדפן מלבצע פעולות עצמאיות
+     if (screen === 4) {
+                 handleFinishStep1(e);
+             } else {
+                 // בכל מסך אחר - פשוט תעבור למסך הבא
+                 goNext();
+             }
+  }}
+>
           {/* Screen 1 */}
           <div style={{ display: screen === 1 ? 'block' : 'none' }}>
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input className={styles.inputBase} name="lastName" defaultValue={defaults.lastName} /></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div><input className={styles.inputBase} name="firstName" defaultValue={defaults.firstName} /></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة السابق" he="שם משפחה קודם" /></div><input className={styles.inputBase} name="oldLastName" defaultValue={defaults.oldLastName} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input className={styles.inputBase} name="lastName" defaultValue={defaults.lastName} /></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي السابق" he="שם פרטי קודם" /></div><input className={styles.inputBase} name="oldFirstName" defaultValue={defaults.oldFirstName} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة السابق" he="שם משפחה קודם" /></div><input className={styles.inputBase} name="oldLastName" defaultValue={defaults.oldLastName} /></div>
           </div>
 
           {/* Screen 2 */}
@@ -383,12 +388,7 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
           
           {/* כפתורים למסכים 1-4 */}
           <div className={styles.fixedFooter}>
-             {/* כאן שינוי 3: הפרדה מוחלטת של הפונקציונליות */}
-             <button 
-               type="button" 
-               onClick={screen === 4 ? handleFinishStep1 : goNext} 
-               className={styles.btnPrimary}
-             >
+             <button type={screen === 4 ? "submit" : "button"} onClick={screen === 4 ? undefined : goNext} className={styles.btnPrimary}>
                <BiInline ar={screen === 4 ? "إنهاء المرحلة" : "التالي"} he={screen === 4 ? "סיום שלב" : "המשך"} />
              </button>
              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
@@ -405,10 +405,10 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
           <div className={styles.reviewHeader}>
             <div className={styles.reviewTitle}><BiInline ar="نهاية المرحلة 1" he="סוף שלב 1" /></div>
             <div className={styles.summarySub} style={{ lineHeight: '1.6' }}>
-              يرجى التحقق من صحة التفاصيل وترجمتها
-              <br /> {/* ירידת שורה */}
-              אנא וודא/י כי כל הפרטים ותרגומם נכונים
-            </div>
+     يرجى التحقق من صحة التفاصيل وترجمتها
+     <br /> {/* ירידת שורה */}
+     אנא וודא/י כי כל הפרטים ותרגומם נכונים
+  </div>
           </div>
 
           {/* חלק 1: שדות שמות (מפוצלים - עברית/ערבית) */}

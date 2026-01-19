@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import styles from "@/lib/styles/IntakeForm.module.css"; 
 
-const INTRO_IMAGE = "/images/step7-files.svg"; // התמונה שביקשת
+const INTRO_IMAGE = "/images/step7-files.svg"; 
 
 function BiInline({ ar, he }: { ar: string; he: string }) {
   return (
@@ -19,6 +19,7 @@ type Props = {
   locale: string;
   saved: boolean;
   defaults: any;
+  childrenList: any[]; // הרשימה משלב 6
   saveDraftAction: (formData: FormData) => Promise<void>;
   finishAction: (formData: FormData) => Promise<void>;
   saveDraftAndBackAction: (formData: FormData) => Promise<void>;
@@ -27,6 +28,7 @@ type Props = {
 export default function Step7FormClient({
   saved,
   defaults,
+  childrenList = [], // ברירת מחדל
   saveDraftAction,
   finishAction,
   saveDraftAndBackAction,
@@ -34,32 +36,33 @@ export default function Step7FormClient({
   const [screen, setScreen] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // ניהול שמות הקבצים לתצוגה
-  const [fileNames, setFileNames] = useState({
+  const [fileNames, setFileNames] = useState<Record<string, string>>({
     passportCopy: defaults.passportCopy ? "קובץ קיים / ملف موجود" : "",
+    familyStatusDoc: defaults.familyStatusDoc ? "קובץ קיים / ملف موجود" : "",
+    secondParentStatusDoc: defaults.secondParentStatusDoc ? "קובץ קיים / ملف موجود" : "",
     rentalContract: defaults.rentalContract ? "קובץ קיים / ملف موجود" : "",
     propertyOwnership: defaults.propertyOwnership ? "קובץ קיים / ملف موجود" : "",
-    childPassportPhoto: defaults.childPassportPhoto ? "קובץ קיים / ملف موجود" : "",
+    childPassportPhoto: defaults.childPassportPhoto ? "קובץ קיים / ملف موجود" : "", // למקרה הגנרי
     otherDocs: defaults.otherDocs ? "קובץ קיים / ملف موجود" : "",
   });
 
   const goBack = () => setScreen(0);
   const startForm = () => setScreen(1);
 
-  // עדכון שם הקובץ כשבוחרים אחד חדש
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFileNames(prev => ({
-        ...prev,
-        [fieldName]: e.target.files![0].name
-      }));
+      const count = e.target.files.length;
+      let displayText = e.target.files[0].name;
+      if (count > 1) {
+          displayText = `${count} קבצים נבחרו / ${count} ملفات`;
+      }
+      setFileNames(prev => ({ ...prev, [fieldName]: displayText }));
     }
   };
 
   const handleSubmit = async (formData: FormData) => {
       setIsSubmitting(true);
       await finishAction(formData);
-      // לא צריך להפוך ל-false כי השרת יעשה redirect לדף הבית
   };
 
   return (
@@ -98,130 +101,191 @@ export default function Step7FormClient({
       {screen === 1 && (
         <form className={styles.scrollableContent} action={handleSubmit}>
           
-          {/* Header */}
           <div className={styles.topBar}>
             <div className={styles.topRow} style={{justifyContent: 'flex-start'}}>
-               {/* חזרה לאינטרו או שלב קודם */}
                <button type="submit" formAction={saveDraftAndBackAction} className={styles.backBtn}>
                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                </button>
-               <div className={styles.stepMeta} style={{marginRight: 10}}><span>المرحلة 7 من 7</span><span> | </span><span>שלב 7 מתוך 7</span></div>
+               <div className={styles.stepMeta} style={{marginRight: 10}}><span>المرحلة 7 من 7</span> <span>שלב 7 מתוך 7</span></div>
             </div>
             <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: '100%' }} /></div>
+            
             <div className={styles.titleBlock}>
-                <h1 className={styles.formTitle} style={{justifyContent:'flex-start'}}><BiInline ar="تحميل المستندات" he="העלאת מסמכים" /></h1>
+                <h1 className={styles.formTitle} style={{
+                    flexDirection: 'column', 
+                    alignItems: 'flex-start',
+                    gap: '4px' 
+                }}>
+                    <span>تحميل المستندات</span>
+                    <span>העלאת מסמכים</span>
+                </h1>
             </div>
           </div>
 
-          {/* Fields */}
-          
-          {/* 1. Passport / ID Copy */}
+          {/* 1. Passport Copy */}
           <div className={styles.fieldGroup}>
-            <div className={styles.label}>
-               <BiInline ar="صورة بطاقة الهوية / جواز السفر" he="צילום תעודת זהות / דרכון" />
+            <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+               <BiInline ar="نسخة من جواز السفر" he="צילום דרכון" />
             </div>
             <label className={`${styles.fileInputLabel} ${fileNames.passportCopy ? styles.fileSelected : ''}`}>
-              <span className={styles.plusIcon}>+</span>
               {fileNames.passportCopy ? (
                   <span className={styles.fileName}>{fileNames.passportCopy}</span>
               ) : (
-                  <span className={styles.filePlaceholder}><BiInline ar="اضغط للرفع" he="לחץ להעלאה" /></span>
+                  <span className={styles.filePlaceholder} style={{display: 'flex', gap: '8px'}}>
+                    <BiInline ar="اضغط للرفع" he="לחץ להעלאה" />
+                  </span>
               )}
-              <input 
-                type="file" 
-                name="passportCopy" 
-                accept="image/*,.pdf"
-                className={styles.hiddenInput}
-                onChange={(e) => handleFileChange(e, 'passportCopy')}
-              />
+              <span className={styles.plusIcon}>+</span>
+              <input type="file" name="passportCopy" accept="image/*,.pdf" className={styles.hiddenInput} onChange={(e) => handleFileChange(e, 'passportCopy')} />
             </label>
           </div>
 
-          {/* 2. Rental Contract */}
+          {/* 2. Family Status Doc */}
           <div className={styles.fieldGroup}>
-            <div className={styles.label}>
+            <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+               <BiInline ar="توثيق الحالة العائلية" he="תיעוד מצב משפחתי" />
+            </div>
+            <label className={`${styles.fileInputLabel} ${fileNames.familyStatusDoc ? styles.fileSelected : ''}`}>
+              {fileNames.familyStatusDoc ? (
+                  <span className={styles.fileName}>{fileNames.familyStatusDoc}</span>
+              ) : (
+                  <span className={styles.filePlaceholder} style={{display: 'flex', gap: '8px'}}>
+                    <BiInline ar="اضغط للرفع" he="לחץ להעלאה" />
+                  </span>
+              )}
+              <span className={styles.plusIcon}>+</span>
+              <input type="file" name="familyStatusDoc" accept="image/*,.pdf" className={styles.hiddenInput} onChange={(e) => handleFileChange(e, 'familyStatusDoc')} />
+            </label>
+          </div>
+
+          {/* 3. Second Parent Status Doc */}
+          <div className={styles.fieldGroup}>
+            <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+               <BiInline ar="توثيق الحالة العائلية للوالد الثاني" he="תיעוד מצב משפחתי של ההורה השני" />
+            </div>
+            <label className={`${styles.fileInputLabel} ${fileNames.secondParentStatusDoc ? styles.fileSelected : ''}`}>
+              {fileNames.secondParentStatusDoc ? (
+                  <span className={styles.fileName}>{fileNames.secondParentStatusDoc}</span>
+              ) : (
+                  <span className={styles.filePlaceholder} style={{display: 'flex', gap: '8px'}}>
+                    <BiInline ar="اضغط للرفع" he="לחץ להעלאה" />
+                  </span>
+              )}
+              <span className={styles.plusIcon}>+</span>
+              <input type="file" name="secondParentStatusDoc" accept="image/*,.pdf" className={styles.hiddenInput} onChange={(e) => handleFileChange(e, 'secondParentStatusDoc')} />
+            </label>
+          </div>
+
+          {/* 4. Rental Contract */}
+          <div className={styles.fieldGroup}>
+            <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                <BiInline ar="عقد إيجار" he="חוזה שכירות" />
             </div>
             <label className={`${styles.fileInputLabel} ${fileNames.rentalContract ? styles.fileSelected : ''}`}>
-              <span className={styles.plusIcon}>+</span>
               {fileNames.rentalContract ? (
                   <span className={styles.fileName}>{fileNames.rentalContract}</span>
               ) : (
-                  <span className={styles.filePlaceholder}><BiInline ar="اضغط للرفع" he="לחץ להעלאה" /></span>
+                  <span className={styles.filePlaceholder} style={{display: 'flex', gap: '8px'}}>
+                    <BiInline ar="اضغط للرفع" he="לחץ להעלאה" />
+                  </span>
               )}
-              <input 
-                type="file" 
-                name="rentalContract"
-                accept="image/*,.pdf" 
-                className={styles.hiddenInput}
-                onChange={(e) => handleFileChange(e, 'rentalContract')}
-              />
+              <span className={styles.plusIcon}>+</span>
+              <input type="file" name="rentalContract" accept="image/*,.pdf" className={styles.hiddenInput} onChange={(e) => handleFileChange(e, 'rentalContract')} />
             </label>
           </div>
 
-          {/* 3. Property Ownership */}
+          {/* 5. Property Ownership */}
           <div className={styles.fieldGroup}>
-            <div className={styles.label}>
-               <BiInline ar="ملكية العقار (طابو)" he="בעלות על נכס (טאבו)" />
+            <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+               <BiInline ar="شهادة ملكية الممتلكات" he="אישור בעלות רכוש" />
             </div>
             <label className={`${styles.fileInputLabel} ${fileNames.propertyOwnership ? styles.fileSelected : ''}`}>
-              <span className={styles.plusIcon}>+</span>
               {fileNames.propertyOwnership ? (
                   <span className={styles.fileName}>{fileNames.propertyOwnership}</span>
               ) : (
-                  <span className={styles.filePlaceholder}><BiInline ar="اضغط للرفع" he="לחץ להעלאה" /></span>
+                  <span className={styles.filePlaceholder} style={{display: 'flex', gap: '8px'}}>
+                    <BiInline ar="اضغط للرفع" he="לחץ להעלאה" />
+                  </span>
               )}
-              <input 
-                type="file" 
-                name="propertyOwnership" 
-                accept="image/*,.pdf"
-                className={styles.hiddenInput}
-                onChange={(e) => handleFileChange(e, 'propertyOwnership')}
-              />
-            </label>
-          </div>
-
-          {/* 4. Child Passport Photo */}
-          <div className={styles.fieldGroup}>
-            <div className={styles.label}>
-               <BiInline ar="صورة جواز سفر الطفل/الطفلة" he="תמונת פספורט ילד.ה" />
-            </div>
-            <label className={`${styles.fileInputLabel} ${fileNames.childPassportPhoto ? styles.fileSelected : ''}`}>
               <span className={styles.plusIcon}>+</span>
-              {fileNames.childPassportPhoto ? (
-                  <span className={styles.fileName}>{fileNames.childPassportPhoto}</span>
-              ) : (
-                  <span className={styles.filePlaceholder}><BiInline ar="اضغط للرفع" he="לחץ להעלאה" /></span>
-              )}
-              <input 
-                type="file" 
-                name="childPassportPhoto" 
-                accept="image/*,.pdf"
-                className={styles.hiddenInput}
-                onChange={(e) => handleFileChange(e, 'childPassportPhoto')}
-              />
+              <input type="file" name="propertyOwnership" accept="image/*,.pdf" className={styles.hiddenInput} onChange={(e) => handleFileChange(e, 'propertyOwnership')} />
             </label>
           </div>
 
-          {/* 5. Other Documents */}
-          <div className={styles.fieldGroup}>
+          {/* 6. Child Documents - Dynamic OR Generic Fallback */}
+          {childrenList && childrenList.length > 0 ? (
+             // --- אפשרות א': יש רשימת ילדים (מציג שורה לכל ילד) ---
+             <>
+               <div className={styles.sectionHead} style={{marginTop: 30}}>
+                  <div className={styles.sectionTitle}>
+                     <BiInline ar="جوازات سفر الأطفال" he="דרכונים/תמונות של הילדים" />
+                  </div>
+               </div>
+               {childrenList.map((child: any, index: number) => {
+                  const fieldKey = `child_doc_${index}`;
+                  const displayName = child.firstName || `ילד ${index + 1}`;
+                  return (
+                    <div className={styles.fieldGroup} key={index}>
+                      <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                         <span>{displayName}</span>
+                         <span style={{fontSize: 13, opacity: 0.7}}>
+                            <BiInline ar="صورة جواز السفر" he="תמונת דרכון" />
+                         </span>
+                      </div>
+                      <label className={`${styles.fileInputLabel} ${fileNames[fieldKey] ? styles.fileSelected : ''}`}>
+                        {fileNames[fieldKey] ? (
+                            <span className={styles.fileName}>{fileNames[fieldKey]}</span>
+                        ) : (
+                            <span className={styles.filePlaceholder} style={{display: 'flex', gap: '8px'}}>
+                              <BiInline ar="اضغط للرفع" he="לחץ להעלאה" />
+                            </span>
+                        )}
+                        <span className={styles.plusIcon}>+</span>
+                        <input type="file" name={fieldKey} accept="image/*,.pdf" className={styles.hiddenInput} onChange={(e) => handleFileChange(e, fieldKey)} />
+                        <input type="hidden" name={`child_id_${index}`} value={index} />
+                      </label>
+                    </div>
+                  );
+               })}
+             </>
+          ) : (
+             // --- אפשרות ב': אין רשימת ילדים (מציג שדה גנרי כדי שלא יהיה ריק) ---
+             <div className={styles.fieldGroup}>
+                <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                   <BiInline ar="صورة جواز سفر الطفل/الطفلة" he="תמונת פספורט ילד.ה" />
+                </div>
+                <label className={`${styles.fileInputLabel} ${fileNames.childPassportPhoto ? styles.fileSelected : ''}`}>
+                  {fileNames.childPassportPhoto ? (
+                      <span className={styles.fileName}>{fileNames.childPassportPhoto}</span>
+                  ) : (
+                      <span className={styles.filePlaceholder} style={{display: 'flex', gap: '8px'}}>
+                        <BiInline ar="اضغط للرفع" he="לחץ להעלאה" />
+                      </span>
+                  )}
+                  <span className={styles.plusIcon}>+</span>
+                  <input type="file" name="childPassportPhoto" accept="image/*,.pdf" multiple className={styles.hiddenInput} onChange={(e) => handleFileChange(e, 'childPassportPhoto')} />
+                </label>
+                <div style={{fontSize: 13, color: '#6B7280', marginTop: 4, marginRight: 10}}>
+                    ניתן לבחור מספר קבצים בבת אחת (يمكن اختيار عدة ملفات)
+                </div>
+             </div>
+          )}
+
+          {/* 7. Other Documents */}
+          <div className={styles.fieldGroup} style={{marginTop: 20}}>
             <div className={styles.label}>
                <BiInline ar="وثائق إضافية" he="מסמכים נוספים" />
             </div>
             <label className={`${styles.fileInputLabel} ${fileNames.otherDocs ? styles.fileSelected : ''}`}>
-              <span className={styles.plusIcon}>+</span>
               {fileNames.otherDocs ? (
                   <span className={styles.fileName}>{fileNames.otherDocs}</span>
               ) : (
-                  <span className={styles.filePlaceholder}><BiInline ar="اضغط للرفع" he="לחץ להעלאה" /></span>
+                  <span className={styles.filePlaceholder} style={{display: 'flex', gap: '8px'}}>
+                    <BiInline ar="اضغط للرفع" he="לחץ להעלאה" />
+                  </span>
               )}
-              <input 
-                type="file" 
-                name="otherDocs" 
-                accept="image/*,.pdf"
-                className={styles.hiddenInput}
-                onChange={(e) => handleFileChange(e, 'otherDocs')}
-              />
+              <span className={styles.plusIcon}>+</span>
+              <input type="file" name="otherDocs" accept="image/*,.pdf" multiple className={styles.hiddenInput} onChange={(e) => handleFileChange(e, 'otherDocs')} />
             </label>
           </div>
 

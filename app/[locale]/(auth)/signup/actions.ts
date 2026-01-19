@@ -243,6 +243,8 @@ export async function saveDraftAndGoToStep(params: {
   redirect(`/${params.locale}/signup/step-${params.goToStep}`);
 }
 
+// בתוך קובץ actions.ts
+
 async function finishRegistration(params: {
   locale: string;
   step: number;
@@ -250,8 +252,18 @@ async function finishRegistration(params: {
 }) {
   const { supabase, user } = await getAuthedSupabase();
   
-  const { data: profile } = await supabase.from("profiles").select("data").eq("id", user.id).single();
-  const existingData = profile?.data || {};
+  // 1. שליפת הסטטוס הנוכחי *לפני* השמירה
+  const { data: currentProfile } = await supabase
+    .from("profiles")
+    .select("data, registration_completed") // מוודאים ששולפים גם את הדגל
+    .eq("id", user.id)
+    .single();
+
+  // בדיקה: האם זו הפעם הראשונה?
+  // אם registration_completed הוא false או null - זו הפעם הראשונה.
+  const isFirstTime = !currentProfile?.registration_completed;
+
+  const existingData = currentProfile?.data || {};
   const existingIntake = existingData.intake || {};
 
   const nextIntake = mergeDeep(existingIntake, {
@@ -259,14 +271,21 @@ async function finishRegistration(params: {
     [`step${params.step}`]: params.patch,
   });
 
+  // 2. שמירת הנתונים ועדכון שההרשמה הושלמה
   await supabase.from("profiles").update({ 
     data: { ...existingData, intake: nextIntake },
     registration_completed: true 
   }).eq("id", user.id);
 
-  redirect(`/${params.locale}/home`);
+  // 3. ניתוב חכם
+  if (isFirstTime) {
+      // פעם ראשונה? לך למסך "שלום מוחמד"
+      redirect(`/${params.locale}/signup/success`);
+  } else {
+      // עריכה חוזרת? לך ישר לבית
+      redirect(`/${params.locale}/home`);
+  }
 }
-
 // ----------------------------------------------------------------------
 // Step 3 Logic
 // ----------------------------------------------------------------------
@@ -311,14 +330,14 @@ function buildOccupationJSON(formData: FormData, buildDualField: (name: string) 
      finalEmployerName = buildDualField("employerName");
   }
 
-  return JSON.stringify({
+  return {
     assets: cleanedAssets,
     occupationText: normalizeText(formData.get("occupationText")),
     employerName: finalEmployerName,
     workAddress: buildDualField("workAddress"),
     workStartDate: normalizeText(formData.get("workStartDate")),
     notWorkingSub: normalizeText(formData.get("notWorkingSub")),
-  });
+  };
 }
 
 export async function submitStep3(locale: string, mode: "draft" | "next" | "back", formData: FormData) {
@@ -579,9 +598,115 @@ export async function proceedToStep7(locale: string) {
 // Step 7 Logic
 // ----------------------------------------------------------------------
 
+// --- הוספי את הפונקציה הזו בתחילת הקובץ או לפני submitStep7 ---
+
+async function uploadFile(supabase: any, bucket: string, path: string, file: File) {
+  const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+    upsert: true, // דורס קובץ ישן אם קיים באותו שם
+  });
+  if (error) {
+    console.error("Upload error:", error);
+    return null;
+  }
+  return { path: data.path, fullUrl: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${bucket}/${data.path}` };
+}
+
+// ----------------------------------------------------------------------
+// Step 7 Logic - Updated with File Upload
+// ----------------------------------------------------------------------
+
 export async function submitStep7(locale: string, mode: "draft" | "finish" | "back", formData: FormData) {
   "use server";
-  const patch = { documents: {} }; 
+  
+  const { supabase, user } = await getAuthedSupabase();
+  const userId = user.id;
+  const bucketName = "intake_docs";
+
+  // אובייקט שיחזיק את כל הקישורים לקבצים
+  const documents: any = {};
+
+  // רשימת השדות הרגילים (בודדים)
+  const singleFileFields = [
+    "passportCopy", 
+    "familyStatusDoc", 
+    "secondParentStatusDoc", 
+    "rentalContract", 
+    "propertyOwnership",
+    "childPassportPhoto" // fallback
+  ];
+
+  // 1. העלאת קבצים בודדים
+  for (const field of singleFileFields) {
+    const file = formData.get(field);
+    if (file && file instanceof File && file.size > 0) {
+      // יצירת שם קובץ ייחודי: user_id/field_name/timestamp_filename
+      const filePath = `${userId}/${field}/${Date.now()}_${file.name}`;
+      const uploadResult = await uploadFile(supabase, bucketName, filePath, file);
+      
+      if (uploadResult) {
+        documents[field] = {
+          path: filePath,
+          name: file.name,
+          uploadedAt: new Date().toISOString()
+        };
+      }
+    }
+  }
+
+  // 2. העלאת קבצי ילדים (דינמיים)
+  // אנחנו עוברים על כל המפתחות בטופס ומחפשים child_doc_X
+  for (const key of Array.from(formData.keys())) {
+    if (key.startsWith("child_doc_")) {
+       const file = formData.get(key);
+       if (file && file instanceof File && file.size > 0) {
+          const filePath = `${userId}/children/${key}/${Date.now()}_${file.name}`;
+          const uploadResult = await uploadFile(supabase, bucketName, filePath, file);
+          
+          if (uploadResult) {
+            documents[key] = {
+              path: filePath,
+              name: file.name,
+              uploadedAt: new Date().toISOString()
+            };
+          }
+       }
+    }
+  }
+
+  // 3. העלאת קבצים מרובים (מסמכים נוספים)
+  const otherFiles = formData.getAll("otherDocs");
+  if (otherFiles && otherFiles.length > 0) {
+    const uploadedOthers = [];
+    for (const file of otherFiles) {
+      if (file instanceof File && file.size > 0) {
+        const filePath = `${userId}/otherDocs/${Date.now()}_${file.name}`;
+        const res = await uploadFile(supabase, bucketName, filePath, file);
+        if (res) {
+          uploadedOthers.push({
+             path: filePath,
+             name: file.name,
+             uploadedAt: new Date().toISOString()
+          });
+        }
+      }
+    }
+    if (uploadedOthers.length > 0) {
+      documents["otherDocs"] = uploadedOthers;
+    }
+  }
+
+  // 4. שמירה בדאטה-בייס
+  // אנחנו צריכים למזג את המסמכים החדשים עם הישנים (כדי לא למחוק מה שכבר הועלה)
+  
+  // שליפת המידע הקיים
+  const { data: profile } = await supabase.from("profiles").select("data").eq("id", userId).single();
+  const existingDocs = profile?.data?.intake?.step7?.documents || {};
+  
+  // מיזוג: החדש דורס את הישן, אבל שומר על מה שלא שונה
+  const mergedDocuments = { ...existingDocs, ...documents };
+
+  const patch = { documents: mergedDocuments };
+
   if (mode === "back") {
     await saveDraftAndGoToStep({ locale, step: 7, patch, goToStep: 6 });
   } else if (mode === "finish") {

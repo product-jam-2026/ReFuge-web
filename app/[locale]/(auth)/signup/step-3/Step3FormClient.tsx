@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
-// שימוש ב-CSS המשותף והנכון
 import styles from "@/lib/styles/IntakeForm.module.css";
 import { translateStep3Data } from "@/app/[locale]/(auth)/signup/actions";
 
@@ -38,6 +37,7 @@ function CustomSelect({
           onClick={() => setIsOpen(!isOpen)}
           style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
         >
+           {/* כאן שיניתי כדי שיראה את הפלייסהולדר אם אין ערך */}
            <span style={{ color: value ? '#0B1B2B' : '#9CA3AF' }}>
              {value ? selectedLabel : placeholder}
            </span>
@@ -47,6 +47,14 @@ function CustomSelect({
         </div>
         {isOpen && (
           <ul className={styles.comboboxMenu} style={{ zIndex: 100 }}>
+             {/* אופציה לאיפוס הבחירה אם רוצים */}
+             <li 
+                className={styles.comboboxItem} 
+                onClick={() => { onChange(""); setIsOpen(false); }}
+                style={{ color: '#9CA3AF' }}
+              >
+                {placeholder}
+              </li>
             {options.map((opt) => (
               <li 
                 key={opt.value} 
@@ -150,8 +158,21 @@ export default function Step3FormClient({
   const [notWorkingSub, setNotWorkingSub] = useState(defaults.notWorkingSub || ""); 
 
   const [assets, setAssets] = useState<string[]>(defaults.assets || []);
+  
+  // לוגיקה מעודכנת לרכוש: אם בוחרים "אין לי", זה מנקה את השאר
   const toggleAsset = (val: string) => {
-    setAssets(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
+    if (val === 'none') {
+        // אם נבחר "אין לי רכוש" - נקה הכל ושים רק את זה
+        setAssets(prev => prev.includes('none') ? [] : ['none']);
+    } else {
+        // אם נבחר משהו אחר - הסר את "אין לי רכוש" אם קיים
+        setAssets(prev => {
+            const newAssets = prev.filter(x => x !== 'none');
+            return newAssets.includes(val) 
+                ? newAssets.filter(x => x !== val) 
+                : [...newAssets, val];
+        });
+    }
   };
 
   const [regCityText, setRegCityText] = useState(defaults.regCity || "");
@@ -237,8 +258,8 @@ export default function Step3FormClient({
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם נתונים...</p>
-             <p style={{fontSize: 14, color: '#666'}}>جاري ترجمة البيانات...</p>
+             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+             <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
           </div>
         </div>
       )}
@@ -270,11 +291,12 @@ export default function Step3FormClient({
         onSubmit={(e) => e.preventDefault()} 
       >
         <div className={styles.topBar}>
-            <div className={styles.topRow} style={{justifyContent: 'space-between'}}>
+            {/* תיקון: הסרת עיצוב inline כדי להצמיד לימין דרך ה-CSS */}
+            <div className={styles.topRow}>
                <button type="button" className={styles.backBtn} onClick={goBack}>
                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                </button>
-               <div className={styles.stepMeta}><span>المرحلة 3 من 7</span><span> | </span><span>שלב 3 מתוך 7</span></div>
+               <div className={styles.stepMeta}><span>المرحلة 3 من 7</span> <span>שלב 3 מתוך 7</span></div>
             </div>
             <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
             <div className={styles.titleBlock}>
@@ -292,7 +314,7 @@ export default function Step3FormClient({
               labelAr="اختر" labelHe="בחר"
               value={maritalStatus}
               onChange={setMaritalStatus}
-              placeholder="בחר / اختر"
+              placeholder="اختر / בחר" // מעודכן לערבית ועברית
               options={[
                 { value: "single", label: "רווק/ה / أعزب/ة" },
                 { value: "married", label: "נשוי/ה / متزوج/ة" },
@@ -337,7 +359,7 @@ export default function Step3FormClient({
                     value={regCityText}
                     onChange={e => setRegCityText(e.target.value)}
                     className={styles.inputBase}
-                    placeholder="בחר עיר / اختر مدينة"
+                    placeholder="اختر مدينة / בחר עיר"
                 />
                 <datalist id="regCities">
                     {regCityOpts.map(c => <option key={c.id} value={c.label} />)}
@@ -376,7 +398,7 @@ export default function Step3FormClient({
                 labelAr="شقة مستأجرة / بملكية" labelHe="דירה שכורה / בבעלות"
                 value={housingType}
                 onChange={setHousingType}
-                placeholder="בחר / اختر"
+                placeholder="اختر / בחר" // מעודכן
                 options={[
                     { value: "rented", label: "דירה שכורה / شقة مستأجرة" },
                     { value: "owned", label: "דירה בבעלות / شقة بملكية" },
@@ -472,7 +494,7 @@ export default function Step3FormClient({
                 labelAr="الوضع" labelHe="סטטוס"
                 value={empStatus}
                 onChange={setEmpStatus}
-                placeholder="בחר / اختر"
+                placeholder="اختر / בחר" // מעודכן
                 options={[
                     { value: "selfEmployed", label: "עצמאי / مستقل" },
                     { value: "employee", label: "שכיר / موظف" },
@@ -573,12 +595,12 @@ export default function Step3FormClient({
             </div>
 
             <div className={styles.fieldGroup}>
-                 {/* כפתורים אליפטיים לבחירה מרובה (בלי ריבוע V) */}
                  <div className={styles.assetsStack}>
                     {[
                       { val: 'business', ar: 'عمل', he: 'עסק' },
                       { val: 'apartment', ar: 'شقة', he: 'דירה' },
                       { val: 'other', ar: 'ممتلكات أخرى', he: 'רכוש אחר' },
+                      { val: 'none', ar: 'ليس لدي ممتلكات', he: 'אין לי רכוש' }, // הוספה חדשה
                     ].map(item => (
                       <label key={item.val} className={styles.selectionLabel}>
                          <input 
@@ -588,7 +610,6 @@ export default function Step3FormClient({
                             checked={assets.includes(item.val)} 
                             onChange={() => toggleAsset(item.val)} 
                          />
-                         {/* שימוש ב-selectionSpan נותן את המראה האליפטי */}
                          <span className={styles.selectionSpan} style={{justifyContent: 'center'}}>
                             <BiInline ar={item.ar} he={item.he} />
                          </span>
@@ -623,7 +644,7 @@ export default function Step3FormClient({
                 </div>
               </div>
 
-              {/* --- 1. שדות מתורגמים (שימוש ב-translationPill כמו בשלב 1 ו-2) --- */}
+              {/* --- 1. שדות מתורגמים --- */}
               {[
                   { key: "regStreet", labelAr: "الشارع (السكن)", labelHe: "רחוב (מגורים)" },
                   { key: "employerName", labelAr: "اسم صاحب العمل", labelHe: "שם המעסיק" },
@@ -815,6 +836,7 @@ export default function Step3FormClient({
                            value={assets.map(a => 
                              a === 'business' ? 'עסק / عمل' : 
                              a === 'apartment' ? 'דירה / شقة' : 
+                             a === 'none' ? 'אין לי רכוש / ليس لدي ممتلكات' :
                              'רכוש אחר / ممتلكات أخرى'
                            ).join(', ')} 
                            readOnly

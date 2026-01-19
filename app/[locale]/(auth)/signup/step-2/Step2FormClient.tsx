@@ -73,6 +73,91 @@ function getCountryLabel(value: string) {
 
 // --- Components ---
 
+/**
+ * רכיב בחירה מותאם אישית שנראה בדיוק כמו האינפוטים בשלב 1
+ * משתמש ב-CSS הקיים ללא שינוי
+ */
+function CustomSelect({ 
+  options, 
+  defaultValue, 
+  name, 
+  labelAr, 
+  labelHe 
+}: { 
+  options: {value: string, label: string}[], 
+  defaultValue: string, 
+  name: string, 
+  labelAr: string, 
+  labelHe: string 
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedVal, setSelectedVal] = useState(defaultValue);
+
+  // מציאת הטקסט לתצוגה
+  const displayLabel = useMemo(() => {
+    const found = options.find(o => o.value === selectedVal);
+    return found ? found.label : "";
+  }, [selectedVal, options]);
+
+  return (
+    <div className={styles.fieldGroup}>
+      <div className={styles.label}><BiInline ar={labelAr} he={labelHe} /></div>
+      <div className={styles.comboboxWrap}>
+        {/*
+           מדמה את ה-Input של שלב 1.
+           השתמשנו ב-readOnly כדי שלא יפתח מקלדת, אבל בלחיצה יפתח את התפריט.
+        */}
+        <input
+          type="text"
+          className={styles.inputBase}
+          value={displayLabel}
+          placeholder="اختر / בחר" // הפלייסהולדר שביקשת
+          readOnly
+          onClick={() => setIsOpen(!isOpen)}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          style={{ cursor: 'pointer', caretColor: 'transparent' }} // נראה כמו כפתור
+        />
+        
+        {/* אייקון חץ קטן כדי שיהיה ברור שזה נפתח (אופציונלי, אבל עוזר ליוזר) */}
+        <div style={{
+            position: 'absolute', 
+            left: '20px', 
+            top: '50%', 
+            transform: 'translateY(-50%)', 
+            pointerEvents: 'none',
+            opacity: 0.5
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+
+        <input type="hidden" name={name} value={selectedVal} />
+        
+        {isOpen && (
+          <ul className={styles.comboboxMenu}>
+             {/* אופציה ראשונה לביטול בחירה או כותרת */}
+             <li 
+                className={styles.comboboxItem} 
+                onMouseDown={() => { setSelectedVal(""); setIsOpen(false); }}
+                style={{ color: '#9CA3AF' }}
+             >
+               اختر / בחר
+             </li>
+            {options.map((opt) => (
+              <li 
+                key={opt.value} 
+                className={styles.comboboxItem} 
+                onMouseDown={() => { setSelectedVal(opt.value); setIsOpen(false); }}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DateField({ labelHe, labelAr, namePrefix, defaultParts, placeholder }: { 
   labelHe?: string; labelAr?: string; namePrefix: string; defaultParts: DateParts; placeholder?: string 
 }) {
@@ -136,6 +221,7 @@ function DateField({ labelHe, labelAr, namePrefix, defaultParts, placeholder }: 
   );
 }
 
+// שים לב: כאן השתמשנו באותו מבנה בדיוק של Step1 עבור בחירת מדינה
 function CountrySelect({ defaultValue, name, labelAr, labelHe }: { defaultValue: string, name: string, labelAr: string, labelHe: string }) {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -192,7 +278,6 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
   const [translations, setTranslations] = useState<any>({});
   const formRef = useRef<HTMLFormElement>(null);
   
-  // Progress Logic: Screen 1=0%, Screen 2=50%, Summary=100%
   const progress = useMemo(() => {
     if (screen === 1) return 0;
     if (screen === 2) return 50;
@@ -256,8 +341,8 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
         <div className={styles.loadingOverlay}>
             <div className={styles.spinner}></div>
             <div className={styles.loadingText} style={{marginTop: 20}}>
-                <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם נתונים</p>
-                <p style={{fontSize: 14, color: '#666'}}>جاري ترجمة البيانات</p>
+                <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+                <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
             </div>
         </div>
       )}
@@ -265,7 +350,15 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
       {/* Intro Screen */}
       {screen === 0 && (
         <div className={styles.stepSplashContainer}>
-          <Image src={PLANE_IMAGE} alt="Plane" width={320} height={150} className={styles.stepSplashImage} priority />
+          {/* תיקון: עדכון מימדים לפי פיגמה */}
+          <Image 
+            src={PLANE_IMAGE} 
+            alt="Plane" 
+            width={290} 
+            height={134} 
+            className={styles.stepSplashImage} 
+            priority 
+          />
           <div className={styles.stepSplashContent}>
             <div className={styles.stepNumberTitle}>
                 <span>المرحلة 2</span><span>שלב 2</span>
@@ -290,15 +383,29 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
             className={styles.scrollableContent} 
             onSubmit={(e) => e.preventDefault()} 
         >
-            <div className={styles.topBar}>
-                {/* Header layout adjustment */}
-                <div className={styles.topRow} style={{ justifyContent: 'space-between' }}>
+            <div 
+                className={styles.topBar} 
+                // כאן אנחנו דורסים את ה-Padding של ה-CSS (24px) ושמים 20px כמו בפיגמה
+                style={{ paddingRight: '20px', paddingLeft: '20px' }}
+            >
+                <div className={styles.topRow}>
                     <button type="button" className={styles.backBtn} onClick={goBack}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
+                    {/* הטקסט הזה יזוז ימינה בגלל שינוי ה-Padding למעלה */}
                     <div className={styles.stepMeta}><span>المرحلة 2 من 7</span> <span>שלב 2 מתוך 7</span></div>
                 </div>
-                <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
+                
+                {/* חישוב רוחב הבר הכתום בהתאם ל-Padding החדש (20px):
+                   רוחב = 100% + 40px (פעמיים 20)
+                   מרג'ין = -20px כדי לצאת החוצה עד הקצה
+                */}
+                <div 
+                    className={styles.progressBarTrack} 
+                    style={{ width: 'calc(100% + 40px)', marginRight: '-20px', marginLeft: '-20px' }}
+                >
+                    <div className={styles.progressBarFill} style={{ width: `${progress}%` }} />
+                </div>
                 
                 <div className={styles.titleBlock}>
                     <h1 className={styles.formTitle}><BiInline ar="الوضع القانوني" he="מעמד" /></h1>
@@ -306,7 +413,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
             </div>
 
             {/* Screen 1: Migration */}
-            <div style={{ display: screen === 1 ? 'block' : 'none' }}>
+            <div style={{ display: screen === 1 ? 'block' : 'none', paddingTop: '40px' }}>
                 <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="الهجرة" he="הגירה" /></div></div>
                 
                 <CountrySelect 
@@ -322,7 +429,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
                         className={styles.inputBase} 
                         name="residenceCity" 
                         defaultValue={defaults.residenceCity} 
-                        placeholder="הזן עיר..." 
+                        placeholder="أدخل المدينة  הזן עיר " 
                         onChange={(e) => fetchCities(e.target.value)} 
                         list="city-suggestions" 
                     />
@@ -346,34 +453,29 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
             <div style={{ display: screen === 2 ? 'block' : 'none' }}>
                 <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="التأشيرة" he="אשרה" /></div></div>
                 
-                {/* Visa Type Select */}
-                <div className={styles.fieldGroup}>
-                    <div className={styles.label}><BiInline ar="نوع التأشيرة" he="סוג אשרה" /></div>
-                    <div className={styles.comboboxWrap}>
-                        <select className={styles.selectInput} name="visaType" defaultValue={defaults.visaType}>
-                            <option value="">اختر / בחר</option>
-                            {VISA_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
+                {/* תיקון: שימוש ב-CustomSelect החדש במקום <select>.
+                    זה מבטיח שהעיצוב ייראה בדיוק כמו CountrySelect משלב 1,
+                    וכולל את האופציה "בחר" כברירת מחדל.
+                */}
+                <CustomSelect 
+                    labelAr="نوع التأشيرة"
+                    labelHe="סוג אשרה"
+                    name="visaType"
+                    defaultValue={defaults.visaType}
+                    options={VISA_OPTIONS}
+                />
 
                 {/* Visa Dates Range */}
                 <div className={styles.fieldGroup}>
                     <div className={styles.label}><BiInline ar="توقيف" he="תוקף" /></div>
                     
                     <div className={styles.dateRangeRow}>
-                        {/* תאריך התחלה */}
                         <div className={styles.dateRangeItem}>
-                            <DateField namePrefix="visaStartDate" defaultParts={defaults.visaStartDate} placeholder="מ-" />
+                            <DateField namePrefix="visaStartDate" defaultParts={defaults.visaStartDate} />
                         </div>
-                        
                         <div className={styles.dateSeparator}>-</div>
-                        
-                        {/* תאריך סיום */}
                         <div className={styles.dateRangeItem}>
-                            <DateField namePrefix="visaEndDate" defaultParts={defaults.visaEndDate} placeholder="עד" />
+                            <DateField namePrefix="visaEndDate" defaultParts={defaults.visaEndDate} />
                         </div>
                     </div>
                 </div>
@@ -411,7 +513,6 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
                 </div>
             </div>
 
-            {/* --- Translated Fields (Split) --- */}
             {[
               { key: "residenceCity", labelAr: "مدينة الميلاد", labelHe: "עיר לידה" },
               { key: "residenceAddress", labelAr: "هدف الإقامة", labelHe: "מטרת שהייה" },
@@ -424,16 +525,12 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
                 const translatedName = isHeToAr ? `${field.key}Ar` : `${field.key}He`;
 
                 return (
-                  // === התיקון: שימוש במבנה של שלב 1 (translationPill) ===
                   <div className={styles.fieldGroup} key={field.key} style={{marginBottom: 16}}>
                     <div className={styles.label}><BiInline ar={field.labelAr} he={field.labelHe} /></div>
-                    
                     <div className={styles.translationPill}>
-                       {/* חלק עליון - מקור */}
-                       <div className={styles.transOriginal}>{data.original}</div>
+                       <div className={styles.transOriginal} 
+                         style={{ justifyContent: 'flex-start' }} >{data.original}</div>
                        <input type="hidden" name={originalName} value={data.original} />
-                       
-                       {/* חלק תחתון - תרגום (עם רקע כתום ואינפוט שקוף) */}
                        <div className={styles.transTranslated}>
                          <input className={styles.inputBase} 
                                 style={{
@@ -452,10 +549,8 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
                   </div>
                 );
             })}
-
-            {/* --- Read Only Standard Fields --- */}
             
-            {/* Country */}
+            {/* Read Only Fields - Country */}
             {formDataState.residenceCountry && (
               <div className={styles.fieldGroup}>
                 <div className={styles.label}><BiInline ar="بلد الميلاد" he="ארץ לידה" /></div>
@@ -463,7 +558,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
               </div>
             )}
 
-            {/* Visa Type */}
+            {/* Read Only Fields - Visa Type */}
             {formDataState.visaType && (
               <div className={styles.fieldGroup}>
                 <div className={styles.label}><BiInline ar="نوع التأشيرة" he="סוג אשרה" /></div>
@@ -471,7 +566,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
               </div>
             )}
 
-            {/* Visa Dates */}
+            {/* Read Only Fields - Dates */}
             {(formDataState.visaStartDate || formDataState.visaEndDate) && (
               <div className={styles.fieldGroup}>
                  <div className={styles.label}><BiInline ar="توقيف" he="תוקף אשרה" /></div>
@@ -479,47 +574,30 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
                     <div className={styles.dateRangeItem}>
                         <div className={styles.readOnlyWrapper}>
                             <Image src="/images/calendar.svg" alt="cal" width={24} height={24} className={styles.calendarIcon} style={{ left: '12px' }} />
-                            <input 
-                                className={styles.readOnlyInput} 
-                                defaultValue={formatDateDisplay(formDataState.visaStartDate)} 
-                                readOnly 
-                                style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} 
-                            />
+                            <input className={styles.readOnlyInput} defaultValue={formatDateDisplay(formDataState.visaStartDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} />
                         </div>
                     </div>
                     <span className={styles.dateSeparator}>-</span>
                     <div className={styles.dateRangeItem}>
                         <div className={styles.readOnlyWrapper}>
                             <Image src="/images/calendar.svg" alt="cal" width={24} height={24} className={styles.calendarIcon} style={{ left: '12px' }} />
-                            <input 
-                                className={styles.readOnlyInput} 
-                                defaultValue={formatDateDisplay(formDataState.visaEndDate)} 
-                                readOnly 
-                                style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} 
-                            />
+                            <input className={styles.readOnlyInput} defaultValue={formatDateDisplay(formDataState.visaEndDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} />
                         </div>
                     </div>
                  </div>
               </div>
             )}
 
-            {/* Entry Date */}
             {formDataState.entryDate && (
                <div className={styles.fieldGroup}>
                  <div className={styles.label}><BiInline ar="تاريخ الدخول" he="תאריך כניסה" /></div>
                  <div className={styles.readOnlyWrapper}>
                     <Image src="/images/calendar.svg" alt="cal" width={24} height={24} className={styles.calendarIcon} style={{ left: '12px' }} />
-                    <input 
-                        className={styles.readOnlyInput} 
-                        defaultValue={formatDateDisplay(formDataState.entryDate)} 
-                        readOnly 
-                        style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} 
-                    />
+                    <input className={styles.readOnlyInput} defaultValue={formatDateDisplay(formDataState.entryDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} />
                  </div>
                </div>
             )}
 
-            {/* Hidden Fields for Submission */}
             <input type="hidden" name="residenceCountry" value={formDataState.residenceCountry || ""} />
             <input type="hidden" name="visaType" value={formDataState.visaType || ""} />
             <input type="hidden" name="visaStartDate" value={formDataState.visaStartDate || ""} />

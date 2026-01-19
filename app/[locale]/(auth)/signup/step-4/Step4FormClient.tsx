@@ -197,8 +197,8 @@ export default function Step4FormClient({
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים...</p>
-             <p style={{fontSize: 14, color: '#666'}}>جاري المعالجة...</p>
+             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+             <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
           </div>
         </div>
       )}
