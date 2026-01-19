@@ -436,6 +436,7 @@
     "notLoggedIn": "על מנת לצפות במסמכים יש להתחבר למערכת",
     "goToLogin": "להתחברות",
     "empty": "לא הועלו מסמכים",
+    "emptyField": "לא הועלה מסמך",
     "fields": {
       "passportCopy": "צילום דרכון",
       "familyStatusDoc": "תיעוד מצב משפחתי",

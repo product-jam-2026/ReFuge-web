@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
 import { createClient } from "../../../../lib/supabase/server";
+import intakeStyles from "@/lib/styles/IntakeForm.module.css";
 import styles from "./DocumentsPage.module.css";
 
 type DocRecord = {
@@ -78,11 +79,10 @@ export default async function DocumentsPage({
     ? data.intake.step6.children
     : [];
 
-  const entries: Array<{ id: string; label: string; doc: DocRecord }> = [];
+  const entries: Array<{ id: string; label: string; doc: DocRecord | null }> = [];
   const bucketName = "intake_docs";
 
   const addEntry = (id: string, label: string, doc: DocRecord | null) => {
-    if (!doc?.path) return;
     entries.push({ id, label, doc });
   };
 
@@ -149,70 +149,99 @@ export default async function DocumentsPage({
   });
 
   return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <Link
-          href={`/${locale}/profile`}
-          className={styles.backBtn}
-          aria-label={isArabic ? "رجوع" : "חזרה"}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="11"
-            height="22"
-            viewBox="0 0 11 22"
-            fill="none"
-            aria-hidden="true"
-          >
-            <g clipPath="url(#clip0_1820_2548)">
-              <path
-                d="M3.19922 4.25879L9.19922 10.2588L3.19922 16.2588"
-                stroke="#011429"
-                strokeWidth="1.5"
-              />
-            </g>
-            <defs>
-              <clipPath id="clip0_1820_2548">
-                <rect
-                  width="22"
-                  height="11"
-                  fill="white"
-                  transform="translate(0 22) rotate(-90)"
-                />
-              </clipPath>
-            </defs>
-          </svg>
-        </Link>
-        <h1 className={styles.headerTitle}>{t("title")}</h1>
-        <p className={styles.headerSubtitle}>{t("subtitle")}</p>
+    <div className={intakeStyles.pageContainer}>
+      <div className={intakeStyles.topBar}>
+        <div className={intakeStyles.headerArea}>
+          <div className={intakeStyles.topRow}>
+            <Link
+              href={`/${locale}/profile`}
+              className={intakeStyles.backBtn}
+              aria-label={isArabic ? "رجوع" : "חזרה"}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="11"
+                height="22"
+                viewBox="0 0 11 22"
+                fill="none"
+                aria-hidden="true"
+              >
+                <g clipPath="url(#clip0_1820_2548)">
+                  <path
+                    d="M3.19922 4.25879L9.19922 10.2588L3.19922 16.2588"
+                    stroke="#011429"
+                    strokeWidth="1.5"
+                  />
+                </g>
+                <defs>
+                  <clipPath id="clip0_1820_2548">
+                    <rect
+                      width="22"
+                      height="11"
+                      fill="white"
+                      transform="translate(0 22) rotate(-90)"
+                    />
+                  </clipPath>
+                </defs>
+              </svg>
+            </Link>
+          </div>
+
+          <div className={intakeStyles.progressBarTrack}>
+            <div className={intakeStyles.progressBarFill} style={{ width: "100%" }} />
+          </div>
+
+          <div className={intakeStyles.titleBlock}>
+            <h1 className={intakeStyles.formTitle}>{t("title")}</h1>
+            <p className={intakeStyles.formSubtitle}>{t("subtitle")}</p>
+          </div>
+        </div>
       </div>
 
-      <div className={styles.card}>
+      <div className={intakeStyles.scrollableContent}>
         {entries.length === 0 ? (
           <div className={styles.empty}>{t("empty")}</div>
         ) : (
           entries.map(({ id, label, doc }) => {
-            const publicUrl = supabase.storage
-              .from(bucketName)
-              .getPublicUrl(doc.path).data.publicUrl;
+            const publicUrl = doc?.path
+              ? supabase.storage.from(bucketName).getPublicUrl(doc.path).data.publicUrl
+              : "";
             return (
-              <div key={id} className={styles.docRow}>
-                <div className={styles.docMeta}>
-                  <span className={styles.docLabel}>{label}</span>
-                  <span className={styles.docName}>{doc.name || doc.path}</span>
+              <div key={id} className={intakeStyles.fieldGroup}>
+                <div className={intakeStyles.label}>
+                  <span>{label}</span>
                 </div>
-                <div className={styles.docActions}>
-                  <a
-                    className={styles.docBtn}
-                    href={publicUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {t("actions.view")}
-                  </a>
-                  <a className={styles.docBtn} href={publicUrl} download>
-                    {t("actions.download")}
-                  </a>
+                <div
+                  className={`${intakeStyles.fileInputLabel} ${
+                    doc ? intakeStyles.fileSelected : ""
+                  }`}
+                >
+                  {doc ? (
+                    <span className={intakeStyles.fileName}>
+                      {doc.name || doc.path}
+                    </span>
+                  ) : (
+                    <span className={intakeStyles.filePlaceholder}>
+                      {t("emptyField")}
+                    </span>
+                  )}
+                  {doc ? (
+                    <div className={styles.docActions}>
+                      <a
+                        className={styles.docBtn}
+                        href={publicUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t("actions.view")}
+                      </a>
+                      <a className={styles.docBtn} href={publicUrl} download>
+                        {t("actions.download")}
+                      </a>
+                    </div>
+                  ) : (
+                    <span className={styles.docActions} />
+                  )}
                 </div>
               </div>
             );

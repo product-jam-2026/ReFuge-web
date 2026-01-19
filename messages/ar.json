@@ -410,6 +410,7 @@
     "notLoggedIn": "للاطلاع على الملفات يجب تسجيل الدخول",
     "goToLogin": "تسجيل الدخول",
     "empty": "لم يتم رفع ملفات",
+    "emptyField": "لم يتم رفع ملف",
     "fields": {
       "passportCopy": "نسخة من جواز السفر",
       "familyStatusDoc": "توثيق الحالة العائلية",
