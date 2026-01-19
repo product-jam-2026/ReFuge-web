@@ -260,7 +260,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
             <DateField labelAr="تاريخ الميلاد" labelHe="תאריך לידה" name="childBirthDate" />
             <CountrySelect name="childNationality" labelAr="الجنسية" labelHe="אזרחות" />
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم بطاقة الهوية الإسرائيلية" he="מספר תעודת זהות ישראלית" /></div><input name="childIsraeliId" className={styles.inputBase} inputMode="numeric" /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div><input name="childIsraeliId" className={styles.inputBase} inputMode="numeric" /></div>
             
             <div className={styles.fixedFooter}>
                 <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
