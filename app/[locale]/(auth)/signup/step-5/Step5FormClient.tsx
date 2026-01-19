@@ -103,7 +103,7 @@ function CountrySelect({ defaultValue, name, labelAr, labelHe }: { defaultValue:
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIso, setSelectedIso] = useState(defaultValue);
 
-  // הוספתי useEffect כדי לעדכן את השדה אם defaultValue משתנה (כשחוזרים אחורה)
+  // הוספתי useEffect כדי לעדכן את    השדה אם defaultValue משתנה (כשחוזרים אחורה)
   useState(() => {
       if (defaultValue) {
         const found = countriesList.find((c: any) => c.iso2 === defaultValue || c.he === defaultValue);
