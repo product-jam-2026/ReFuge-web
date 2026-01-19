@@ -29,13 +29,7 @@ export async function GET(request: Request) {
       const preferredLocale = profile?.PrefLang ? "ar" : "he";
       const redirectLocale = locale === "ar" || locale === "he" ? locale : preferredLocale;
 
-      // אם הפרופיל קיים וההרשמה הושלמה -> דאשבורד
-      if (profile && profile.registration_completed === true) {
-        return NextResponse.redirect(new URL(`/${redirectLocale}/home`, requestUrl.origin));
-      }
-      
-      // אחרת -> אינטייק
-      return NextResponse.redirect(new URL(`/${redirectLocale}/signup/intake`, requestUrl.origin));
+      return NextResponse.redirect(new URL(`/${redirectLocale}/home`, requestUrl.origin));
     }
   }
 
