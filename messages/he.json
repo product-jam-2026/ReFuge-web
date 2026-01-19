@@ -437,6 +437,7 @@
     "goToLogin": "להתחברות",
     "empty": "לא הועלו מסמכים",
     "emptyField": "לחץ להעלאה",
+    "fileTooLarge": "הקובץ גדול מדי ולא ניתן להעלות אותו (מקסימום 10MB)",
     "fields": {
       "passportCopy": "צילום דרכון",
       "familyStatusDoc": "תיעוד מצב משפחתי",

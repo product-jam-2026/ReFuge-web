@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import intakeStyles from "@/lib/styles/IntakeForm.module.css";
 import styles from "./DocumentsPage.module.css";
 
@@ -15,8 +15,10 @@ type DocumentRowClientProps = {
   docName: string;
   publicUrl: string;
   emptyText: string;
+  fileTooLargeText: string;
   deleteText: string;
   hasDoc: boolean;
+  maxFileSizeBytes: number;
   uploadAction: UploadAction;
   deleteAction: DeleteAction;
 };
@@ -29,23 +31,28 @@ export default function DocumentRowClient({
   docName,
   publicUrl,
   emptyText,
+  fileTooLargeText,
   deleteText,
   hasDoc,
+  maxFileSizeBytes,
   uploadAction,
   deleteAction,
 }: DocumentRowClientProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const deleteFormId = `delete-${docKey}-${otherIndex ?? "single"}`;
-
-  const onPickFile = () => {
-    inputRef.current?.click();
-  };
+  const inputId = `upload-${docKey}-${otherIndex ?? "single"}`;
+  const [error, setError] = useState<string | null>(null);
 
   const onFileChange = () => {
-    if (formRef.current) {
-      formRef.current.requestSubmit();
+    const input = formRef.current?.querySelector<HTMLInputElement>(`#${inputId}`);
+    const files = input?.files ? Array.from(input.files) : [];
+    if (files.some((file) => file.size > maxFileSizeBytes)) {
+      setError(fileTooLargeText);
+      if (input) input.value = "";
+      return;
     }
+    setError(null);
+    formRef.current?.requestSubmit();
   };
 
   return (
@@ -66,7 +73,7 @@ export default function DocumentRowClient({
           <input type="hidden" name="otherIndex" value={otherIndex} />
         ) : null}
         <input
-          ref={inputRef}
+          id={inputId}
           type="file"
           name="file"
           accept="image/*,.pdf"
@@ -83,19 +90,11 @@ export default function DocumentRowClient({
         ) : null}
       </form>
 
-      <div
+      <label
+        htmlFor={inputId}
         className={`${intakeStyles.fileInputLabel} ${
           hasDoc ? intakeStyles.fileSelected : ""
         }`}
-        role="button"
-        tabIndex={0}
-        onClick={onPickFile}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            onPickFile();
-          }
-        }}
       >
         {hasDoc ? (
           <a
@@ -103,7 +102,11 @@ export default function DocumentRowClient({
             href={publicUrl}
             target="_blank"
             rel="noreferrer"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              window.open(publicUrl, "_blank", "noopener,noreferrer");
+            }}
           >
             {docName}
           </a>
@@ -130,7 +133,8 @@ export default function DocumentRowClient({
             />
           )}
         </div>
-      </div>
+      </label>
+      {error ? <div className={styles.errorText}>{error}</div> : null}
     </div>
   );
 }

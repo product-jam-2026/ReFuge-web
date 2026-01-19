@@ -33,8 +33,10 @@ export default function Step7FormClient({
   finishAction,
   saveDraftAndBackAction,
 }: Props) {
+  const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
   const [screen, setScreen] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fileErrors, setFileErrors] = useState<Record<string, boolean>>({});
   
   const [fileNames, setFileNames] = useState<Record<string, string>>({
     passportCopy: defaults.passportCopy ? "קובץ קיים / ملف موجود" : "",
@@ -50,14 +52,40 @@ export default function Step7FormClient({
   const startForm = () => setScreen(1);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const count = e.target.files.length;
-      let displayText = e.target.files[0].name;
-      if (count > 1) {
-          displayText = `${count} קבצים נבחרו / ${count} ملفات`;
-      }
-      setFileNames(prev => ({ ...prev, [fieldName]: displayText }));
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length === 0) return;
+
+    const tooLarge = files.some((file) => file.size > MAX_FILE_SIZE_BYTES);
+    if (tooLarge) {
+      setFileErrors((prev) => ({ ...prev, [fieldName]: true }));
+      e.target.value = "";
+      return;
     }
+
+    setFileErrors((prev) => {
+      const next = { ...prev };
+      delete next[fieldName];
+      return next;
+    });
+
+    const count = files.length;
+    let displayText = files[0].name;
+    if (count > 1) {
+      displayText = `${count} קבצים נבחרו / ${count} ملفات`;
+    }
+    setFileNames((prev) => ({ ...prev, [fieldName]: displayText }));
+  };
+
+  const renderFileError = (fieldName: string) => {
+    if (!fileErrors[fieldName]) return null;
+    return (
+      <div className={styles.uploadError}>
+        <BiInline
+          ar="الملف كبير جدًا ولا يمكن رفعه (حد أقصى 10MB)"
+          he="הקובץ גדול מדי ולא ניתן להעלות אותו (מקסימום 10MB)"
+        />
+      </div>
+    );
   };
 
   const handleSubmit = async (formData: FormData) => {
@@ -127,6 +155,7 @@ export default function Step7FormClient({
             <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                <BiInline ar="نسخة من جواز السفر" he="צילום דרכון" />
             </div>
+            {renderFileError("passportCopy")}
             <label className={`${styles.fileInputLabel} ${fileNames.passportCopy ? styles.fileSelected : ''}`}>
               {fileNames.passportCopy ? (
                   <span className={styles.fileName}>{fileNames.passportCopy}</span>
@@ -145,6 +174,7 @@ export default function Step7FormClient({
             <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                <BiInline ar="توثيق الحالة العائلية" he="תיעוד מצב משפחתי" />
             </div>
+            {renderFileError("familyStatusDoc")}
             <label className={`${styles.fileInputLabel} ${fileNames.familyStatusDoc ? styles.fileSelected : ''}`}>
               {fileNames.familyStatusDoc ? (
                   <span className={styles.fileName}>{fileNames.familyStatusDoc}</span>
@@ -163,6 +193,7 @@ export default function Step7FormClient({
             <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                <BiInline ar="توثيق الحالة العائلية للوالد الثاني" he="תיעוד מצב משפחתי של ההורה השני" />
             </div>
+            {renderFileError("secondParentStatusDoc")}
             <label className={`${styles.fileInputLabel} ${fileNames.secondParentStatusDoc ? styles.fileSelected : ''}`}>
               {fileNames.secondParentStatusDoc ? (
                   <span className={styles.fileName}>{fileNames.secondParentStatusDoc}</span>
@@ -181,6 +212,7 @@ export default function Step7FormClient({
             <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                <BiInline ar="عقد إيجار" he="חוזה שכירות" />
             </div>
+            {renderFileError("rentalContract")}
             <label className={`${styles.fileInputLabel} ${fileNames.rentalContract ? styles.fileSelected : ''}`}>
               {fileNames.rentalContract ? (
                   <span className={styles.fileName}>{fileNames.rentalContract}</span>
@@ -199,6 +231,7 @@ export default function Step7FormClient({
             <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                <BiInline ar="شهادة ملكية الممتلكات" he="אישור בעלות רכוש" />
             </div>
+            {renderFileError("propertyOwnership")}
             <label className={`${styles.fileInputLabel} ${fileNames.propertyOwnership ? styles.fileSelected : ''}`}>
               {fileNames.propertyOwnership ? (
                   <span className={styles.fileName}>{fileNames.propertyOwnership}</span>
@@ -232,6 +265,7 @@ export default function Step7FormClient({
                             <BiInline ar="صورة جواز السفر" he="תמונת דרכון" />
                          </span>
                       </div>
+                      {renderFileError(fieldKey)}
                       <label className={`${styles.fileInputLabel} ${fileNames[fieldKey] ? styles.fileSelected : ''}`}>
                         {fileNames[fieldKey] ? (
                             <span className={styles.fileName}>{fileNames[fieldKey]}</span>
@@ -254,6 +288,7 @@ export default function Step7FormClient({
                 <div className={styles.label} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                    <BiInline ar="صورة جواز سفر الطفل/الطفلة" he="תמונת פספורט ילד.ה" />
                 </div>
+                {renderFileError("childPassportPhoto")}
                 <label className={`${styles.fileInputLabel} ${fileNames.childPassportPhoto ? styles.fileSelected : ''}`}>
                   {fileNames.childPassportPhoto ? (
                       <span className={styles.fileName}>{fileNames.childPassportPhoto}</span>
@@ -276,6 +311,7 @@ export default function Step7FormClient({
             <div className={styles.label}>
                <BiInline ar="وثائق إضافية" he="מסמכים נוספים" />
             </div>
+            {renderFileError("otherDocs")}
             <label className={`${styles.fileInputLabel} ${fileNames.otherDocs ? styles.fileSelected : ''}`}>
               {fileNames.otherDocs ? (
                   <span className={styles.fileName}>{fileNames.otherDocs}</span>

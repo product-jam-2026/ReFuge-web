@@ -411,6 +411,7 @@
     "goToLogin": "تسجيل الدخول",
     "empty": "لم يتم رفع ملفات",
     "emptyField": "اضغط للرفع",
+    "fileTooLarge": "الملف كبير جدًا ولا يمكن رفعه (حد أقصى 10MB)",
     "fields": {
       "passportCopy": "نسخة من جواز السفر",
       "familyStatusDoc": "توثيق الحالة العائلية",

@@ -8,6 +8,8 @@ import intakeStyles from "@/lib/styles/IntakeForm.module.css";
 import styles from "./DocumentsPage.module.css";
 import DocumentRowClient from "./DocumentRowClient";
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 type DocRecord = {
   path: string;
   name?: string;
@@ -108,6 +110,7 @@ async function uploadDocument(formData: FormData) {
   const file = formData.get("file");
 
   if (!docKey || !(file instanceof File) || file.size === 0) return;
+  if (file.size > MAX_FILE_SIZE_BYTES) return;
 
   const supabase = createClient(cookies());
   const {
@@ -363,8 +366,10 @@ export default async function DocumentsPage({
                 docName={doc?.name || doc?.path || ""}
                 publicUrl={publicUrl}
                 emptyText={t("emptyField")}
+                fileTooLargeText={t("fileTooLarge")}
                 deleteText={t("actions.delete")}
                 hasDoc={Boolean(doc?.path)}
+                maxFileSizeBytes={MAX_FILE_SIZE_BYTES}
                 uploadAction={uploadDocument}
                 deleteAction={deleteDocument}
               />

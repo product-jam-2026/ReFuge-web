@@ -109,3 +109,10 @@
   padding: 22px 0;
   font-weight: 600;
 }
+
+.errorText {
+  color: #EE8548;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 4px 6px 0;
+}
