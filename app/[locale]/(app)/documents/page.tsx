@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { createClient } from "../../../../lib/supabase/server";
 import intakeStyles from "@/lib/styles/IntakeForm.module.css";
 import styles from "./DocumentsPage.module.css";
+import DocumentRowClient from "./DocumentRowClient";
 
 type DocRecord = {
   path: string;
@@ -98,6 +99,86 @@ async function deleteDocument(formData: FormData) {
     await supabase.from("profiles").update({ data: nextData }).eq("id", user.id);
     revalidatePath(`/${locale}/documents`);
   }
+}
+
+async function uploadDocument(formData: FormData) {
+  "use server";
+  const docKey = String(formData.get("docKey") || "");
+  const locale = String(formData.get("locale") || "he");
+  const file = formData.get("file");
+
+  if (!docKey || !(file instanceof File) || file.size === 0) return;
+
+  const supabase = createClient(cookies());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: profileRow } = await supabase
+    .from("profiles")
+    .select("data")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const data = profileRow?.data ?? {};
+  const step7 = data?.intake?.step7 ?? {};
+  const documents = step7?.documents ?? {};
+  const nextDocuments = { ...documents };
+
+  const existingDoc = docKey === "otherDocs" ? null : normalizeDoc(nextDocuments[docKey]);
+  const userId = user.id;
+  const bucketName = "intake_docs";
+  let filePath = "";
+
+  if (docKey === "otherDocs") {
+    filePath = `${userId}/otherDocs/${Date.now()}_${file.name}`;
+  } else if (docKey.startsWith("child_doc_")) {
+    filePath = `${userId}/children/${docKey}/${Date.now()}_${file.name}`;
+  } else {
+    filePath = `${userId}/${docKey}/${Date.now()}_${file.name}`;
+  }
+
+  const { error } = await supabase.storage.from(bucketName).upload(filePath, file, {
+    upsert: true,
+  });
+  if (error) return;
+
+  if (existingDoc?.path) {
+    await supabase.storage.from(bucketName).remove([existingDoc.path]);
+  }
+
+  const docRecord = {
+    path: filePath,
+    name: file.name,
+    uploadedAt: new Date().toISOString(),
+  };
+
+  if (docKey === "otherDocs") {
+    const list = Array.isArray(nextDocuments.otherDocs)
+      ? [...nextDocuments.otherDocs]
+      : nextDocuments.otherDocs
+      ? [nextDocuments.otherDocs]
+      : [];
+    list.push(docRecord);
+    nextDocuments.otherDocs = list;
+  } else {
+    nextDocuments[docKey] = docRecord;
+  }
+
+  const nextData = {
+    ...data,
+    intake: {
+      ...data?.intake,
+      step7: {
+        ...step7,
+        documents: nextDocuments,
+      },
+    },
+  };
+
+  await supabase.from("profiles").update({ data: nextData }).eq("id", user.id);
+  revalidatePath(`/${locale}/documents`);
 }
 
 export default async function DocumentsPage({
@@ -275,63 +356,25 @@ export default async function DocumentsPage({
             const publicUrl = doc?.path
               ? supabase.storage.from(bucketName).getPublicUrl(doc.path).data.publicUrl
               : "";
-            const docKey = id.startsWith("otherDocs_") ? "otherDocs" : id;
-            return (
-              <div key={id} className={intakeStyles.fieldGroup}>
-                <div className={intakeStyles.label}>
-                  <span>{label}</span>
-                </div>
-                <div
-                  className={`${intakeStyles.fileInputLabel} ${
-                    doc ? intakeStyles.fileSelected : ""
-                  }`}
-                >
-                  {doc ? (
-                    <a
-                      className={intakeStyles.fileName}
-                      href={publicUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {doc.name || doc.path}
-                    </a>
-                  ) : (
-                    <span className={intakeStyles.filePlaceholder}>
-                      {t("emptyField")}
-                    </span>
-                  )}
+            const docKey = id.startsWith("otherDocs_") || id === "otherDocs_empty"
+              ? "otherDocs"
+              : id;
 
-                  {doc ? (
-                    <div className={styles.docActions}>
-                      <a
-                        className={styles.docBtn}
-                        href={publicUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {t("actions.view")}
-                      </a>
-                      <form action={deleteDocument}>
-                        <input type="hidden" name="docKey" value={docKey} />
-                        <input type="hidden" name="locale" value={locale} />
-                        {typeof otherIndex === "number" ? (
-                          <input type="hidden" name="otherIndex" value={otherIndex} />
-                        ) : null}
-                        <button type="submit" className={styles.docBtn}>
-                          {t("actions.delete")}
-                        </button>
-                      </form>
-                    </div>
-                  ) : (
-                    <img
-                      src="/icons/pin.svg"
-                      alt=""
-                      className={styles.pinIcon}
-                      aria-hidden="true"
-                    />
-                  )}
-                </div>
-              </div>
+            return (
+              <DocumentRowClient
+                key={id}
+                label={label}
+                docKey={docKey}
+                otherIndex={otherIndex}
+                locale={locale}
+                docName={doc?.name || doc?.path || ""}
+                publicUrl={publicUrl}
+                emptyText={t("emptyField")}
+                deleteText={t("actions.delete")}
+                hasDoc={Boolean(doc?.path)}
+                uploadAction={uploadDocument}
+                deleteAction={deleteDocument}
+              />
             );
           })
         )}
