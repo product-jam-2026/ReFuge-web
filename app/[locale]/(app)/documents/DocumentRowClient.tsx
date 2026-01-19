@@ -54,7 +54,12 @@ export default function DocumentRowClient({
         <span>{label}</span>
       </div>
 
-      <form ref={formRef} action={uploadAction} className={styles.uploadForm}>
+      <form
+        ref={formRef}
+        action={uploadAction}
+        className={styles.uploadForm}
+        encType="multipart/form-data"
+      >
         <input type="hidden" name="docKey" value={docKey} />
         <input type="hidden" name="locale" value={locale} />
         {typeof otherIndex === "number" ? (
@@ -94,7 +99,7 @@ export default function DocumentRowClient({
       >
         {hasDoc ? (
           <a
-            className={intakeStyles.fileName}
+            className={`${intakeStyles.fileName} ${styles.docName}`}
             href={publicUrl}
             target="_blank"
             rel="noreferrer"

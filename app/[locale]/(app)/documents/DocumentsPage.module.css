@@ -89,6 +89,12 @@
   flex-shrink: 0;
 }
 
+.docName {
+  flex: 1;
+  min-width: 0;
+  display: block;
+}
+
 .pinIcon {
   width: 20px;
   height: 20px;

@@ -99,7 +99,7 @@ export default function Step7FormClient({
 
       {/* Main Form Screen */}
       {screen === 1 && (
-        <form className={styles.scrollableContent} action={handleSubmit}>
+        <form className={styles.scrollableContent} action={handleSubmit} encType="multipart/form-data">
           
           <div className={styles.topBar}>
             <div className={styles.topRow} style={{justifyContent: 'flex-start'}}>
