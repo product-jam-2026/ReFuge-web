@@ -85,7 +85,12 @@
   white-space: nowrap;
 }
 
-.uploadForm,
+.uploadForm {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
 .deleteForm {
   display: contents;
 }
@@ -95,6 +100,10 @@
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.plusLeft {
+  margin-inline-start: auto;
 }
 
 .docName {

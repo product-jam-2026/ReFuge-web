@@ -43,6 +43,14 @@ export default function DocumentRowClient({
   const inputId = `upload-${docKey}-${otherIndex ?? "single"}`;
   const [error, setError] = useState<string | null>(null);
 
+  const submitForm = () => {
+    if (formRef.current?.requestSubmit) {
+      formRef.current.requestSubmit();
+      return;
+    }
+    formRef.current?.submit();
+  };
+
   const onFileChange = () => {
     const input = formRef.current?.querySelector<HTMLInputElement>(`#${inputId}`);
     const files = input?.files ? Array.from(input.files) : [];
@@ -52,7 +60,7 @@ export default function DocumentRowClient({
       return;
     }
     setError(null);
-    formRef.current?.requestSubmit();
+    submitForm();
   };
 
   return (
@@ -102,7 +110,7 @@ export default function DocumentRowClient({
           ) : (
             <>
               <span className={intakeStyles.filePlaceholder}>{emptyText}</span>
-              <span className={intakeStyles.plusIcon}>+</span>
+              <span className={`${intakeStyles.plusIcon} ${styles.plusLeft}`}>+</span>
             </>
           )}
 
