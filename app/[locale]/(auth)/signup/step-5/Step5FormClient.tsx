@@ -241,7 +241,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
     setIsTranslating(true);
 
     try {
-      const translatedResult = await translateStep5Data(formData);
+      const translatedResult = await translateStep5Data(formData, locale);
       setTranslations(translatedResult || {});
       setScreen(TOTAL_SCREENS + 1);
     } catch (error) {

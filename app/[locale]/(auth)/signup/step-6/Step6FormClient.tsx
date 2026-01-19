@@ -155,7 +155,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
       const res = await submitStep6Child(locale, "finish_step", formData);
       
       if (res?.updatedChildren) {
-         const translated = await translateStep6Data(res.updatedChildren);
+         const translated = await translateStep6Data(res.updatedChildren, locale);
          setAllChildrenTranslated(translated);
          setScreen(4); // מעבר למסך סיכום
       }

@@ -237,7 +237,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
     
     setIsTranslating(true);
     try {
-      const translatedResult = await translateStep2Data(formData);
+      const translatedResult = await translateStep2Data(formData, locale);
       setTranslations(translatedResult || {});
       setScreen(3);
     } catch (error) { 
