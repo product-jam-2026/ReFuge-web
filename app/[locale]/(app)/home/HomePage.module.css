@@ -7,8 +7,9 @@
   --illustration-h: 36.226851vh;
   --title-top: 11.921296vh;
 
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100svh;
+  min-height: 100dvh;
+  overflow: visible;
   background: var(--c-surface);
 
   display: grid;
