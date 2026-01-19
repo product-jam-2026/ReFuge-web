@@ -81,6 +81,21 @@ function resolveSourceLang(text: string, locale?: string): "he" | "ar" {
   return locale === "ar" ? "ar" : "he";
 }
 
+function isFileLike(value: unknown): value is { size: number; name?: string; arrayBuffer: () => Promise<ArrayBuffer> } {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "size" in value &&
+      typeof (value as any).size === "number" &&
+      "arrayBuffer" in value
+  );
+}
+
+function getFileName(file: { name?: string }, fallback: string) {
+  const name = file?.name?.trim();
+  return name ? name : fallback;
+}
+
 // ----------------------------------------------------------------------
 // Step 1 Logic
 // ----------------------------------------------------------------------
@@ -639,6 +654,15 @@ export async function submitStep7(locale: string, mode: "draft" | "finish" | "ba
   const userId = user.id;
   const bucketName = "intake_docs";
 
+  const { data: profile } = await supabase.from("profiles").select("data").eq("id", userId).single();
+  const existingDocs = profile?.data?.intake?.step7?.documents || {};
+
+  const removeIfExists = async (path?: string) => {
+    if (path) {
+      await supabase.storage.from(bucketName).remove([path]);
+    }
+  };
+
   // אובייקט שיחזיק את כל הקישורים לקבצים
   const documents: any = {};
 
@@ -655,12 +679,17 @@ export async function submitStep7(locale: string, mode: "draft" | "finish" | "ba
   // 1. העלאת קבצים בודדים
   for (const field of singleFileFields) {
     const file = formData.get(field);
-    if (file && file instanceof File && file.size > 0) {
+    if (file && isFileLike(file) && file.size > 0) {
+      const fileName = getFileName(file, `${field}.bin`);
       // יצירת שם קובץ ייחודי: user_id/field_name/timestamp_filename
-      const filePath = `${userId}/${field}/${Date.now()}_${file.name}`;
-      const uploadResult = await uploadFile(supabase, bucketName, filePath, file);
+      const filePath = `${userId}/${field}/${Date.now()}_${fileName}`;
+      const uploadResult = await uploadFile(supabase, bucketName, filePath, file as File);
       if (!uploadResult) {
         console.error("Step7 upload failed", { field, filePath });
+      }
+      const oldPath = existingDocs?.[field]?.path;
+      if (oldPath) {
+        await removeIfExists(oldPath);
       }
       
       if (uploadResult) {
@@ -678,11 +707,16 @@ export async function submitStep7(locale: string, mode: "draft" | "finish" | "ba
   for (const key of Array.from(formData.keys())) {
     if (key.startsWith("child_doc_")) {
        const file = formData.get(key);
-       if (file && file instanceof File && file.size > 0) {
-          const filePath = `${userId}/children/${key}/${Date.now()}_${file.name}`;
-          const uploadResult = await uploadFile(supabase, bucketName, filePath, file);
+       if (file && isFileLike(file) && file.size > 0) {
+          const fileName = getFileName(file, `${key}.bin`);
+          const filePath = `${userId}/children/${key}/${Date.now()}_${fileName}`;
+          const uploadResult = await uploadFile(supabase, bucketName, filePath, file as File);
           if (!uploadResult) {
             console.error("Step7 child upload failed", { key, filePath });
+          }
+          const oldPath = existingDocs?.[key]?.path;
+          if (oldPath) {
+            await removeIfExists(oldPath);
           }
           
           if (uploadResult) {
@@ -701,9 +735,10 @@ export async function submitStep7(locale: string, mode: "draft" | "finish" | "ba
   if (otherFiles && otherFiles.length > 0) {
     const uploadedOthers = [];
     for (const file of otherFiles) {
-      if (file instanceof File && file.size > 0) {
-        const filePath = `${userId}/otherDocs/${Date.now()}_${file.name}`;
-        const res = await uploadFile(supabase, bucketName, filePath, file);
+      if (file && isFileLike(file) && file.size > 0) {
+        const fileName = getFileName(file, "other.bin");
+        const filePath = `${userId}/otherDocs/${Date.now()}_${fileName}`;
+        const res = await uploadFile(supabase, bucketName, filePath, file as File);
         if (!res) {
           console.error("Step7 otherDoc upload failed", { filePath });
         }
@@ -725,9 +760,6 @@ export async function submitStep7(locale: string, mode: "draft" | "finish" | "ba
   // אנחנו צריכים למזג את המסמכים החדשים עם הישנים (כדי לא למחוק מה שכבר הועלה)
   
   // שליפת המידע הקיים
-  const { data: profile } = await supabase.from("profiles").select("data").eq("id", userId).single();
-  const existingDocs = profile?.data?.intake?.step7?.documents || {};
-  
   // מיזוג: החדש דורס את הישן, אבל שומר על מה שלא שונה
   const mergedDocuments = { ...existingDocs, ...documents };
 

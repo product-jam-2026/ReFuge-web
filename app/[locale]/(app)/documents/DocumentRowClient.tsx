@@ -114,8 +114,8 @@ export default function DocumentRowClient({
             </>
           )}
 
-          <div className={styles.actionSlot} onClick={(event) => event.stopPropagation()}>
-            {hasDoc ? (
+          {hasDoc ? (
+            <div className={styles.actionSlot} onClick={(event) => event.stopPropagation()}>
               <button
                 type="submit"
                 form={deleteFormId}
@@ -124,8 +124,8 @@ export default function DocumentRowClient({
               >
                 {deleteText}
               </button>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </label>
       </form>
 

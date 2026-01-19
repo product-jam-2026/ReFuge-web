@@ -8,7 +8,7 @@ import intakeStyles from "@/lib/styles/IntakeForm.module.css";
 import styles from "./DocumentsPage.module.css";
 import DocumentRowClient from "./DocumentRowClient";
 
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 
 type DocRecord = {
   path: string;
@@ -103,13 +103,29 @@ async function deleteDocument(formData: FormData) {
   }
 }
 
+function isFileLike(value: unknown): value is { size: number; name?: string; arrayBuffer: () => Promise<ArrayBuffer> } {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "size" in value &&
+      typeof (value as any).size === "number" &&
+      "arrayBuffer" in value
+  );
+}
+
+function getFileName(file: { name?: string }, fallback: string) {
+  const name = file?.name?.trim();
+  return name ? name : fallback;
+}
+
 async function uploadDocument(formData: FormData) {
   "use server";
   const docKey = String(formData.get("docKey") || "");
   const locale = String(formData.get("locale") || "he");
   const file = formData.get("file");
+  const otherIndexRaw = formData.get("otherIndex");
 
-  if (!docKey || !(file instanceof File) || file.size === 0) return;
+  if (!docKey || !isFileLike(file) || file.size === 0) return;
   if (file.size > MAX_FILE_SIZE_BYTES) return;
 
   const supabase = createClient(cookies());
@@ -133,16 +149,20 @@ async function uploadDocument(formData: FormData) {
   const userId = user.id;
   const bucketName = "intake_docs";
   let filePath = "";
+  const otherIndex = otherIndexRaw !== null ? Number(otherIndexRaw) : null;
 
   if (docKey === "otherDocs") {
-    filePath = `${userId}/otherDocs/${Date.now()}_${file.name}`;
+    const fileName = getFileName(file, "other.bin");
+    filePath = `${userId}/otherDocs/${Date.now()}_${fileName}`;
   } else if (docKey.startsWith("child_doc_")) {
-    filePath = `${userId}/children/${docKey}/${Date.now()}_${file.name}`;
+    const fileName = getFileName(file, `${docKey}.bin`);
+    filePath = `${userId}/children/${docKey}/${Date.now()}_${fileName}`;
   } else {
-    filePath = `${userId}/${docKey}/${Date.now()}_${file.name}`;
+    const fileName = getFileName(file, `${docKey}.bin`);
+    filePath = `${userId}/${docKey}/${Date.now()}_${fileName}`;
   }
 
-  const { error } = await supabase.storage.from(bucketName).upload(filePath, file, {
+  const { error } = await supabase.storage.from(bucketName).upload(filePath, file as File, {
     upsert: true,
   });
   if (error) return;
@@ -163,7 +183,15 @@ async function uploadDocument(formData: FormData) {
       : nextDocuments.otherDocs
       ? [nextDocuments.otherDocs]
       : [];
-    list.push(docRecord);
+    if (otherIndex !== null && !Number.isNaN(otherIndex) && list[otherIndex]) {
+      const existingOther = normalizeDoc(list[otherIndex]);
+      if (existingOther?.path) {
+        await supabase.storage.from(bucketName).remove([existingOther.path]);
+      }
+      list[otherIndex] = docRecord;
+    } else {
+      list.push(docRecord);
+    }
     nextDocuments.otherDocs = list;
   } else {
     nextDocuments[docKey] = docRecord;

@@ -33,7 +33,7 @@ export default function Step7FormClient({
   finishAction,
   saveDraftAndBackAction,
 }: Props) {
-  const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+  const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
   const [screen, setScreen] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fileErrors, setFileErrors] = useState<Record<string, boolean>>({});
