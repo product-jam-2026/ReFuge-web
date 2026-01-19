@@ -96,8 +96,6 @@ function DateField({ labelHe, labelAr, namePrefix, defaultParts }: {
     <div className={styles.fieldGroup}>
       <div className={styles.label}><BiInline ar={labelAr} he={labelHe} /></div>
       <div className={styles.dateWrapper} onClick={openPicker}>
-        
-        {/* שימוש באייקון SVG ששמרת */}
         <Image 
           src="/images/calendar.svg" 
           alt="Calendar" 
@@ -106,7 +104,6 @@ function DateField({ labelHe, labelAr, namePrefix, defaultParts }: {
           className={styles.calendarIcon}
           priority
         />
-        
         <input 
           ref={inputRef} 
           className={styles.dateInput} 
@@ -248,6 +245,35 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
   const goNext = () => setScreen(s => Math.min(4, s + 1));
   const goBack = () => setScreen(s => Math.max(0, s - 1));
 
+  // --- פונקציה חדשה לבדיקת שדות חובה ---
+  const validateScreen = () => {
+    if (!formRef.current) return true;
+    const formData = new FormData(formRef.current);
+
+    // בדיקה למסך 1 (שמות)
+    if (screen === 1) {
+      const firstName = formData.get("firstName")?.toString().trim();
+      const lastName = formData.get("lastName")?.toString().trim();
+      if (!firstName || !lastName) {
+        alert("נא למלא שדות חובה (שם פרטי, שם משפחה) \n يرجى تعبئة الحقول المطلوبة (الاسم الشخصي، اسم العائلة)");
+        return false;
+      }
+    }
+
+    // בדיקה למסך 4 (טלפון ומייל)
+    if (screen === 4) {
+      const phone = formData.get("phone")?.toString().trim();
+      const email = formData.get("email")?.toString().trim();
+      
+      // הערה: בטלפון לעיתים הקידומת נשלחת לבד, אז בודקים שאורך הטלפון הגיוני (מעל 4 תווים נניח)
+      if (!phone || phone.length < 5 || !email) {
+        alert("נא למלא טלפון ומייל \n يرجى تعبئة رقم الهاتف والبريد الإلكتروني");
+        return false;
+      }
+    }
+
+    return true;
+  };
   const handleFinishStep1 = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formRef.current) return;
@@ -292,13 +318,40 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
     }
   };
 
+  // Helper to render translated field
+  const renderTranslatedField = (key: string, labelAr: string, labelHe: string) => {
+    const data = translations[key];
+    if (!data || !data.original) return null;
+
+    const isHeToAr = data.direction === "he-to-ar";
+    const originalName = isHeToAr ? `${key}He` : `${key}Ar`;
+    const translatedName = isHeToAr ? `${key}Ar` : `${key}He`;
+
+    return (
+      <div className={styles.fieldGroup} key={key} style={{marginBottom: 16}}>
+        <div className={styles.label}><BiInline ar={labelAr} he={labelHe} /></div>
+        <div className={styles.translationPill}>
+            <div className={styles.transOriginal}>{data.original}</div>
+            <input type="hidden" name={originalName} value={data.original} />
+            <div className={styles.transTranslated}>
+                <input className={styles.inputBase} 
+                    style={{background: 'transparent', border: 'none', fontWeight: 700, padding: 0, height: 'auto', textAlign: 'right'}} 
+                    defaultValue={data.translated} name={translatedName} 
+                />
+            </div>
+        </div>
+        <input type="hidden" name={key} value={data.original} />
+      </div>
+    );
+  };
+
   // --- Intro Screen ---
   if (screen === 0) {
     return (
       <div className={styles.stepSplashContainer} dir="rtl">
         <Image src={HAND_IMAGE} alt="Hand" width={280} height={280} className={styles.stepSplashImage} priority />
         <div className={styles.stepSplashContent}>
-          <h1 className={styles.stepNumberTitle}><BiInline ar="المرحلة 1" he="שלב 1" /></h1>
+          <h1 className={styles.stepNumberTitle}><BiInline ar="المرحلة " he="שלב 1" /></h1>
           <h2 className={styles.stepMainTitle}><BiInline ar="تفاصيل شخصية" he="פרטים אישיים" /></h2>
           <div className={styles.stepDescription}>
             <p dir="rtl">بهالمرحلة بنطلب منك تدخل معلومات أساسية للتعريف<br/>الوقت المتوقع للتعبئة: 8 دقيقة</p>
@@ -346,29 +399,33 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
       {/* טפסים */}
       {screen > 0 && screen < 5 && (
         <form 
-  ref={formRef} 
-  className={styles.scrollableContent} 
-  onSubmit={(e) => {
-     e.preventDefault(); // <--- שורה קריטית! עוצרת את הדפדפן מלבצע פעולות עצמאיות
-     if (screen === 4) {
+          ref={formRef} 
+          className={styles.scrollableContent} 
+          onSubmit={(e) => {
+             e.preventDefault();
+             
+             // --- הוספת הבדיקה כאן ---
+             if (!validateScreen()) return; 
+             // -----------------------
+
+             if (screen === 4) {
                  handleFinishStep1(e);
              } else {
-                 // בכל מסך אחר - פשוט תעבור למסך הבא
                  goNext();
              }
-  }}
->
-          {/* Screen 1 */}
-          <div style={{ display: screen === 1 ? 'block' : 'none' }}>
+          }}
+        >
+          {/* Screen 1 - הוספנו padding-top: 40px */}
+          <div style={{ display: screen === 1 ? 'block' : 'none', paddingTop: '40px' }}>
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div><input className={styles.inputBase} name="firstName" defaultValue={defaults.firstName} /></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input className={styles.inputBase} name="lastName" defaultValue={defaults.lastName} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /> <span>*</span> </div><input className={styles.inputBase} name="firstName" defaultValue={defaults.firstName} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /> <span>*</span> </div><input className={styles.inputBase} name="lastName" defaultValue={defaults.lastName} /></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي السابق" he="שם פרטי קודם" /></div><input className={styles.inputBase} name="oldFirstName" defaultValue={defaults.oldFirstName} /></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة السابق" he="שם משפחה קודם" /></div><input className={styles.inputBase} name="oldLastName" defaultValue={defaults.oldLastName} /></div>
           </div>
 
-          {/* Screen 2 */}
-          <div style={{ display: screen === 2 ? 'block' : 'none' }}>
+          {/* Screen 2 - הוספנו padding-top: 40px */}
+          <div style={{ display: screen === 2 ? 'block' : 'none', paddingTop: '40px' }}>
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
             <div className={styles.fieldGroup}>
               <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
@@ -388,8 +445,8 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div><input className={styles.inputBase} name="israeliId" defaultValue={defaults.israeliId} inputMode="numeric" /></div>
           </div>
 
-          {/* Screen 3 */}
-          <div style={{ display: screen === 3 ? 'block' : 'none' }}>
+          {/* Screen 3 - הוספנו padding-top: 40px */}
+          <div style={{ display: screen === 3 ? 'block' : 'none', paddingTop: '40px' }}>
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="جواز السفر" he="דרכון" /></div></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم جواز السفر" he="מספר דרכון" /></div><input className={styles.inputBase} name="passportNumber" defaultValue={defaults.passportNumber} /></div>
             <DateField labelAr="تاريخ إصدار جواز السفر" labelHe="תאריך הוצאת דרכון" namePrefix="passportIssueDate" defaultParts={defaults.passIssue} />
@@ -397,19 +454,19 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
             <CountrySelect defaultValue={defaults.passportIssueCountry} name="passportIssueCountry" labelAr="بلد إصدار جواز السفر" labelHe="ארץ הוצאת דרכון" />
           </div>
 
-          {/* Screen 4 */}
-          <div style={{ display: screen === 4 ? 'block' : 'none' }}>
+          {/* Screen 4 - הוספנו padding-top: 40px */}
+          <div style={{ display: screen === 4 ? 'block' : 'none', paddingTop: '40px' }}>
             <div className={styles.titleBlock} style={{textAlign: 'right', marginTop: 0, marginBottom: 16}}>
                 <h2 className={styles.formTitle} style={{fontSize: 20}}><BiInline ar="وسائل الاتصال" he="דרכי התקשרות" /></h2>
                 <p className={styles.formSubtitle}><BiInline ar="المسجّلون في وزارة الداخلية" he="הרשומים במשרד הפנים" /></p>
             </div>
 
-            <PhoneField labelAr="هاتف" labelHe="טלפון נייד" name="phone" defaultValue={defaults.phone} prefixes={MOBILE_PREFIXES} />
+            <PhoneField labelAr="هاتف" labelHe="טלפון נייד  *" name="phone" defaultValue={defaults.phone} prefixes={MOBILE_PREFIXES} />
             <PhoneField labelAr="هاتف أرضي" labelHe="טלפון קווי" name="landline" defaultValue="" prefixes={LANDLINE_PREFIXES} />
 
             <div className={styles.fieldGroup}>
-              <div className={styles.label}><BiInline ar="بريد إلكتروني" he="אימייל" /></div>
-              <input className={styles.inputBase} name="email" defaultValue={defaults.email} inputMode="email" style={{direction: 'ltr', textAlign: 'left'}} placeholder="example@email.com" />
+              <div className={styles.label}><BiInline ar="بريد إلكتروني" he="אימייל" /> <span>*</span> </div>
+              <input className={styles.inputBase} name="email" defaultValue={defaults.email} inputMode="email" style={{direction: 'ltr', textAlign: 'right', pointerEvents: 'none'}} placeholder="example@email.com" />
             </div>
           </div>
           
@@ -430,50 +487,30 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
         <form className={styles.scrollableContent} action={saveAndNextAction} style={{paddingTop: 0}}>
           
           <div className={styles.reviewHeader}>
-            <div className={styles.reviewTitle}><BiInline ar="نهاية المرحلة 1" he="סוף שלב 1" /></div>
+            <div className={styles.reviewTitle}><BiInline ar="نهاية المرحلة " he="סוף שלב 1" /></div>
             <div className={styles.summarySub} style={{ lineHeight: '1.6' }}>
-     يرجى التحقق من صحة التفاصيل وترجمتها
-     <br /> {/* ירידת שורה */}
-     אנא וודא/י כי כל הפרטים ותרגומם נכונים
-  </div>
+                يرجى التحقق من صحة التفاصيل وترجمتها
+                <br />
+                אנא וודא/י כי כל הפרטים ותרגומם נכונים
+            </div>
           </div>
 
-          {/* חלק 1: שדות שמות (מפוצלים - עברית/ערבית) */}
-          {[
-            { key: "lastName", labelAr: "اسم العائلة", labelHe: "שם משפחה" },
-            { key: "firstName", labelAr: "الاسم الشخصي", labelHe: "שם פרטי" },
-            { key: "oldLastName", labelAr: "اسم العائلة السابق", labelHe: "שם משפחה קודם" },
-            { key: "oldFirstName", labelAr: "الاسم الشخصي السابق", labelHe: "שם פרטי קודם" },
-          ].map((field) => {
-            const data = translations[field.key];
-            if (!data || !data.original) return null;
+          {/* 1. שדות מתורגמים (שמות) - ראשונים */}
+          {renderTranslatedField("firstName", "الاسم الشخصي", "שם פרטי")}
+          {renderTranslatedField("lastName", "اسم العائلة", "שם משפחה")}
+          {renderTranslatedField("oldFirstName", "الاسم الشخصي السابق", "שם פרטי קודם")}
+          {renderTranslatedField("oldLastName", "اسم العائلة السابق", "שם משפחה קודם")}
 
-            const isHeToAr = data.direction === "he-to-ar";
-            const originalName = isHeToAr ? `${field.key}He` : `${field.key}Ar`;
-            const translatedName = isHeToAr ? `${field.key}Ar` : `${field.key}He`;
+          {/* 2. שדות רגילים לפי סדר המילוי */}
 
-            return (
-              <div className={styles.fieldGroup} key={field.key} style={{marginBottom: 16}}>
-                <div className={styles.label}><BiInline ar={field.labelAr} he={field.labelHe} /></div>
-                <div className={styles.translationPill}>
-                   {/* שדה המקור */}
-                   <div className={styles.transOriginal}>{data.original}</div>
-                   <input type="hidden" name={originalName} value={data.original} />
-                   {/* שדה התרגום */}
-                   <div className={styles.transTranslated}>
-                     {/* מאפשר עריכה של התרגום אם צריך, אבל בעיצוב זה נראה קבוע */}
-                     <input className={styles.inputBase} 
-                            style={{background: 'transparent', border: 'none', fontWeight: 700, padding: 0, height: 'auto', textAlign: 'right'}} 
-                            defaultValue={data.translated} name={translatedName} 
-                     />
-                   </div>
-                </div>
-                <input type="hidden" name={field.key} value={data.original} />
-              </div>
-            );
-          })}
+          {/* מגדר */}
+          {formDataState.gender && (
+             <div className={styles.fieldGroup}>
+               <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
+               <input className={styles.inputBase} value={formDataState.gender === 'male' ? 'זכר / ذكر' : formDataState.gender === 'female' ? 'נקבה / أنثى' : formDataState.gender} readOnly style={{pointerEvents: 'none'}} />
+             </div>
+          )}
 
-          {/* חלק 2: שאר השדות (קריאה בלבד) */}
           {/* תאריך לידה */}
           {formDataState.birthDate && (
             <div className={styles.fieldGroup}>
@@ -490,14 +527,6 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
              <div className={styles.fieldGroup}>
                <div className={styles.label}><BiInline ar="الجنسية" he="אזרחות" /></div>
                <input className={styles.inputBase} value={formDataState.nationality} readOnly style={{pointerEvents: 'none'}} />
-             </div>
-          )}
-
-           {/* מין */}
-           {formDataState.gender && (
-             <div className={styles.fieldGroup}>
-               <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
-               <input className={styles.inputBase} value={formDataState.gender === 'male' ? 'זכר / ذكر' : formDataState.gender === 'female' ? 'נקבה / أنثى' : formDataState.gender} readOnly style={{pointerEvents: 'none'}} />
              </div>
           )}
 
