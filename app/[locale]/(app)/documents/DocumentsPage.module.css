@@ -1,8 +1,16 @@
 .page {
+  --c-blue: #011429;
+  --c-orange: #EE8548;
+  --c-gray-border: #E5E7EB;
+  --c-text: #0B1B2B;
+  --c-bg: #FFFFFF;
+
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
   padding: 0 24px 24px;
+  font-family: var(--font-simpler), sans-serif;
+  direction: rtl;
 }
 
 .pageHeader {

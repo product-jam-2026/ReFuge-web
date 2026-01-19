@@ -659,6 +659,9 @@ export async function submitStep7(locale: string, mode: "draft" | "finish" | "ba
       // יצירת שם קובץ ייחודי: user_id/field_name/timestamp_filename
       const filePath = `${userId}/${field}/${Date.now()}_${file.name}`;
       const uploadResult = await uploadFile(supabase, bucketName, filePath, file);
+      if (!uploadResult) {
+        console.error("Step7 upload failed", { field, filePath });
+      }
       
       if (uploadResult) {
         documents[field] = {
@@ -678,6 +681,9 @@ export async function submitStep7(locale: string, mode: "draft" | "finish" | "ba
        if (file && file instanceof File && file.size > 0) {
           const filePath = `${userId}/children/${key}/${Date.now()}_${file.name}`;
           const uploadResult = await uploadFile(supabase, bucketName, filePath, file);
+          if (!uploadResult) {
+            console.error("Step7 child upload failed", { key, filePath });
+          }
           
           if (uploadResult) {
             documents[key] = {
@@ -698,6 +704,9 @@ export async function submitStep7(locale: string, mode: "draft" | "finish" | "ba
       if (file instanceof File && file.size > 0) {
         const filePath = `${userId}/otherDocs/${Date.now()}_${file.name}`;
         const res = await uploadFile(supabase, bucketName, filePath, file);
+        if (!res) {
+          console.error("Step7 otherDoc upload failed", { filePath });
+        }
         if (res) {
           uploadedOthers.push({
              path: filePath,

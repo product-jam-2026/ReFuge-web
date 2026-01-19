@@ -72,14 +72,53 @@ export default function DocumentRowClient({
         {typeof otherIndex === "number" ? (
           <input type="hidden" name="otherIndex" value={otherIndex} />
         ) : null}
-        <input
-          id={inputId}
-          type="file"
-          name="file"
-          accept="image/*,.pdf"
-          className={intakeStyles.hiddenInput}
-          onChange={onFileChange}
-        />
+        <label
+          className={`${intakeStyles.fileInputLabel} ${
+            hasDoc ? intakeStyles.fileSelected : ""
+          }`}
+        >
+          <input
+            id={inputId}
+            type="file"
+            name="file"
+            accept="image/*,.pdf"
+            className={intakeStyles.hiddenInput}
+            onChange={onFileChange}
+          />
+          {hasDoc ? (
+            <a
+              className={`${intakeStyles.fileName} ${styles.docName}`}
+              href={publicUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                window.open(publicUrl, "_blank", "noopener,noreferrer");
+              }}
+            >
+              {docName}
+            </a>
+          ) : (
+            <>
+              <span className={intakeStyles.filePlaceholder}>{emptyText}</span>
+              <span className={intakeStyles.plusIcon}>+</span>
+            </>
+          )}
+
+          <div className={styles.actionSlot} onClick={(event) => event.stopPropagation()}>
+            {hasDoc ? (
+              <button
+                type="submit"
+                form={deleteFormId}
+                className={styles.docBtn}
+                onClick={(event) => event.stopPropagation()}
+              >
+                {deleteText}
+              </button>
+            ) : null}
+          </div>
+        </label>
       </form>
 
       <form id={deleteFormId} action={deleteAction} className={styles.deleteForm}>
@@ -90,50 +129,6 @@ export default function DocumentRowClient({
         ) : null}
       </form>
 
-      <label
-        htmlFor={inputId}
-        className={`${intakeStyles.fileInputLabel} ${
-          hasDoc ? intakeStyles.fileSelected : ""
-        }`}
-      >
-        {hasDoc ? (
-          <a
-            className={`${intakeStyles.fileName} ${styles.docName}`}
-            href={publicUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              window.open(publicUrl, "_blank", "noopener,noreferrer");
-            }}
-          >
-            {docName}
-          </a>
-        ) : (
-          <span className={intakeStyles.filePlaceholder}>{emptyText}</span>
-        )}
-
-        <div className={styles.actionSlot} onClick={(event) => event.stopPropagation()}>
-          {hasDoc ? (
-            <button
-              type="submit"
-              form={deleteFormId}
-              className={styles.docBtn}
-              onClick={(event) => event.stopPropagation()}
-            >
-              {deleteText}
-            </button>
-          ) : (
-            <img
-              src="/icons/pin.svg"
-              alt=""
-              className={styles.pinIcon}
-              aria-hidden="true"
-            />
-          )}
-        </div>
-      </label>
       {error ? <div className={styles.errorText}>{error}</div> : null}
     </div>
   );
