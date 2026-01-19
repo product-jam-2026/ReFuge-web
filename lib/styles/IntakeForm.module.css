@@ -81,7 +81,7 @@
   font-weight: 500; 
   display: flex;
   gap: 5px;
-  align-items: center;
+  align-items: flex-start;
 }
 
 /* פרוגרס בר - מתמלא מימין לשמאל */

@@ -3,6 +3,47 @@
    ========================= */
 
 /* 1) Tokens */
+
+/* טעינת הפונטים */
+
+/* 1. רגיל (Regular) - משקל 400 */
+@font-face {
+  font-family: 'SimplerPro';
+  src: url('/fonts/SimplerPro_HLAR-Regular.18a7124eda5acf4f0b6b9588053aeb15.ttf') format('truetype'); 
+  /* ^^^ שימי לב: אם שינית שם, תעדכני כאן ל- /fonts/SimplerPro-Regular.ttf */
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* 2. חצי מודגש (Semibold) - משקל 500 או 600 */
+@font-face {
+  font-family: 'SimplerPro';
+  src: url('/fonts/SimplerPro_HLAR-Semibold.6f8ad05254f860aac6f501f167ed14cd.ttf') format('truetype');
+  /* ^^^ שימי לב: אם שינית שם, תעדכני כאן */
+  font-weight: 600; /* נשתמש ב-600 עבור Semibold */
+  font-style: normal;
+}
+
+/* 3. מודגש (Bold) - משקל 700 */
+@font-face {
+  font-family: 'SimplerPro';
+  src: url('/fonts/SimplerPro_HLAR-Bold.3b698aade71399026000e6b9ef7f06a7.ttf') format('truetype');
+  /* ^^^ שימי לב: אם שינית שם, תעדכני כאן */
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* הגדרה גלובלית של המשתנה */
+:root {
+  /* מעכשיו כל מקום שמשתמש במשתנה הזה יקבל את הפונט החדש */
+  --font-simpler: 'SimplerPro', sans-serif;
+}
+
+/* הגדרת ברירת מחדל לכל האתר */
+body {
+  font-family: var(--font-simpler);
+}
+
 :root{
   --font-family-app: var(--font-simpler), system-ui, sans-serif;
   --font-family-heading: var(--font-simpler), system-ui, sans-serif;

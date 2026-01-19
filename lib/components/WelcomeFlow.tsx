@@ -116,14 +116,33 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
       {currentScreen === "login" && (
         <div className={`${styles.loginScreen} ${styles.fadeIn}`}>
           <div className={styles.loginCard}>
-            <div className={styles.googleHeader}>
-              <Image src="https://authjs.dev/img/providers/google.svg" alt="Google" width={18} height={18} />
-              <span className={styles.googleHeaderText}>
-                 تسجيل الدخول باستخدام جوجل  התחברות באמצעות גוגל
-              </span>
-            </div>
+            <div className={styles.googleHeader} style={{ paddingRight: '16px' }}> {/* הזזתי את ה-padding לפה */}
+  
+  <Image 
+    src="https://authjs.dev/img/providers/google.svg" 
+    alt="Google" 
+    width={18} 
+    height={18} 
+    style={{ flexShrink: 0 }} /* מונע כיווץ של האייקון */
+  />
+
+  <div className={styles.googleHeaderText} style={{ 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'flex-start', 
+    gap: '2px', 
+    lineHeight: '1.2',
+    textAlign: 'right',
+    width: '100%'
+    /* מחקתי מכאן את ה-paddingRight */
+  }}>
+    <span>تسجيل الدخول باستخدام جوجل</span>
+    <span>התחברות באמצעות גוגל</span>
+  </div>
+
+</div>
             <div className={styles.loginContent}>
-                <Image src="/images/logo-refuge.svg" alt="ReFuge" width={50} height={50} className={styles.loginLogo} />
+                <Image src="/images/logo-refuge-orange.svg" alt="ReFuge" width={50} height={50} className={styles.loginLogo} />
                 <h2 className={styles.loginTitle}>בחר חשבון</h2>
                 <button onClick={handleGoogleLogin} disabled={loading} className={styles.googleBtn}>
                   {loading ? (

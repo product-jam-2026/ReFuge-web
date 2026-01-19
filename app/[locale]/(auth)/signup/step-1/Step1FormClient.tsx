@@ -294,8 +294,8 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם את הנתונים...</p>
-             <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات...</p>
+             <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם את הנתונים</p>
+             <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
           </div>
         </div>
       )}
@@ -307,7 +307,7 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
              <button type="button" className={styles.backBtn} onClick={goBack}>
                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
              </button>
-             <div className={styles.stepMeta}><span>المرحلة 1 من 7</span><span> | </span><span>שלב 1 מתוך 7</span></div>
+             <div className={styles.stepMeta}><span>المرحلة 1 من 7</span> <span>שלב 1 מתוך 7</span></div>
           </div>
           <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
           
