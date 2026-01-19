@@ -340,7 +340,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
             {/* שימוש ב-isoValue כדי לשמור על התאריך בחזרה אחורה */}
             <DateField labelAr="تاريخ الميلاد" labelHe="תאריך לידה" namePrefix="birthDate" defaultParts={defaults.birthDate} isoValue={formDataState.birthDate} />
             <CountrySelect defaultValue={val("nationality")} name="nationality" labelAr="الجنسية" labelHe="אזרחות" />
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم الهوية الإسرائيلية" he="מספר תעודת זהות ישראלית" /></div><input name="israeliId" defaultValue={val("israeliId")} className={styles.inputBase} inputMode="numeric" /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div><input name="israeliId" defaultValue={val("israeliId")} className={styles.inputBase} inputMode="numeric" /></div>
             <div className={styles.fixedFooter}>
                 <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
                 <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
@@ -473,7 +473,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
 
           {formDataState.israeliId && (
              <div className={styles.fieldGroup}>
-                <div className={styles.label}><BiInline ar="رقم الهوية الإسرائيلية" he="מספר תעודת זהות ישראלית" /></div>
+                <div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div>
                 <input className={styles.readOnlyInput} value={formDataState.israeliId} readOnly style={{direction: 'ltr', textAlign: 'right'}} />
              </div>
           )}

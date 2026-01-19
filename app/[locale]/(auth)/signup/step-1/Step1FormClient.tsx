@@ -353,7 +353,7 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
             </div>
             <DateField labelAr="تاريخ الميلاد" labelHe="תאריך לידה" namePrefix="birthDate" defaultParts={defaults.birth} />
             <CountrySelect defaultValue={defaults.nationality} name="nationality" labelAr="الجنسية" labelHe="אזרחות" />
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم الهوية الإسرائيلية" he="מספר תעודת זהות ישראלית" /></div><input className={styles.inputBase} name="israeliId" defaultValue={defaults.israeliId} inputMode="numeric" /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div><input className={styles.inputBase} name="israeliId" defaultValue={defaults.israeliId} inputMode="numeric" /></div>
           </div>
 
           {/* Screen 3 */}

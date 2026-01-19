@@ -45,6 +45,7 @@ export default async function RootLayout({
     <html lang={locale} dir={dir} className={`${simplerPro.variable} ${simplerProArabic.variable}`}>
       <head>
         <link rel="icon" href="/icons/favicon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
 
