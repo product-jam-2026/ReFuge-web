@@ -75,36 +75,60 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
       {/* --- מצב 2: Onboarding --- */}
       {currentScreen === "onboarding" && (
         <div className={`${styles.onboardingScreen} ${styles.fadeIn}`}>
-          <Image 
-            src="/images/logos-hias-refuge.svg" 
-            alt="HIAS & ReFuge"
-            width={155}
-            height={60}
-            className={styles.topLogos}
-          />
-          <Image 
-            src="/images/onboarding-envelope.png" 
-            alt="Onboarding"
-            width={280}
-            height={280}
-            className={styles.envelopeImage}
-            priority
-          />
-          <div className={styles.textContainer}>
-            {/* הורדתי את ה-balancedText וסומך על ה-CSS החדש */}
-            <h2 className={styles.obTitle}>
-              التطبيق دا بيرافقك في الاجراءات الورقية لتسهيل العملية عليك
-            </h2>
-            <h2 className={styles.obTitle}>
-              האפליקציה נועדה ללוות אותך בתהליכים בירוקרטיים
-            </h2>
-            <p className={styles.obBody}>
-              بتقدر تحفظ معلوماتك، تعرف على حقوقك، وتعبّي الاستمارات بطريقة سهلة وبسيطة
-            </p>
-            <p className={styles.obBody}>
-              אפשר לשמור מידע אישי, לקרוא על זכויות, ולמלא טפסים בצורה פשוטה
-            </p>
+          
+          {/* קונטיינר ללוגואים - מסודר כך ש-HIAS בימין ו-ReFuge בשמאל */}
+          <div className={styles.logosContainer}>
+            {/* ב-RTL: האלמנט השני יהיה לשמאלו */}
+            <Image 
+              src="/images/logo-refuge.svg" 
+              alt="ReFuge"
+              width={35}
+              height={32}
+              className={styles.refugeLogo}
+            />
+            {/* ב-RTL: האלמנט הראשון נצמד לימין */}
+            <Image 
+              src="/images/logo-hias.svg" 
+              alt="HIAS"
+              width={690}
+              height={187}
+              className={styles.hiasLogo}
+            />
+            
+            
           </div>
+
+          <div className={styles.envelopeContainer}>
+            <Image 
+              src="/images/intake-success.svg" 
+              alt="Onboarding"
+              width={280}
+              height={280}
+              className={styles.envelopeImage}
+              priority
+            />
+          </div>
+
+          <div className={styles.textContainer}>
+            <div className={styles.titlesGroup}>
+              <h2 className={styles.obTitle}>
+                التطبيق دا بيرافقك في الاجراءات الورقية لتسهيل العملية عليك
+              </h2>
+              <h2 className={styles.obTitle}>
+                האפליקציה נועדה ללוות אותך בתהליכים בירוקרטיים
+              </h2>
+            </div>
+
+            <div className={styles.bodyGroup}>
+              <p className={styles.obBody}>
+                بتقدر تحفظ معلوماتك، تعرف على حقوقك، وتعبّي الاستمارات بطريقة سهلة وبسيطة
+              </p>
+              <p className={styles.obBody}>
+                אפשר לשמור מידע אישי, לקרוא על זכויות, ולמלא טפסים בצורה פשוטה
+              </p>
+            </div>
+          </div>
+
           <button className={styles.startButton} onClick={() => setCurrentScreen("login")}>
             <span>ابدأ</span>
             <span>התחל</span>
@@ -116,31 +140,28 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
       {currentScreen === "login" && (
         <div className={`${styles.loginScreen} ${styles.fadeIn}`}>
           <div className={styles.loginCard}>
-            <div className={styles.googleHeader} style={{ paddingRight: '16px' }}> {/* הזזתי את ה-padding לפה */}
-  
-  <Image 
-    src="https://authjs.dev/img/providers/google.svg" 
-    alt="Google" 
-    width={18} 
-    height={18} 
-    style={{ flexShrink: 0 }} /* מונע כיווץ של האייקון */
-  />
+            <div className={styles.googleHeader} style={{ paddingRight: '16px' }}>
+              <Image 
+                src="https://authjs.dev/img/providers/google.svg" 
+                alt="Google" 
+                width={18} 
+                height={18} 
+                style={{ flexShrink: 0 }} 
+              />
+              <div className={styles.googleHeaderText} style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'flex-start', 
+                gap: '2px', 
+                lineHeight: '1.2',
+                textAlign: 'right',
+                width: '100%'
+              }}>
+                <span>تسجيل الدخول باستخدام جوجل</span>
+                <span>התחברות באמצעות גוגל</span>
+              </div>
+            </div>
 
-  <div className={styles.googleHeaderText} style={{ 
-    display: 'flex', 
-    flexDirection: 'column', 
-    alignItems: 'flex-start', 
-    gap: '2px', 
-    lineHeight: '1.2',
-    textAlign: 'right',
-    width: '100%'
-    /* מחקתי מכאן את ה-paddingRight */
-  }}>
-    <span>تسجيل الدخول باستخدام جوجل</span>
-    <span>התחברות באמצעות גוגל</span>
-  </div>
-
-</div>
             <div className={styles.loginContent}>
                 <Image src="/images/logo-refuge-orange.svg" alt="ReFuge" width={50} height={50} className={styles.loginLogo} />
                 <h2 className={styles.loginTitle}>בחר חשבון</h2>
