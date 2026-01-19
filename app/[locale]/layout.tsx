@@ -17,7 +17,11 @@ const simplerPro = localFont({
 });
 
 const simplerProArabic = localFont({
-  src: [{ path: "../../public/fonts/SimplerPro_HLAR_Mono-Regular.ttf", weight: "400", style: "normal" }],
+  src: [
+    { path: "../../public/fonts/SimplerPro_HLAR-Regular.18a7124eda5acf4f0b6b9588053aeb15.ttf", weight: "400", style: "normal" },
+    { path: "../../public/fonts/SimplerPro_HLAR-Semibold.6f8ad05254f860aac6f501f167ed14cd.ttf", weight: "600", style: "normal" },
+    { path: "../../public/fonts/SimplerPro_HLAR-Bold.3b698aade71399026000e6b9ef7f06a7.ttf", weight: "700", style: "normal" },
+  ],
   variable: "--font-simpler-ar",
   display: "swap",
 });

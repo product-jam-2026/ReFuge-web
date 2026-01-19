@@ -1,53 +1,54 @@
 /* app/[locale]/(auth)/login/signup/intake/intake.module.css */
 
 .container {
-  /* שימוש ב-dvh מתאים את הגובה למסך האמיתי באייפון */
-  min-height: 100dvh; 
+  /* הגדרות קיימות לקיבוע המסך */
+  position: fixed;
+  inset: 0;
+  height: 100dvh; 
   width: 100%;
-  
-  position: relative;
+  z-index: 50;
   background-color: var(--mint, #DFFC8E);
   
   display: flex;
   flex-direction: column;
   align-items: center;
   
-  /* מאפשר גלילה אם התוכן גולש */
   overflow-y: auto;
   overflow-x: hidden;
   
-  padding-top: 60px; /* קצת פחות רווח למעלה */
+  padding-top: 60px;
   padding-left: 24px;
   padding-right: 24px;
   
-  /* רווח תחתון גדול במיוחד - זה מה שיקפיץ את הכפתור מעל הכתובת של ספארי */
-  padding-bottom: 140px; 
+  /* ביטלתי את ה-padding הגדול שהיה כאן, כי הכפתור עצמו יקבע את המרווח */
+  padding-bottom: 0; 
 }
 
 .illustration {
-  /* הקטנו את התמונה כדי לפנות מקום */
   height: 180px; 
   width: auto;
   margin-bottom: 20px;
   object-fit: contain;
-  flex-shrink: 0; /* מונע מהתמונה להימעך */
+  flex-shrink: 0;
 }
 
-/* קונטיינר לטקסטים */
 .content {
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 360px;
-  gap: 12px; /* רווחים קצת יותר צפופים */
-  
+  gap: 12px;
   text-align: right; 
   align-items: flex-start;
+  /* מוודא שהתוכן תופס את המקום שלו אבל לא מפריע לכפתור לרדת */
+  flex: 1; 
 }
+
+/* הוספתי text-wrap: pretty לכל הטקסטים כדי למנוע מילים יתומות */
 
 .title {
   font-family: var(--font-simpler), sans-serif;
-  font-size: 32px; /* קצת יותר קטן */
+  font-size: 32px;
   font-weight: 700;
   color: #011429;
   line-height: 1.2;
@@ -57,6 +58,9 @@
   gap: 10px;
   flex-direction: row-reverse;
   justify-content: flex-start;
+  
+  /* מאזן את הכותרת */
+  text-wrap: balance; 
 }
 
 .subtitle {
@@ -71,6 +75,9 @@
   flex-direction: column;
   gap: 4px;
   align-items: flex-start;
+  
+  /* מונע מילה בודדת בשורה */
+  text-wrap: pretty;
 }
 
 .bodyText {
@@ -86,6 +93,9 @@
   flex-direction: column;
   gap: 12px;
   align-items: flex-start;
+
+  /* מונע מילה בודדת בשורה - פתרון מעולה לפסקאות */
+  text-wrap: pretty;
 }
 
 .startButton {
@@ -106,12 +116,19 @@
   justify-content: center;
   gap: 12px;
   
-  /* מרווח מלמעלה - מרחיק מהטקסט */
-  margin-top: 30px; 
-  align-self: center;
+  /* === השינוי הקריטי === */
+  
+  /* 1. דוחף את הכפתור לתחתית הקונטיינר */
+  margin-top: auto; 
+  
+  /* 2. המרווח המדויק מהעיצוב (65px) + הגנה לאייפון */
+  margin-bottom: calc(65px + env(safe-area-inset-bottom));
+  
+  /* 3. מרווח ביטחון קטן מלמעלה, למקרה שהמסך ממש נמוך */
+  padding-top: 0; 
   
   transition: transform 0.1s;
-  flex-shrink: 0; /* חשוב! שלא יתכווץ אם חסר מקום */
+  flex-shrink: 0;
 }
 
 .startButton:active {

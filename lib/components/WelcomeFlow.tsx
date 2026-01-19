@@ -9,18 +9,17 @@ type ScreenState = "splash" | "onboarding" | "login";
 
 const WelcomeFlow = ({ locale }: { locale: string }) => {
   const [currentScreen, setCurrentScreen] = useState<ScreenState>("splash");
+  const [splashPhase, setSplashPhase] = useState(0);
   const [isExiting, setIsExiting] = useState(false); 
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
     if (currentScreen === "splash") {
-      // כאן השינוי: 2.5 שניות במקום 4
-      const exitTimer = setTimeout(() => { setIsExiting(true); }, 2500);
-      // חצי שנייה אחרי זה מבצעים את המעבר (סה"כ 3 שניות)
-      const switchTimer = setTimeout(() => { setCurrentScreen("onboarding"); }, 3000);
-      
-      return () => { clearTimeout(exitTimer); clearTimeout(switchTimer); };
+      const textTimer = setTimeout(() => { setSplashPhase(1); }, 1500);
+      const exitTimer = setTimeout(() => { setIsExiting(true); }, 3500);
+      const switchTimer = setTimeout(() => { setCurrentScreen("onboarding"); }, 4000);
+      return () => { clearTimeout(textTimer); clearTimeout(exitTimer); clearTimeout(switchTimer); };
     }
   }, [currentScreen]);
 
@@ -51,18 +50,24 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
              priority
              className={styles.logoImage}
            />
+           
            <div className={styles.bottomGroup}>
              <Image 
                src="/images/welcome-hands.png" 
                alt="Welcome Hands"
-               width={380}
-               height={200}
+               width={430}
+               height={250}
                className={styles.handsImage}
                priority
              />
-             <h1 className={styles.splashTitle}>
-               نحن ري-فيوج <br /> אנחנו רה-פיוג׳
-             </h1>
+             <div className={styles.splashTextContainer}>
+               <h1 className={`${styles.splashTitle} ${splashPhase === 0 ? styles.textVisible : styles.textHidden}`}>
+                 أهلاً وسهلاً <br /> ברוכים הבאים
+               </h1>
+               <h1 className={`${styles.splashTitle} ${splashPhase === 1 ? styles.textVisible : styles.textHidden} ${styles.absoluteText}`}>
+                 نحن ري-فيوج <br /> אנחנו רה-פיוג׳
+               </h1>
+             </div>
            </div>
         </div>
       )}
@@ -86,6 +91,7 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
             priority
           />
           <div className={styles.textContainer}>
+            {/* הורדתי את ה-balancedText וסומך על ה-CSS החדש */}
             <h2 className={styles.obTitle}>
               التطبيق دا بيرافقك في الاجراءات الورقية لتسهيل العملية عليك
             </h2>
@@ -110,38 +116,21 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
       {currentScreen === "login" && (
         <div className={`${styles.loginScreen} ${styles.fadeIn}`}>
           <div className={styles.loginCard}>
-            
             <div className={styles.googleHeader}>
               <Image src="https://authjs.dev/img/providers/google.svg" alt="Google" width={18} height={18} />
               <span className={styles.googleHeaderText}>
-                 تسجيل الدخول باستخدام جوجل | התחברות באמצעות גוגל
+                 تسجيل الدخول باستخدام جوجل  התחברות באמצעות גוגל
               </span>
             </div>
-
             <div className={styles.loginContent}>
-                <Image 
-                  src="/images/logo-refuge.svg" 
-                  alt="ReFuge" 
-                  width={50} 
-                  height={50} 
-                  className={styles.loginLogo}
-                />
-                
+                <Image src="/images/logo-refuge.svg" alt="ReFuge" width={50} height={50} className={styles.loginLogo} />
                 <h2 className={styles.loginTitle}>בחר חשבון</h2>
-                
                 <button onClick={handleGoogleLogin} disabled={loading} className={styles.googleBtn}>
                   {loading ? (
                     <span className="w-full text-center">מתחבר...</span>
                   ) : (
                     <>
-                      <Image 
-                        src="https://authjs.dev/img/providers/google.svg" 
-                        alt="G" 
-                        width={28} 
-                        height={28} 
-                        className={styles.googleIconInBtn}
-                      />
-                      
+                      <Image src="https://authjs.dev/img/providers/google.svg" alt="G" width={28} height={28} className={styles.googleIconInBtn} />
                       <div className={styles.userInfo}>
                          <span className={styles.userName}>התחברות עם חשבון Google</span>
                          <span className={styles.userEmail}>לחץ כאן כדי להמשיך</span>
@@ -149,7 +138,6 @@ const WelcomeFlow = ({ locale }: { locale: string }) => {
                     </>
                   )}
                 </button>
-
                 <div className={styles.termsText}>
                  אם בחרת להשתמש בשירותים שלנו, המשמעות היא שנתת בנו אמון לטפל באופן הולם במידע שמסרת לנו. אנחנו מבינים שמדובר באחריות גדולה ואנחנו עושים מאמצים רבים כדי להגן על המידע שלך ולתת לך שליטה.
                 </div>

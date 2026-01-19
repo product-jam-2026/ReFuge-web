@@ -71,12 +71,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
+  text-wrap: pretty;
 }
 
 /* 3) Global typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-heading);
   margin: 0;
+  text-wrap: balance;
 }
 
 p {

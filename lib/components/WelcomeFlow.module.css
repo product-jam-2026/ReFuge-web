@@ -7,9 +7,8 @@
   transform: translateX(-50%);
   width: 100%;
   max-width: 430px; 
-  height: 100dvh; /* גובה דינמי */
+  height: 100dvh;
   z-index: 9999;
-  /* שינינו את זה כדי לאפשר גלילה במקרה הצורך בתוך המסכים הפנימיים */
   overflow: hidden; 
   touch-action: none;
   font-family: var(--font-simpler), sans-serif;
@@ -36,28 +35,74 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 167px;
-  padding-bottom: 100px; /* קצת פחות כדי שיתאים למסכים קטנים */
-  justify-content: space-between; 
+  /* שינינו מ-space-between ל-flex-start כדי לשלוט במיקום ידנית */
+  justify-content: flex-start; 
   z-index: 30;
-  background: #C0DEFF; /* וידוא רקע */
+  background: #C0DEFF;
+  padding-bottom: 20px;
 }
-.logoImage { width: 81px; height: 76px; object-fit: contain; }
-.bottomGroup { display: flex; flex-direction: column; align-items: center; width: 100%; }
-.handsImage { width: 100%; max-width: 380px; height: auto; margin-bottom: 10px; }
+
+/* הלוגו מקבל מיקום קבוע מלמעלה */
+.logoImage { 
+  width: 81px; 
+  height: 76px; 
+  object-fit: contain; 
+  margin-top: 140px; /* מרווח קבוע מהחלק העליון */
+  flex-shrink: 0;
+}
+
+/* הקבוצה התחתונה (ידיים + טקסט) תתפוס את המרכז של מה שנשאר */
+.bottomGroup { 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  width: 100%; 
+  
+  /* זה הטריק למרכז אותם בחלל הריק שבין הלוגו לתחתית */
+  margin-top: auto; 
+  margin-bottom: auto;
+  
+  /* הזזתי קצת למעלה ויזואלית כדי שלא יהיה "ממורכז" אבל נמוך מדי */
+  transform: translateY(-20px);
+}
+
+.handsImage { 
+  width: 100%; 
+  height: auto; 
+  object-fit: cover; 
+  margin-bottom: 0; /* הורדנו רווח מיותר */
+  display: block;
+}
+
+.splashTextContainer {
+  position: relative;
+  width: 100%;
+  height: 80px; /* הגדלתי קצת את הגובה השמור לטקסט */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* הטקסט ייצמד לחלק העליון של הקופסה שלו */
+  margin-top: 10px; /* מקרב את הטקסט לידיים */
+}
+
 .splashTitle {
   font-family: var(--font-simpler), sans-serif;
   font-size: 36px;
   font-weight: 700;
-  line-height: 52px;
+  line-height: 1.2;
   color: #011429;
   text-align: center;
-  width: 251px;
+  width: 100%;
   margin: 0;
   white-space: pre-line;
+  transition: opacity 0.5s ease-in-out;
 }
 
-/* --- מסך 2: Onboarding (התיקון לכפתור כאן) --- */
+.textVisible { opacity: 1; }
+.textHidden { opacity: 0; }
+.absoluteText { position: absolute; top: 0; left: 0; width: 100%; }
+
+
+/* --- מסך 2: Onboarding --- */
 .onboardingScreen {
   position: absolute;
   inset: 0;
@@ -66,25 +111,52 @@
   align-items: center;
   background: #C0DEFF;
   z-index: 20;
-  
-  /* מאפשר גלילה אם המסך נמוך מדי */
   overflow-y: auto; 
   
   padding-top: 65px;
-  padding-left: 20px;
-  padding-right: 20px;
-  
-  /* התיקון הקריטי: רווח תחתון גדול + התחשבות ב-Safe Area של אייפון */
+  padding-left: 24px;
+  padding-right: 24px;
   padding-bottom: calc(100px + env(safe-area-inset-bottom));
   
-  gap: 20px; 
+  gap: 24px; /* רווחים קצת יותר גדולים בין האלמנטים */
   text-align: right;
 }
+
 .topLogos { width: 155px; height: auto; flex-shrink: 0; }
 .envelopeImage { width: 100%; max-width: 260px; height: auto; filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.1)); flex-shrink: 0; }
-.textContainer { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: flex-start; }
-.obTitle { font-size: 20px; font-weight: 800; color: #0B1B2B; line-height: 1.2; margin: 0; }
-.obBody { font-size: 15px; font-weight: 500; color: #0B1B2B; opacity: 0.9; line-height: 1.3; margin: 0; }
+
+.textContainer { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; /* רווח בין הכותרות לטקסט */
+  width: 100%; 
+  align-items: flex-start; 
+}
+
+/* ביטלתי את ה-balance שהיה כאן קודם וגרם לדחיסה */
+/* והגדלתי את הפונטים */
+
+.obTitle { 
+  font-size: 24px; /* הוגדל מ-20 */
+  font-weight: 800; 
+  color: #0B1B2B; 
+  line-height: 1.3; 
+  margin: 0; 
+  width: 100%;
+  /* מבטל כיווץ מיותר */
+  text-wrap: pretty; 
+}
+
+.obBody { 
+  font-size: 17px; /* הוגדל מ-15 */
+  font-weight: 500; 
+  color: #0B1B2B; 
+  opacity: 0.9; 
+  line-height: 1.4; 
+  margin: 0; 
+  width: 100%;
+  text-wrap: pretty;
+}
 
 .startButton { 
   width: 100%; 
@@ -101,18 +173,15 @@
   justify-content: center; 
   gap: 10px; 
   padding: 0 16px; 
-  
-  /* דוחף את הכפתור לתחתית, אבל הגלילה תאפשר להגיע אליו */
   margin-top: auto; 
-  flex-shrink: 0; /* מונע מעיכה */
-  
+  flex-shrink: 0; 
   transition: transform 0.1s; 
   -webkit-tap-highlight-color: transparent; 
 }
 .startButton:active { transform: scale(0.98); }
 
 
-/* --- מסך 3: Login --- */
+/* --- מסך 3: Login (ללא שינוי) --- */
 .loginScreen {
   position: absolute;
   inset: 0;
@@ -124,7 +193,6 @@
   z-index: 10;
   padding: 0;
 }
-
 .loginCard {
   background: #FFFFFF;
   width: 100%;
@@ -138,12 +206,10 @@
   align-items: center;
   animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
-
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
-
 .googleHeader {
   width: 100%;
   display: flex;
@@ -154,9 +220,7 @@
   border-bottom: 1px solid #E5E7EB;
   margin-bottom: 30px;
 }
-
 .googleHeaderText { font-size: 16px; color: #5f6368; font-weight: 500; }
-
 .loginContent {
   display: flex;
   flex-direction: column;
@@ -165,10 +229,8 @@
   padding: 0 32px;
   gap: 20px;
 }
-
 .loginLogo { width: 50px; height: auto; margin-bottom: 5px; }
 .loginTitle { font-size: 24px; font-weight: 600; color: #202124; margin: 0; }
-
 .googleBtn {
   display: flex;
   align-items: center;
@@ -184,11 +246,9 @@
 }
 .googleBtn:active { background-color: #f8f9fa; }
 .googleIconInBtn { width: 28px; height: 28px; }
-
 .userInfo { display: flex; flex-direction: column; align-items: flex-start; flex: 1; }
 .userName { font-size: 14px; font-weight: 500; color: #3c4043; }
 .userEmail { font-size: 12px; color: #5f6368; }
-
 .termsText {
   margin-top: 20px;
   font-size: 11px;

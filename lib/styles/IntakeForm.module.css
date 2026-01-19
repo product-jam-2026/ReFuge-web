@@ -1,0 +1,657 @@
+/* lib/styles/IntakeForm.module.css */
+
+/* --- משתנים מקומיים --- */
+.pageContainer {
+  --c-blue: #011429;
+  --c-orange: #EE7248;
+  --c-gray-border: #E5E7EB;
+  --c-text: #0B1B2B;
+  --c-bg: #FFFFFF;
+  
+  display: flex;
+  flex-direction: column;
+  background-color: var(--c-bg);
+  height: 100dvh;
+  width: 100%;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  font-family: var(--font-simpler), sans-serif;
+  direction: rtl; /* וידוא גלובלי שהכל מתחיל מימין */
+}
+
+/* --- מסך טעינה (Loading) --- */
+.loadingOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--c-orange);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loadingText { text-align: center; }
+
+
+/* --- אזור עליון --- */
+.topBar {
+  padding: 60px 24px 10px 24px;
+  background: white;
+  z-index: 10;
+  flex-shrink: 0;
+}
+.headerArea { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+}
+
+/* תיקון: השורה העליונה צמודה לימין */
+.topRow { 
+  display: flex; 
+  justify-content: flex-start; /* מצמיד את הכל לימין */
+  align-items: center; 
+  margin-bottom: 8px; 
+  gap: 10px; /* רווח קטן בין החץ לטקסט */
+}
+
+
+/* החץ */
+.backBtn {
+  background: none; border: none; cursor: pointer; padding: 0; color: var(--c-blue);
+  display: flex; align-items: center;
+  /* אין צורך בשינוי כיוון, הוא יופיע ראשון מימין בגלל ה-RTL */
+}
+
+/* הטקסט "שלב 1 מתוך 7" */
+.stepMeta { 
+  font-size: 14px; 
+  color: #6b7280; 
+  font-weight: 500; 
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+/* פרוגרס בר - מתמלא מימין לשמאל */
+.progressBarTrack {
+  width: 100%; height: 6px; 
+  background-color: rgba(238, 133, 72, 0.2);
+  border-radius: 999px; 
+  overflow: hidden; 
+  direction: rtl; 
+  margin-top: 5px;
+}
+.progressBarFill {
+  height: 100%; 
+  background-color: var(--c-orange);
+  border-radius: 999px; 
+  transition: width 0.3s ease;
+}
+
+/* --- תוכן גולל --- */
+.scrollableContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 24px;
+  padding-bottom: 180px; 
+  display: flex;
+  flex-direction: column;
+}
+
+.titleBlock { 
+  text-align: right; 
+  margin-top: 10px; 
+  margin-bottom: 24px; 
+}
+.formTitle {
+  font-size: 24px; 
+  font-weight: 800; 
+  color: var(--c-blue);
+  margin-bottom: 4px; 
+  line-height: 1.2;
+  
+  /* === הוספה: מצמיד לימין === */
+  display: flex; 
+  gap: 8px; 
+  justify-content: flex-start; /* ב-RTL זה אומר ימין */
+}
+
+.formSubtitle { 
+  font-size: 14px; 
+  color: #6B7280; 
+  margin-bottom: 20px; 
+  font-weight: 500; 
+  
+  /* === הוספה: מצמיד לימין === */
+  display: flex; 
+  gap: 6px; 
+  justify-content: flex-start; /* ב-RTL זה אומר ימין */
+}
+
+.sectionHead { text-align: right; margin-bottom: 12px; margin-top: 10px; }
+.sectionTitle { 
+  font-size: 16px; color: #6B7280; font-weight: 600; 
+  display: flex; gap: 8px; justify-content: flex-start;
+}
+
+/* --- שדות --- */
+.fieldGroup {
+  display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 20px;
+}
+
+.label {
+  display: flex; 
+  justify-content: flex-start; /* הכל לימין */
+  align-items: center;
+  gap: 12px; 
+  font-size: 15px; font-weight: 500; color: #6b7280; padding: 0 4px;
+  text-align: right;
+}
+
+/* הגדרת הבסיס לכל סוגי השדות */
+.inputBase, .selectInput, .dateInput {
+  width: 100%; height: 56px; padding: 0 20px;
+  border-radius: 30px; border: 1px solid var(--c-gray-border);
+  background: white; font-size: 16px; color: var(--c-text);
+  outline: none; text-align: right; transition: all 0.2s;
+  font-family: inherit; font-weight: 500; appearance: none;
+}
+.inputBase:focus, .selectInput:focus, .dateInput:focus {
+  border-color: var(--c-blue); box-shadow: 0 0 0 1px var(--c-blue);
+}
+.inputBase::placeholder { color: #9CA3AF; }
+
+/* --- Date Field --- */
+.dateWrapper { 
+  position: relative; 
+  width: 100%; 
+  display: flex; 
+  align-items: center; 
+}
+.dateInput {
+  padding-left: 50px; /* מפנה מקום לאייקון שנמצא משמאל */
+  direction: rtl; 
+}
+/* תיקון מיקום האייקון */
+.calendarIcon {
+  position: absolute; 
+  left: 20px; /* צמוד לשמאל */
+  top: 50%; 
+  transform: translateY(-50%);
+  width: 24px; 
+  height: 24px;
+  color: var(--c-blue); 
+  pointer-events: none;
+  z-index: 2;
+}
+.dateInput::-webkit-calendar-picker-indicator {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer; margin: 0; padding: 0;
+}
+
+/* --- Combobox / Select --- */
+.comboboxWrap { position: relative; width: 100%; }
+.comboboxMenu {
+  position: absolute; top: 105%; left: 0; right: 0;
+  background: white; border: 1px solid #e5e7eb; border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 250px;
+  overflow-y: auto; z-index: 100; padding: 8px 0; list-style: none; margin: 0;
+}
+.comboboxItem {
+  padding: 12px 24px; cursor: pointer; display: flex;
+  justify-content: flex-start; gap: 10px; font-size: 15px;
+  color: var(--c-text); text-align: right;
+}
+
+.comboboxItem:hover { background-color: #F3F4F6; }
+
+/* --- Phone Field --- */
+.phoneRow { display: flex; gap: 12px; width: 100%; direction: ltr; } 
+.prefixWrapper { position: relative; width: 110px; flex-shrink: 0; }
+.prefixBtn {
+  width: 100%; height: 56px; border: 1px solid var(--c-gray-border);
+  border-radius: 30px; background: white; display: flex;
+  align-items: center; justify-content: center; gap: 6px;
+  font-size: 16px; font-weight: 500; color: var(--c-text); cursor: pointer;
+}
+.phoneBodyWrapper { flex-grow: 1; }
+.phoneBodyInput {
+  width: 100%; height: 56px; padding: 0 20px;
+  border-radius: 30px; border: 1px solid var(--c-gray-border);
+  background: white; font-size: 16px; color: var(--c-text);
+  outline: none; transition: all 0.2s;
+  font-family: inherit; font-weight: 500; appearance: none;
+  direction: ltr; text-align: left; 
+}
+.phoneBodyInput:focus { border-color: var(--c-blue); box-shadow: 0 0 0 1px var(--c-blue); }
+.arrowIcon { width: 16px; height: 16px; opacity: 0.5; }
+
+/* --- Gender Buttons --- */
+.selectionRow { display: flex; gap: 12px; width: 100%; }
+.selectionLabel {
+  flex: 1; position: relative; cursor: pointer; margin: 0;
+}
+.selectionLabel input { position: absolute; opacity: 0; width: 0; height: 0; }
+.selectionSpan {
+  display: flex; align-items: center; 
+  /* תיקון: הצמדה לימין */
+  justify-content: flex-start; 
+  padding-right: 20px; /* רווח מהקצה הימני */
+  
+  width: 100%; height: 56px; border: 1px solid var(--c-gray-border);
+  border-radius: 30px; background: white; color: #6b7280;
+  font-size: 16px; font-weight: 500; transition: all 0.2s;
+  gap: 15px; /* רווח בין השפות */
+}
+.selectionLabel input:checked + .selectionSpan {
+  border-color: var(--c-orange); color: var(--c-text);
+  box-shadow: 0 0 0 1px var(--c-orange); font-weight: 700;
+}
+
+/* --- Footer Buttons --- */
+.fixedFooter {
+  position: fixed; bottom: 0; left: 0; width: 100%;
+  background: linear-gradient(to top, #ffffff 90%, rgba(255,255,255,0));
+  padding: 24px; padding-bottom: calc(30px + env(safe-area-inset-bottom));
+  z-index: 20; display: flex; flex-direction: column; gap: 12px; align-items: center;
+}
+.btnPrimary {
+  width: 100%; max-width: 353px; height: 56px;
+  background-color: var(--c-blue); color: white;
+  border-radius: 30px; font-size: 18px; font-weight: 700;
+  border: none; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; gap: 10px;
+}
+.btnSecondary {
+  width: 100%; max-width: 353px; height: 56px;
+  background-color: transparent; color: var(--c-orange);
+  border: 1px solid var(--c-orange); border-radius: 30px;
+  font-size: 16px; font-weight: 700; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; gap: 10px;
+}
+
+/* --- מסך סיכום (Review) --- */
+.reviewHeader {
+  background-color: var(--c-orange);
+  border-radius: 0 0 30px 30px;
+  padding: 60px 24px 30px 24px; 
+  text-align: center; color: white;
+  
+  /* התיקון לרוחב מלא: מתיחה מחוץ לפאדינג של הקונטיינר */
+  width: calc(100% + 48px); /* 100% ועוד פעמיים ה-Padding של 24px */
+  margin-left: -24px; 
+  margin-right: -24px;
+  margin-top: -24px; /* ביטול רווח עליון אם יש */
+  
+  margin-bottom: 24px;
+}
+.reviewTitle {
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1.2;
+  
+  /* === הוספה: מסדר את השפות עם רווח ביניהן === */
+  display: flex;
+  justify-content: center; /* שומר על הכותרת באמצע */
+  gap: 12px; /* גודל הרווח בין הערבית לעברית */
+}
+.reviewSubtitle { font-size: 14px; opacity: 0.9; }
+
+.translationPill {
+  display: flex; flex-direction: column; width: 100%;
+  border-radius: 16px; border: 1px solid var(--c-gray-border);
+  overflow: hidden; background-color: white; margin-bottom: 20px;
+}
+.transOriginal {
+  padding: 0 20px; height: 50px; display: flex; align-items: center; justify-content: flex-end;
+  font-size: 16px; color: var(--c-text); border-bottom: 1px solid #f3f4f6; text-align: right;
+}
+.transTranslated {
+  padding: 0 20px; height: 50px; display: flex; align-items: center; justify-content: flex-end;
+  font-size: 16px; font-weight: 700; color: var(--c-text); background-color: #FFF0E6; text-align: right;
+}
+
+.readOnlyWrapper { position: relative; width: 100%; }
+.readOnlyInput {
+  width: 100%; height: 56px; padding: 0 20px;
+  border-radius: 30px; border: 1px solid var(--c-gray-border);
+  font-size: 16px; color: var(--c-text);
+  outline: none; text-align: right;
+  font-family: inherit; font-weight: 500;
+  pointer-events: none; background: #fff;
+}
+
+/* --- Intro Screen --- */
+.stepSplashContainer {
+  display: flex; flex-direction: column; background-color: var(--c-orange);
+  height: 100dvh; width: 100%; position: fixed; inset: 0;
+  padding: 24px; padding-top: 60px; color: #F7F8EC;
+  z-index: 50; overflow-y: auto;
+}
+.stepSplashImage {
+  width: 100%; max-width: 280px; height: auto; margin: 40px auto; object-fit: contain;
+}
+.stepSplashContent {
+  margin-top: auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  margin-bottom: 40px;
+  
+  /* זה מצמיד את כל הבלוקים לימין */
+  align-items: flex-start; 
+  text-align: right;
+}
+.stepNumberTitle { 
+  font-size: 32px; 
+  font-weight: 700; 
+  line-height: 1.2; 
+  margin: 0;
+  
+  /* שורה אחת */
+  display: flex; 
+  flex-direction: row; 
+  /* האלמנטים בתוך השורה נצמדים לימין (התחלה ב-RTL) */
+  justify-content: flex-start; 
+  gap: 10px; 
+}
+
+.stepMainTitle { 
+  font-size: 22px; 
+  font-weight: 600; 
+  opacity: 0.95; 
+  margin: 0;
+  
+  /* שורה אחת */
+  display: flex; 
+  flex-direction: row; 
+  justify-content: flex-start; 
+  gap: 10px; 
+}
+
+.stepDescription { 
+  font-size: 15px; 
+  opacity: 0.9; 
+  line-height: 1.5; 
+  text-align: right; 
+  margin: 0;
+}
+
+/* תיקון צבע הכפתור במסך פתיחה */
+.btnDark {
+  width: 100%; max-width: 353px; height: 56px;
+  background-color: #011429; /* הצבע הכהה הנכון */
+  color: white;
+  border-radius: 30px; font-size: 18px; font-weight: 700;
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  align-self: center; flex-shrink: 0; gap: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+/* --- תוספות חסרות למסך סיכום --- */
+
+.summaryPair {
+  margin-bottom: 24px;
+}
+
+.summaryPairLabel {
+  display: flex;
+  justify-content: flex-start; /* מצמיד לימין ב-RTL */
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+  padding: 0 4px;
+}
+
+.summaryInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #E5E7EB;
+  background-color: white;
+}
+
+.originalInput {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-bottom: 1px solid #E5E7EB;
+  padding: 0 20px;
+  font-size: 16px;
+  color: #0B1B2B;
+  background: #fff;
+  text-align: right;
+  outline: none;
+}
+
+.translatedInput {
+  width: 100%;
+  height: 60px;
+  border: none;
+  padding: 0 20px;
+  font-size: 16px;
+  color: #011429;
+  font-weight: 700;
+  background: #FFF0E6;
+  
+  /* === הוספתי את זה: === */
+  text-align: right;
+  direction: rtl; /* <--- השורה הקריטית */
+  
+  outline: none;
+}
+/* --- תוספת לטווח תאריכים (Step 2) --- */
+/* --- תוספות לשלב 2 (Date Range) --- */
+.dateRangeRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+/* הפס המפריד בין התאריכים */
+.dateSeparator {
+  font-size: 24px;
+  color: #9CA3AF;
+  flex-shrink: 0;
+  line-height: 1;
+  padding-top: 5px; /* יישור אופטי עם השדות */
+}
+
+/* מוודא שכל שדה תאריך בשורה תופס חצי מהרוחב ולא חורג */
+.dateRangeItem {
+  flex: 1;
+  min-width: 0; /* קריטי! מונע מהפלקס "להתפוצץ" ולחרוג מהמסך */
+}
+
+/* --- תוספות לשלב 3 (Address Grid & Check Cards) --- */
+
+/* שורת הכתובת המפוצלת (בית, כניסה, דירה) */
+.addressGrid {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.addressGrid > div {
+  flex: 1;
+  min-width: 0; /* מונע גלישה */
+}
+
+/* כרטיסי בחירה (כמו רדיו/צ'קבוקס אבל מעוצבים) - לרכוש ותעסוקה */
+.checkCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 20px;
+  border: 1px solid var(--c-gray-border);
+  border-radius: 30px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  /* טקסט */
+  color: var(--c-text);
+  font-weight: 500;
+  font-size: 16px;
+  text-align: right;
+  justify-content: flex-start;
+}
+
+.checkCardSelected {
+  border-color: var(--c-orange);
+  background-color: #FFF5F0;
+  box-shadow: 0 0 0 1px var(--c-orange);
+}
+
+.checkInput {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--c-orange);
+  flex-shrink: 0;
+}
+
+/* אזור הטוגל (כתובת למכתבים שונה) */
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  color: var(--c-text);
+}
+
+/* --- עדכון: כרטיסי בחירה (כמו רדיו/צ'קבוקס אבל מעוצבים) --- */
+.checkCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 20px;
+  border: 1px solid var(--c-gray-border);
+  border-radius: 30px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  /* טקסט */
+  color: var(--c-text);
+  font-weight: 500;
+  font-size: 16px;
+  text-align: right;
+  justify-content: flex-start;
+}
+
+.checkCardSelected {
+  border-color: var(--c-orange);
+  /* הורדנו את הרקע הכתום החזק, שמנו לבן או כתום ממש בהיר */
+  background-color: #fff; 
+  box-shadow: 0 0 0 1px var(--c-orange); /* מדגיש את המסגרת */
+  font-weight: 700;
+}
+
+.checkInput {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--c-orange);
+  flex-shrink: 0;
+}
+
+/* --- תוספות לשלב 3 --- */
+
+/* רשימת כפתורים אנכית (לנכסים) */
+/* lib/styles/IntakeForm.module.css */
+
+/* ... (כל הקוד הקיים נשאר) ... */
+
+/* --- תוספות לשלב 3 --- */
+
+/* סידור אנכי לכפתורי בחירה אליפטיים (כמו בנכסים) */
+.assetsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* התאמה למסך סיכום: כותרת כתומה לרוחב מלא */
+.reviewHeader {
+  width: calc(100% + 48px);
+  margin-left: -24px;
+  margin-right: -24px;
+}
+/* --- תוספות לשלב 7 (העלאת קבצים) --- */
+
+.fileInputLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* פלוס בצד אחד, טקסט בצד שני */
+  width: 100%;
+  height: 56px;
+  padding: 0 20px;
+  border: 1px solid var(--c-gray-border);
+  border-radius: 30px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.fileInputLabel:hover {
+  border-color: var(--c-blue);
+}
+
+.fileSelected {
+  border-color: var(--c-orange);
+  background-color: #FFF5F0;
+  color: var(--c-blue);
+  font-weight: 500;
+}
+
+.plusIcon {
+  font-size: 24px;
+  color: var(--c-orange);
+  font-weight: 300;
+  line-height: 1;
+}
+
+.fileName {
+  font-size: 15px;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 85%;
+  direction: ltr; /* שמות קבצים נראים טוב יותר ב-LTR */
+  text-align: right; 
+}
+
+.filePlaceholder {
+  color: #9CA3AF;
+  font-size: 15px;
+}
+
+.hiddenInput {
+  display: none;
+}

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache"; // חשוב עבור שלב 6
 import { translateToHebrew, translateToArabic } from "@/app/actions/translate";
 
 // ----------------------------------------------------------------------
@@ -128,29 +129,23 @@ export async function submitStep1(locale: string, mode: "draft" | "next", formDa
 }
 
 // ----------------------------------------------------------------------
-// Step 2 Logic (הוספנו את residenceCity לתרגום)
+// Step 2 Logic
 // ----------------------------------------------------------------------
 
 export async function translateStep2Data(formData: FormData) {
   "use server";
-  
-  // ✅ הוספנו את residenceCity לרשימת השדות לתרגום
   const fields = ["residenceCity", "residenceAddress"]; 
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
 
   await Promise.all(
     fields.map(async (key) => {
       const originalValue = String(formData.get(key) || "").trim();
-      
-      // אם השדה ריק, נחזיר תוצאה ריקה כדי לא לשבור את הלולאה בקליינט
       if (!originalValue) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-
       const sourceIsHebrew = isHebrew(originalValue);
       let translatedValue = "";
-
       if (sourceIsHebrew) {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
@@ -178,8 +173,6 @@ export async function submitStep2(locale: string, mode: "draft" | "next", formDa
     visaStartDate: buildISODateFromForm(formData, "visaStartDate"),
     visaEndDate: buildISODateFromForm(formData, "visaEndDate"),
     entryDate: buildISODateFromForm(formData, "entryDate"),
-    
-    // שדות דו-לשוניים
     residenceCity: buildDualField("residenceCity"),
     residenceAddress: buildDualField("residenceAddress"),
   };
@@ -275,31 +268,23 @@ async function finishRegistration(params: {
 }
 
 // ----------------------------------------------------------------------
-// Other Steps (3-7)
-// ----------------------------------------------------------------------
-
-// ----------------------------------------------------------------------
 // Step 3 Logic
 // ----------------------------------------------------------------------
 
 export async function translateStep3Data(formData: FormData) {
   "use server";
-  // השדות שביקשת לתרגם: רחוב מגורים, שם מעסיק, שם עסק, כתובת עבודה
   const fields = ["regStreet", "employerName", "businessName", "workAddress"];
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
 
   await Promise.all(
     fields.map(async (key) => {
       const originalValue = String(formData.get(key) || "").trim();
-      
       if (!originalValue) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-
       const sourceIsHebrew = isHebrew(originalValue);
       let translatedValue = "";
-
       if (sourceIsHebrew) {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
@@ -316,13 +301,10 @@ function buildOccupationJSON(formData: FormData, buildDualField: (name: string) 
   const rawAssets = formData.getAll("assets").map(String);
   const cleanedAssets = Array.from(new Set(rawAssets)).filter(Boolean);
   
-  // טיפול בשם העסק או שם המעסיק - שניהם נכנסים לאותו שדה ב-DB
-  // אנו בודקים מי מהם קיים ושולחים אותו לפונקציה הדו-לשונית
   const businessVal = formData.get("businessName");
   const employerVal = formData.get("employerName");
   
   let finalEmployerName = { he: "", ar: "" };
-  
   if (businessVal) {
      finalEmployerName = buildDualField("businessName");
   } else if (employerVal) {
@@ -331,24 +313,20 @@ function buildOccupationJSON(formData: FormData, buildDualField: (name: string) 
 
   return JSON.stringify({
     assets: cleanedAssets,
-    occupationText: normalizeText(formData.get("occupationText")), // שדה חופשי ישן אם קיים
-    employerName: finalEmployerName, // נשמר כאובייקט {he, ar}
-    workAddress: buildDualField("workAddress"), // נשמר כאובייקט {he, ar}
+    occupationText: normalizeText(formData.get("occupationText")),
+    employerName: finalEmployerName,
+    workAddress: buildDualField("workAddress"),
     workStartDate: normalizeText(formData.get("workStartDate")),
-    notWorkingSub: normalizeText(formData.get("notWorkingSub")), // הוספנו את תת-הסטטוס של לא עובד
+    notWorkingSub: normalizeText(formData.get("notWorkingSub")),
   });
 }
 
 export async function submitStep3(locale: string, mode: "draft" | "next" | "back", formData: FormData) {
   "use server"; 
-  
-  // פונקציית עזר לשמירת שדות דו-לשוניים (כמו בשלבים 1 ו-2)
   const buildDualField = (baseName: string) => {
     const heVal = normalizeText(formData.get(`${baseName}He`));
     const arVal = normalizeText(formData.get(`${baseName}Ar`));
     const baseVal = normalizeText(formData.get(baseName));
-    
-    // אם הגיעו ערכים מפוצלים (ממסך הסיכום) נשתמש בהם, אחרת בערך המקורי
     return { he: heVal || baseVal, ar: arVal || "" };
   };
 
@@ -357,19 +335,16 @@ export async function submitStep3(locale: string, mode: "draft" | "next" | "back
   const patch = {
     maritalStatus: normalizeText(formData.get("maritalStatus")),
     statusDate: normalizeText(formData.get("statusDate")),
-    
     registeredAddress: {
-      city: normalizeText(formData.get("regCity")), // עיר נשמרת כרגע כטקסט (בחירה מרשימה)
-      street: buildDualField("regStreet"), // רחוב נשמר כדו-לשוני
+      city: normalizeText(formData.get("regCity")),
+      street: buildDualField("regStreet"),
       houseNumber: normalizeDigits(formData.get("regHouseNumber")),
       entry: normalizeText(formData.get("regEntry")),
       apartment: normalizeDigits(formData.get("regApartment")),
       zip: normalizeDigits(formData.get("regZip")),
     },
-    
     housingType: normalizeText(formData.get("housingType")),
     mailingDifferent: mailingDiff,
-    
     mailingAddress: {
       city: mailingDiff ? normalizeText(formData.get("mailCity")) : "",
       street: mailingDiff ? normalizeText(formData.get("mailStreet")) : "",
@@ -378,9 +353,7 @@ export async function submitStep3(locale: string, mode: "draft" | "next" | "back
       apartment: mailingDiff ? normalizeDigits(formData.get("mailApartment")) : "",
       zip: mailingDiff ? normalizeDigits(formData.get("mailZip")) : "",
     },
-    
     employmentStatus: normalizeText(formData.get("employmentStatus")),
-    // כאן אנו מעבירים את buildDualField כדי לשמור תרגומים גם בתוך ה-JSON
     occupation: buildOccupationJSON(formData, buildDualField),
   };
   
@@ -397,8 +370,6 @@ export async function submitStep3(locale: string, mode: "draft" | "next" | "back
 
 export async function translateStep4Data(formData: FormData) {
   "use server";
-  // כרגע אין שדות טקסט חופשי לתרגום בשלב 4 (הכל בחירות או מספרים).
-  // אנו מחזירים אובייקט ריק כדי לשמור על המבנה האחיד של הקוד.
   return {}; 
 }
 
@@ -425,15 +396,13 @@ export async function submitStep4(locale: string, mode: "draft" | "next" | "back
     await saveSignupStep({ locale, step: 4, patch, goNext: mode === "next" });
   }
 }
-// הוסף את זה לקובץ actions.ts הקיים
 
 // ----------------------------------------------------------------------
-// Step 5 Logic (Spouse / Additional Parent)
+// Step 5 Logic
 // ----------------------------------------------------------------------
 
 export async function translateStep5Data(formData: FormData) {
   "use server";
-  // שדות לתרגום: שמות ההורה הנוסף
   const fields = ["firstName", "lastName", "oldFirstName", "oldLastName"];
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
 
@@ -460,7 +429,6 @@ export async function translateStep5Data(formData: FormData) {
 
 export async function submitStep5(locale: string, mode: "draft" | "next" | "back", formData: FormData) {
   "use server";
-  
   const buildDualField = (baseName: string) => {
     const heVal = normalizeText(formData.get(`${baseName}He`));
     const arVal = normalizeText(formData.get(`${baseName}Ar`));
@@ -469,7 +437,7 @@ export async function submitStep5(locale: string, mode: "draft" | "next" | "back
   };
 
   const patch = {
-    spouse: { // שומרים תחת אובייקט spouse כדי להבדיל מהמשתמש הראשי
+    spouse: { 
       lastName: buildDualField("lastName"),
       firstName: buildDualField("firstName"),
       oldLastName: buildDualField("oldLastName"),
@@ -494,24 +462,122 @@ export async function submitStep5(locale: string, mode: "draft" | "next" | "back
   }
 }
 
-export async function submitStep6(locale: string, mode: "draft" | "finish" | "back" | "add_another", formData: FormData) {
+// ----------------------------------------------------------------------
+// Step 6 Logic (Children) - מעודכן עם revalidatePath
+// ----------------------------------------------------------------------
+
+export async function translateStep6Data(childrenList: any[]) {
   "use server";
-  const child = {
-    lastName: normalizeText(formData.get("childLastName"), 60),
-    firstName: normalizeText(formData.get("childFirstName"), 60),
-  };
-  const patch = { children: [child] }; 
-  if (mode === "back") {
-    await saveDraftAndGoToStep({ locale, step: 6, patch, goToStep: 5 });
-  } else if (mode === "finish") {
-    await saveSignupStep({ locale, step: 6, patch, goNext: true });
-  } else if (mode === "add_another") {
-    await saveSignupStep({ locale, step: 6, patch, goNext: false });
-    redirect(`/${locale}/signup/step-6?saved=1`);
-  } else {
-    await saveSignupStep({ locale, step: 6, patch, goNext: false });
-  }
+  const translatedChildren = await Promise.all(
+    childrenList.map(async (child) => {
+      const fName = child.firstName || "";
+      let fNameTrans = "";
+      let fDir = "ar-to-he";
+      if (fName) {
+         if (isHebrew(fName)) {
+            fNameTrans = await translateToArabic(fName);
+            fDir = "he-to-ar";
+         } else {
+            fNameTrans = await translateToHebrew(fName);
+            fDir = "ar-to-he";
+         }
+      }
+
+      const lName = child.lastName || "";
+      let lNameTrans = "";
+      let lDir = "ar-to-he";
+      if (lName) {
+         if (isHebrew(lName)) {
+            lNameTrans = await translateToArabic(lName);
+            lDir = "he-to-ar";
+         } else {
+            lNameTrans = await translateToHebrew(lName);
+            lDir = "ar-to-he";
+         }
+      }
+
+      return {
+        ...child,
+        firstNameTranslation: { 
+            original: fName, 
+            translated: fNameTrans, 
+            direction: fDir
+        },
+        lastNameTranslation: { 
+            original: lName, 
+            translated: lNameTrans, 
+            direction: lDir
+        }
+      };
+    })
+  );
+
+  return translatedChildren;
 }
+
+export async function submitStep6Child(locale: string, actionType: "add_another" | "finish_step" | "save_draft", formData: FormData) {
+  "use server";
+  
+  const { supabase, user } = await getAuthedSupabase();
+
+  // 1. שליפת נתונים קיימים
+  const { data: profile } = await supabase.from("profiles").select("data").eq("id", user.id).single();
+  const existingData = profile?.data || {};
+  const existingIntake = existingData.intake || {};
+  const step6 = existingIntake.step6 || {};
+  const currentChildren = Array.isArray(step6.children) ? step6.children : [];
+
+  // 2. בניית הילד הנוכחי מהטופס
+  const firstName = normalizeText(formData.get("childFirstName"));
+  const lastName = normalizeText(formData.get("childLastName"));
+  
+  let updatedChildren = [...currentChildren];
+
+  // רק אם יש מידע (שם פרטי), נוסיף את הילד
+  if (firstName) {
+      const newChild = {
+        firstName,
+        lastName,
+        gender: normalizeText(formData.get("childGender")),
+        birthDate: buildISODateFromForm(formData, "childBirthDate"),
+        nationality: normalizeText(formData.get("childNationality")),
+        israeliId: normalizeDigits(formData.get("childIsraeliId")),
+        residenceCountry: normalizeText(formData.get("childResidenceCountry")),
+        entryDate: buildISODateFromForm(formData, "childEntryDate"),
+        arrivalToIsraelDate: buildISODateFromForm(formData, "childArrivalToIsraelDate"),
+      };
+      updatedChildren.push(newChild);
+  }
+
+  // 3. שמירה
+  const nextIntake = mergeDeep(existingIntake, {
+    step6: { children: updatedChildren },
+    currentStep: actionType === "finish_step" ? Math.max(existingIntake.currentStep || 1, 7) : existingIntake.currentStep
+  });
+
+  const { error } = await supabase.from("profiles").update({ data: { ...existingData, intake: nextIntake } }).eq("id", user.id);
+
+  if (error) throw new Error("Failed to save child");
+
+  // 4. טיפול בתגובה - ללא redirect במקרה של הוספת עוד ילד
+  if (actionType === "add_another") {
+    // מעדכנים את הקאש ומחזירים הצלחה כדי שהקליינט יאפס את הטופס
+    revalidatePath(`/${locale}/signup/step-6`);
+    return { success: true, savedChild: true };
+  } 
+  
+  // במקרה של סיום, מחזירים את כל הילדים לסיכום
+  return { success: true, updatedChildren };
+}
+
+export async function proceedToStep7(locale: string) {
+    "use server";
+    redirect(`/${locale}/signup/step-7`);
+}
+
+// ----------------------------------------------------------------------
+// Step 7 Logic
+// ----------------------------------------------------------------------
 
 export async function submitStep7(locale: string, mode: "draft" | "finish" | "back", formData: FormData) {
   "use server";
