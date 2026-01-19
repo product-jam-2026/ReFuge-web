@@ -44,6 +44,12 @@ type Props = {
     phone: string;
     email: string;
   };
+  nameTranslations?: {
+    lastName?: { he?: string; ar?: string } | null;
+    firstName?: { he?: string; ar?: string } | null;
+    oldLastName?: { he?: string; ar?: string } | null;
+    oldFirstName?: { he?: string; ar?: string } | null;
+  };
   saveDraftAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
 };
@@ -230,7 +236,7 @@ function PhoneField({ labelAr, labelHe, name, defaultValue, prefixes }: {
 }
 
 // --- Main Form ---
-export default function Step1FormClient({ saved, defaults, saveDraftAction, saveAndNextAction }: Props) {
+export default function Step1FormClient({ locale, saved, defaults, nameTranslations, saveDraftAction, saveAndNextAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
   
@@ -253,14 +259,35 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
     formData.forEach((value, key) => { currentData[key] = value; });
     setFormDataState(currentData);
 
+    const existingResults: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
+    const maybeUseExisting = (key: keyof NonNullable<Props["nameTranslations"]>) => {
+      const current = String(formData.get(key as string) || "").trim();
+      if (!current) return;
+      const existing = nameTranslations?.[key];
+      const he = existing?.he?.trim() || "";
+      const ar = existing?.ar?.trim() || "";
+      if (he && ar && current === he && ar !== he) {
+        existingResults[key as string] = { original: current, translated: ar, direction: "he-to-ar" };
+      } else if (he && ar && current === ar && he !== ar) {
+        existingResults[key as string] = { original: current, translated: he, direction: "ar-to-he" };
+      }
+    };
+    maybeUseExisting("lastName");
+    maybeUseExisting("firstName");
+    maybeUseExisting("oldLastName");
+    maybeUseExisting("oldFirstName");
+
     setIsTranslating(true);
 
     try {
-      const translatedResult = await translateStep1Data(formData);
-      setTranslations(translatedResult);
+      const translatedResult = await translateStep1Data(formData, locale);
+      setTranslations({ ...translatedResult, ...existingResults });
       setScreen(5);
     } catch (error) {
       console.error("Translation error:", error);
+      if (Object.keys(existingResults).length > 0) {
+        setTranslations(existingResults);
+      }
       setScreen(5);
     } finally {
       setIsTranslating(false);

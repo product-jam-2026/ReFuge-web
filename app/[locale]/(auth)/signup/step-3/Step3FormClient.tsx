@@ -130,6 +130,7 @@ type Props = {
 };
 
 export default function Step3FormClient({
+  locale,
   saved,
   defaults,
   saveDraftAction,
@@ -218,7 +219,7 @@ export default function Step3FormClient({
     setIsTranslating(true);
 
     try {
-      const translatedResult = await translateStep3Data(formData);
+      const translatedResult = await translateStep3Data(formData, locale);
       setTranslations(translatedResult || {});
       setScreen(TOTAL_SCREENS + 1); 
     } catch (error) {

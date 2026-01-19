@@ -69,11 +69,23 @@ function isHebrew(text: string) {
   return /[\u0590-\u05FF]/.test(text);
 }
 
+function isArabic(text: string) {
+  return /[\u0600-\u06FF]/.test(text);
+}
+
+function resolveSourceLang(text: string, locale?: string): "he" | "ar" {
+  const hasHe = isHebrew(text);
+  const hasAr = isArabic(text);
+  if (hasHe && !hasAr) return "he";
+  if (hasAr && !hasHe) return "ar";
+  return locale === "ar" ? "ar" : "he";
+}
+
 // ----------------------------------------------------------------------
 // Step 1 Logic
 // ----------------------------------------------------------------------
 
-export async function translateStep1Data(formData: FormData) {
+export async function translateStep1Data(formData: FormData, locale?: string) {
   "use server";
   const fields = ["firstName", "lastName", "oldFirstName", "oldLastName"];
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
@@ -85,9 +97,9 @@ export async function translateStep1Data(formData: FormData) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-      const sourceIsHebrew = isHebrew(originalValue);
+      const sourceLang = resolveSourceLang(originalValue, locale);
       let translatedValue = "";
-      if (sourceIsHebrew) {
+      if (sourceLang === "he") {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
       } else {
@@ -132,7 +144,7 @@ export async function submitStep1(locale: string, mode: "draft" | "next", formDa
 // Step 2 Logic
 // ----------------------------------------------------------------------
 
-export async function translateStep2Data(formData: FormData) {
+export async function translateStep2Data(formData: FormData, locale?: string) {
   "use server";
   const fields = ["residenceCity", "residenceAddress"]; 
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
@@ -144,9 +156,9 @@ export async function translateStep2Data(formData: FormData) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-      const sourceIsHebrew = isHebrew(originalValue);
+      const sourceLang = resolveSourceLang(originalValue, locale);
       let translatedValue = "";
-      if (sourceIsHebrew) {
+      if (sourceLang === "he") {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
       } else {
@@ -271,7 +283,7 @@ async function finishRegistration(params: {
 // Step 3 Logic
 // ----------------------------------------------------------------------
 
-export async function translateStep3Data(formData: FormData) {
+export async function translateStep3Data(formData: FormData, locale?: string) {
   "use server";
   const fields = ["regStreet", "employerName", "businessName", "workAddress"];
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
@@ -283,9 +295,9 @@ export async function translateStep3Data(formData: FormData) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-      const sourceIsHebrew = isHebrew(originalValue);
+      const sourceLang = resolveSourceLang(originalValue, locale);
       let translatedValue = "";
-      if (sourceIsHebrew) {
+      if (sourceLang === "he") {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
       } else {
@@ -401,7 +413,7 @@ export async function submitStep4(locale: string, mode: "draft" | "next" | "back
 // Step 5 Logic
 // ----------------------------------------------------------------------
 
-export async function translateStep5Data(formData: FormData) {
+export async function translateStep5Data(formData: FormData, locale?: string) {
   "use server";
   const fields = ["firstName", "lastName", "oldFirstName", "oldLastName"];
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
@@ -413,9 +425,9 @@ export async function translateStep5Data(formData: FormData) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-      const sourceIsHebrew = isHebrew(originalValue);
+      const sourceLang = resolveSourceLang(originalValue, locale);
       let translatedValue = "";
-      if (sourceIsHebrew) {
+      if (sourceLang === "he") {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
       } else {
@@ -466,7 +478,7 @@ export async function submitStep5(locale: string, mode: "draft" | "next" | "back
 // Step 6 Logic (Children) - מעודכן עם revalidatePath
 // ----------------------------------------------------------------------
 
-export async function translateStep6Data(childrenList: any[]) {
+export async function translateStep6Data(childrenList: any[], locale?: string) {
   "use server";
   const translatedChildren = await Promise.all(
     childrenList.map(async (child) => {
@@ -474,7 +486,8 @@ export async function translateStep6Data(childrenList: any[]) {
       let fNameTrans = "";
       let fDir = "ar-to-he";
       if (fName) {
-         if (isHebrew(fName)) {
+         const sourceLang = resolveSourceLang(fName, locale);
+         if (sourceLang === "he") {
             fNameTrans = await translateToArabic(fName);
             fDir = "he-to-ar";
          } else {
@@ -487,7 +500,8 @@ export async function translateStep6Data(childrenList: any[]) {
       let lNameTrans = "";
       let lDir = "ar-to-he";
       if (lName) {
-         if (isHebrew(lName)) {
+         const sourceLang = resolveSourceLang(lName, locale);
+         if (sourceLang === "he") {
             lNameTrans = await translateToArabic(lName);
             lDir = "he-to-ar";
          } else {
