@@ -22,17 +22,20 @@ export async function GET(request: Request) {
       // 3. בדיקה אם המשתמש סיים הרשמה
       const { data: profile } = await supabase
         .from("profiles")
-        .select("registration_completed")
+        .select("registration_completed, PrefLang")
         .eq("id", user.id)
         .maybeSingle();
 
+      const preferredLocale = profile?.PrefLang ? "ar" : "he";
+      const redirectLocale = locale === "ar" || locale === "he" ? locale : preferredLocale;
+
       // אם הפרופיל קיים וההרשמה הושלמה -> דאשבורד
       if (profile && profile.registration_completed === true) {
-        return NextResponse.redirect(new URL(`/${locale}/home`, requestUrl.origin));
+        return NextResponse.redirect(new URL(`/${redirectLocale}/home`, requestUrl.origin));
       }
       
       // אחרת -> אינטייק
-      return NextResponse.redirect(new URL(`/${locale}/signup/intake`, requestUrl.origin));
+      return NextResponse.redirect(new URL(`/${redirectLocale}/signup/intake`, requestUrl.origin));
     }
   }
 

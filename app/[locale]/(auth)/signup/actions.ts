@@ -267,7 +267,7 @@ async function finishRegistration(params: {
   // 1. שליפת הסטטוס הנוכחי *לפני* השמירה
   const { data: currentProfile } = await supabase
     .from("profiles")
-    .select("data, registration_completed") // מוודאים ששולפים גם את הדגל
+    .select("data, registration_completed, PrefLang") // מוודאים ששולפים גם את הדגל
     .eq("id", user.id)
     .single();
 
@@ -290,12 +290,15 @@ async function finishRegistration(params: {
   }).eq("id", user.id);
 
   // 3. ניתוב חכם
+  const preferredLocale = currentProfile?.PrefLang ? "ar" : "he";
+  const redirectLocale = params.locale === "ar" || params.locale === "he" ? params.locale : preferredLocale;
+
   if (isFirstTime) {
       // פעם ראשונה? לך למסך "שלום מוחמד"
-      redirect(`/${params.locale}/signup/success`);
+      redirect(`/${redirectLocale}/signup/success`);
   } else {
       // עריכה חוזרת? לך ישר לבית
-      redirect(`/${params.locale}/home`);
+      redirect(`/${redirectLocale}/home`);
   }
 }
 // ----------------------------------------------------------------------

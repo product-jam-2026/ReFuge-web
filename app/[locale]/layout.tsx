@@ -39,7 +39,7 @@ export default async function RootLayout({
   params: { locale: string };
 }) {
   const messages = await getMessages();
-  const dir = locale === "en" ? "ltr" : "rtl";
+  const dir = "rtl";
 
   return (
     <html lang={locale} dir={dir} className={`${simplerPro.variable} ${simplerProArabic.variable}`}>

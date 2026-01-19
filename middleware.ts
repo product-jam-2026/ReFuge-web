@@ -5,7 +5,7 @@ import createMiddleware from "next-intl/middleware";
 import { createServerClient } from "@supabase/ssr";
 
 const intlMiddleware = createMiddleware({
-  locales: ["en", "he", "ar"],
+  locales: ["he", "ar"],
   defaultLocale: "he",
 });
 
@@ -26,10 +26,10 @@ function isPublicPath(pathname: string) {
   // דפי auth שפתוחים גם בלי התחברות
   // (התאימי אם אצלך הנתיבים נקראים אחרת)
   const publicRoutes = [
-    /^\/(he|ar|en)\/login\/?$/i,
-    /^\/(he|ar|en)\/signup\/?$/i,
-    /^\/(he|ar|en)\/signup\/.*$/i,
-    /^\/(he|ar|en)\/auth\/callback\/?$/i,
+    /^\/(he|ar)\/login\/?$/i,
+    /^\/(he|ar)\/signup\/?$/i,
+    /^\/(he|ar)\/signup\/.*$/i,
+    /^\/(he|ar)\/auth\/callback\/?$/i,
   ];
 
   return publicRoutes.some((re) => re.test(pathname));
@@ -42,6 +42,14 @@ type CookieToSet = {
 };
 
 export default async function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
+
+  if (pathname.startsWith("/en/") || pathname === "/en") {
+    const redirectUrl = req.nextUrl.clone();
+    redirectUrl.pathname = pathname.replace(/^\/en\b/, "/he");
+    return NextResponse.redirect(redirectUrl);
+  }
+
   // 1) קודם כל next-intl (מוסיף/מתקן locale ב-URL)
   const intlResponse = intlMiddleware(req);
 
@@ -55,8 +63,6 @@ export default async function middleware(req: NextRequest) {
   if (!guardEnabled) {
     return intlResponse;
   }
-
-  const pathname = req.nextUrl.pathname;
 
   // 3) נתיבים ציבוריים – לא חוסמים
   if (isPublicPath(pathname)) {

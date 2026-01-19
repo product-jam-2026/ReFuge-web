@@ -4,7 +4,7 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children, params: { locale } }: AppLayoutProps) {
-  const dir = locale === "en" ? "ltr" : "rtl";
+  const dir = "rtl";
 
   return (
     <div dir={dir}>
