@@ -17,6 +17,8 @@ type DocumentRowClientProps = {
   publicUrl: string;
   emptyText: string;
   fileTooLargeText: string;
+  uploadLoadingText: string;
+  deleteLoadingText: string;
   deleteText: string;
   hasDoc: boolean;
   maxFileSizeBytes: number;
@@ -34,6 +36,8 @@ export default function DocumentRowClient({
   publicUrl,
   emptyText,
   fileTooLargeText,
+  uploadLoadingText,
+  deleteLoadingText,
   deleteText,
   hasDoc,
   maxFileSizeBytes,
@@ -44,6 +48,7 @@ export default function DocumentRowClient({
   const deleteFormId = `delete-${docKey}-${otherIndex ?? "single"}`;
   const inputId = `upload-${docKey}-${otherIndex ?? "single"}`;
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<"upload" | "delete" | null>(null);
 
   const submitForm = () => {
     if (formRef.current?.requestSubmit) {
@@ -59,14 +64,26 @@ export default function DocumentRowClient({
     if (files.some((file) => file.size > maxFileSizeBytes)) {
       setError(fileTooLargeText);
       if (input) input.value = "";
+      setLoading(null);
       return;
     }
     setError(null);
+    setLoading("upload");
     submitForm();
   };
 
   return (
     <div className={intakeStyles.fieldGroup}>
+      {loading ? (
+        <div className={intakeStyles.loadingOverlay}>
+          <div className={intakeStyles.spinner}></div>
+          <div className={intakeStyles.loadingText} style={{ marginTop: 20 }}>
+            <p style={{ fontSize: 18, fontWeight: "bold" }}>
+              {loading === "upload" ? uploadLoadingText : deleteLoadingText}
+            </p>
+          </div>
+        </div>
+      ) : null}
       <div className={`${intakeStyles.label} ${styles.labelStack}`}>
         <span>{label}</span>
         {subLabel ? <span className={styles.labelSub}>{subLabel}</span> : null}
@@ -123,7 +140,10 @@ export default function DocumentRowClient({
                 type="submit"
                 form={deleteFormId}
                 className={styles.docBtn}
-                onClick={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setLoading("delete");
+                }}
               >
                 {deleteText}
               </button>

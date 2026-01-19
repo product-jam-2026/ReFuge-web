@@ -454,7 +454,9 @@
     "actions": {
       "view": "צפייה",
       "download": "הורדה",
-      "delete": "מחיקה"
+      "delete": "מחיקה",
+      "uploading": "מעלה את הקובץ...",
+      "deleting": "מוחק את הקובץ..."
     }
   }
 }

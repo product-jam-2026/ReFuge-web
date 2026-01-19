@@ -428,7 +428,9 @@
     "actions": {
       "view": "عرض",
       "download": "تنزيل",
-      "delete": "حذف"
+      "delete": "حذف",
+      "uploading": "جارٍ رفع الملف...",
+      "deleting": "جارٍ حذف الملف..."
     }
   }
 }

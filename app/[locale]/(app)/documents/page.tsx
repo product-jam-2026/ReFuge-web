@@ -410,6 +410,8 @@ export default async function DocumentsPage({
                 publicUrl={publicUrl}
                 emptyText={t("emptyField")}
                 fileTooLargeText={t("fileTooLarge")}
+                uploadLoadingText={t("actions.uploading")}
+                deleteLoadingText={t("actions.deleting")}
                 deleteText={t("actions.delete")}
                 hasDoc={Boolean(doc?.path)}
                 maxFileSizeBytes={MAX_FILE_SIZE_BYTES}
@@ -439,6 +441,8 @@ export default async function DocumentsPage({
                   publicUrl={publicUrl}
                   emptyText={t("emptyField")}
                   fileTooLargeText={t("fileTooLarge")}
+                  uploadLoadingText={t("actions.uploading")}
+                  deleteLoadingText={t("actions.deleting")}
                   deleteText={t("actions.delete")}
                   hasDoc={Boolean(doc?.path)}
                   maxFileSizeBytes={MAX_FILE_SIZE_BYTES}
@@ -464,6 +468,8 @@ export default async function DocumentsPage({
               publicUrl={publicUrl}
               emptyText={t("emptyField")}
               fileTooLargeText={t("fileTooLarge")}
+              uploadLoadingText={t("actions.uploading")}
+              deleteLoadingText={t("actions.deleting")}
               deleteText={t("actions.delete")}
               hasDoc={Boolean(doc?.path)}
               maxFileSizeBytes={MAX_FILE_SIZE_BYTES}
