@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import intakeStyles from "@/lib/styles/IntakeForm.module.css";
 import styles from "./DocumentsPage.module.css";
 
@@ -26,6 +27,19 @@ type DocumentRowClientProps = {
   deleteAction: DeleteAction;
 };
 
+function FormOverlay({ text }: { text: string }) {
+  const { pending } = useFormStatus();
+  if (!pending) return null;
+  return (
+    <div className={intakeStyles.loadingOverlay}>
+      <div className={intakeStyles.spinner}></div>
+      <div className={intakeStyles.loadingText} style={{ marginTop: 20 }}>
+        <p style={{ fontSize: 18, fontWeight: "bold" }}>{text}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function DocumentRowClient({
   label,
   subLabel,
@@ -48,7 +62,6 @@ export default function DocumentRowClient({
   const deleteFormId = `delete-${docKey}-${otherIndex ?? "single"}`;
   const inputId = `upload-${docKey}-${otherIndex ?? "single"}`;
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<"upload" | "delete" | null>(null);
 
   const submitForm = () => {
     if (formRef.current?.requestSubmit) {
@@ -64,26 +77,14 @@ export default function DocumentRowClient({
     if (files.some((file) => file.size > maxFileSizeBytes)) {
       setError(fileTooLargeText);
       if (input) input.value = "";
-      setLoading(null);
       return;
     }
     setError(null);
-    setLoading("upload");
     submitForm();
   };
 
   return (
     <div className={intakeStyles.fieldGroup}>
-      {loading ? (
-        <div className={intakeStyles.loadingOverlay}>
-          <div className={intakeStyles.spinner}></div>
-          <div className={intakeStyles.loadingText} style={{ marginTop: 20 }}>
-            <p style={{ fontSize: 18, fontWeight: "bold" }}>
-              {loading === "upload" ? uploadLoadingText : deleteLoadingText}
-            </p>
-          </div>
-        </div>
-      ) : null}
       <div className={`${intakeStyles.label} ${styles.labelStack}`}>
         <span>{label}</span>
         {subLabel ? <span className={styles.labelSub}>{subLabel}</span> : null}
@@ -95,6 +96,7 @@ export default function DocumentRowClient({
         className={styles.uploadForm}
         encType="multipart/form-data"
       >
+        <FormOverlay text={uploadLoadingText} />
         <input type="hidden" name="docKey" value={docKey} />
         <input type="hidden" name="locale" value={locale} />
         {typeof otherIndex === "number" ? (
@@ -140,10 +142,7 @@ export default function DocumentRowClient({
                 type="submit"
                 form={deleteFormId}
                 className={styles.docBtn}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setLoading("delete");
-                }}
+                onClick={(event) => event.stopPropagation()}
               >
                 {deleteText}
               </button>
@@ -153,6 +152,7 @@ export default function DocumentRowClient({
       </form>
 
       <form id={deleteFormId} action={deleteAction} className={styles.deleteForm}>
+        <FormOverlay text={deleteLoadingText} />
         <input type="hidden" name="docKey" value={docKey} />
         <input type="hidden" name="locale" value={locale} />
         {typeof otherIndex === "number" ? (
