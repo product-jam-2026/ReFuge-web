@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 import { createClient } from "../../../../lib/supabase/server";
@@ -30,6 +31,73 @@ function normalizeDoc(doc: any): DocRecord | null {
   if (!doc || typeof doc !== "object") return null;
   if (!doc.path) return null;
   return doc as DocRecord;
+}
+
+async function deleteDocument(formData: FormData) {
+  "use server";
+  const docKey = String(formData.get("docKey") || "");
+  const otherIndexRaw = formData.get("otherIndex");
+  const locale = String(formData.get("locale") || "he");
+
+  if (!docKey) return;
+
+  const supabase = createClient(cookies());
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data: profileRow } = await supabase
+    .from("profiles")
+    .select("data")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const data = profileRow?.data ?? {};
+  const step7 = data?.intake?.step7 ?? {};
+  const documents = step7?.documents ?? {};
+
+  let targetDoc: DocRecord | null = null;
+  const nextDocuments = { ...documents };
+
+  if (docKey === "otherDocs") {
+    const list = Array.isArray(documents.otherDocs)
+      ? [...documents.otherDocs]
+      : documents.otherDocs
+      ? [documents.otherDocs]
+      : [];
+    const otherIndex = Number(otherIndexRaw);
+    targetDoc = list[otherIndex] ? normalizeDoc(list[otherIndex]) : null;
+    if (targetDoc?.path) {
+      list.splice(otherIndex, 1);
+      if (list.length > 0) {
+        nextDocuments.otherDocs = list;
+      } else {
+        delete nextDocuments.otherDocs;
+      }
+    }
+  } else {
+    targetDoc = normalizeDoc(nextDocuments[docKey]);
+    if (targetDoc?.path) {
+      delete nextDocuments[docKey];
+    }
+  }
+
+  if (targetDoc?.path) {
+    await supabase.storage.from("intake_docs").remove([targetDoc.path]);
+    const nextData = {
+      ...data,
+      intake: {
+        ...data?.intake,
+        step7: {
+          ...step7,
+          documents: nextDocuments,
+        },
+      },
+    };
+    await supabase.from("profiles").update({ data: nextData }).eq("id", user.id);
+    revalidatePath(`/${locale}/documents`);
+  }
 }
 
 export default async function DocumentsPage({
@@ -79,11 +147,11 @@ export default async function DocumentsPage({
     ? data.intake.step6.children
     : [];
 
-  const entries: Array<{ id: string; label: string; doc: DocRecord | null }> = [];
+  const entries: Array<{ id: string; label: string; doc: DocRecord | null; otherIndex?: number }> = [];
   const bucketName = "intake_docs";
 
-  const addEntry = (id: string, label: string, doc: DocRecord | null) => {
-    entries.push({ id, label, doc });
+  const addEntry = (id: string, label: string, doc: DocRecord | null, otherIndex?: number) => {
+    entries.push({ id, label, doc, otherIndex });
   };
 
   addEntry(
@@ -140,13 +208,18 @@ export default async function DocumentsPage({
     : otherDocsRaw
     ? [otherDocsRaw]
     : [];
-  otherDocs.forEach((doc: any, index: number) => {
-    addEntry(
-      `otherDocs_${index}`,
-      t("fields.otherDocs"),
-      normalizeDoc(doc)
-    );
-  });
+  if (otherDocs.length > 0) {
+    otherDocs.forEach((doc: any, index: number) => {
+      addEntry(
+        `otherDocs_${index}`,
+        t("fields.otherDocs"),
+        normalizeDoc(doc),
+        index
+      );
+    });
+  } else {
+    addEntry("otherDocs_empty", t("fields.otherDocs"), null);
+  }
 
   return (
     <div className={intakeStyles.pageContainer}>
@@ -187,10 +260,6 @@ export default async function DocumentsPage({
             </Link>
           </div>
 
-          <div className={intakeStyles.progressBarTrack}>
-            <div className={intakeStyles.progressBarFill} style={{ width: "100%" }} />
-          </div>
-
           <div className={intakeStyles.titleBlock}>
             <h1 className={intakeStyles.formTitle}>{t("title")}</h1>
             <p className={intakeStyles.formSubtitle}>{t("subtitle")}</p>
@@ -202,10 +271,11 @@ export default async function DocumentsPage({
         {entries.length === 0 ? (
           <div className={styles.empty}>{t("empty")}</div>
         ) : (
-          entries.map(({ id, label, doc }) => {
+          entries.map(({ id, label, doc, otherIndex }) => {
             const publicUrl = doc?.path
               ? supabase.storage.from(bucketName).getPublicUrl(doc.path).data.publicUrl
               : "";
+            const docKey = id.startsWith("otherDocs_") ? "otherDocs" : id;
             return (
               <div key={id} className={intakeStyles.fieldGroup}>
                 <div className={intakeStyles.label}>
@@ -217,14 +287,20 @@ export default async function DocumentsPage({
                   }`}
                 >
                   {doc ? (
-                    <span className={intakeStyles.fileName}>
+                    <a
+                      className={intakeStyles.fileName}
+                      href={publicUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       {doc.name || doc.path}
-                    </span>
+                    </a>
                   ) : (
                     <span className={intakeStyles.filePlaceholder}>
                       {t("emptyField")}
                     </span>
                   )}
+
                   {doc ? (
                     <div className={styles.docActions}>
                       <a
@@ -235,12 +311,24 @@ export default async function DocumentsPage({
                       >
                         {t("actions.view")}
                       </a>
-                      <a className={styles.docBtn} href={publicUrl} download>
-                        {t("actions.download")}
-                      </a>
+                      <form action={deleteDocument}>
+                        <input type="hidden" name="docKey" value={docKey} />
+                        <input type="hidden" name="locale" value={locale} />
+                        {typeof otherIndex === "number" ? (
+                          <input type="hidden" name="otherIndex" value={otherIndex} />
+                        ) : null}
+                        <button type="submit" className={styles.docBtn}>
+                          {t("actions.delete")}
+                        </button>
+                      </form>
                     </div>
                   ) : (
-                    <span className={styles.docActions} />
+                    <img
+                      src="/icons/pin.svg"
+                      alt=""
+                      className={styles.pinIcon}
+                      aria-hidden="true"
+                    />
                   )}
                 </div>
               </div>

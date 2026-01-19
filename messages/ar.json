@@ -422,7 +422,8 @@
     },
     "actions": {
       "view": "عرض",
-      "download": "تنزيل"
+      "download": "تنزيل",
+      "delete": "حذف"
     }
   }
 }

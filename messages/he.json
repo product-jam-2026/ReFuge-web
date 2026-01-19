@@ -448,7 +448,8 @@
     },
     "actions": {
       "view": "צפייה",
-      "download": "הורדה"
+      "download": "הורדה",
+      "delete": "מחיקה"
     }
   }
 }
