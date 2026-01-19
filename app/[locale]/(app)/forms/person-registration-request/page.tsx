@@ -1,206 +1,35 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { fieldMap } from "./fieldMap";
+import React, { useMemo } from "react";
 import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
-import demo from "@/public/demo/intake.demo.json";
-import {
-  intakeToPdfFields,
-  deriveExtrasFromIntake,
-  type IntakeRecord,
-  type ExtrasState,
-} from "./intakeToPdfFields";
+import { fieldMap } from "./fieldMap";
+import { intakeToPdfFields } from "./intakeToPdfFields";
+import { createClient } from "@/lib/supabase/client";
+import { useWizard } from "./WizardProvider";
+import styles from "./page.module.css";
 
-// type IntakeRecord = {
-//   intake: {
-//     step1: {
-//       lastName: string;
-//       firstName: string;
-//       oldLastName: string;
-//       oldFirstName: string;
-//       gender: string;
-//       birthDate: string;
-//       nationality: string;
-//       israeliId: string;
-//       passportNumber: string;
-//       passportIssueDate: string;
-//       passportExpiryDate: string;
-//       passportIssueCountry: string;
-//       phone: string;
-//       email: string;
-//     };
-//     step2: {
-//       residenceCountry: string;
-//       residenceCity: string;
-//       residenceAddress: string;
-//       visaType: string;
-//       visaStartDate: string;
-//       visaEndDate: string;
-//       entryDate: string;
-//     };
-//     step3: {
-//       maritalStatus: string;
-//       statusDate: string;
-//       registeredAddress: {
-//         city: string;
-//         street: string;
-//         houseNumber: string;
-//         entry: string;
-//         apartment: string;
-//         zip: string;
-//       };
-//       mailingDifferent: boolean;
-//       mailingAddress: {
-//         city: string;
-//         street: string;
-//         houseNumber: string;
-//         entry: string;
-//         apartment: string;
-//         zip: string;
-//       };
-//       employmentStatus: string;
-//       notWorkingReason: string;
-//       occupation: string;
-//     };
-//     step4: {
-//       healthFund: string;
-//       bank: { bankName: string; branch: string; accountNumber: string };
-//       nationalInsurance: {
-//         hasFile: string;
-//         fileNumber: string;
-//         getsAllowance: string;
-//         allowanceType: string;
-//         allowanceFileNumber: string;
-//       };
-//     };
-//     step5: {
-//       person: {
-//         lastName: string;
-//         firstName: string;
-//         oldLastName: string;
-//         oldFirstName: string;
-//         gender: string;
-//         birthDate: string;
-//         nationality: string;
-//         israeliId: string;
-//         passportNumber: string;
-//       };
-//       maritalStatus: string;
-//       statusDate: string;
-//       phone: string;
-//       email: string;
-//     };
-//     step6: {
-//       children: Array<{
-//         lastName: string;
-//         firstName: string;
-//         gender: string;
-//         birthDate: string;
-//         nationality: string;
-//         israeliId: string;
-//         residenceCountry: string;
-//         entryDate: string;
-//       }>;
-//     };
-//   };
-// };
+function safePart(title: string) {
+  return (
+    (title ?? "")
+      .toString()
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]+/g, "_")
+      .slice(0, 60) || "Untitled"
+  );
+}
 
-type TripRow = { startDate: string; endDate: string; purpose: string };
-
-// type ExtrasState = {
-//   // English name variants (PDF has both Hebrew+English fields)
-//   firstNameEnglish: string;
-//   lastNameEnglish: string;
-//   prevLastNameEnglish: string;
-
-//   // Birth details (not in DB template)
-//   birthCountry: string;
-//   birthCity: string;
-
-//   // Phone for the address block (PDF has it as part of address)
-//   addressPhoneNumber: string;
-
-//   // Parents (not in DB template)
-//   father: {
-//     firstNameHebrew: string;
-//     lastNameHebrew: string;
-//     firstNameEnglish: string;
-//     lastNameEnglish: string;
-//     idNumber: string;
-//     passportNumber: string;
-//   };
-//   mother: {
-//     firstNameHebrew: string;
-//     lastNameHebrew: string;
-//     firstNameEnglish: string;
-//     lastNameEnglish: string;
-//     idNumber: string;
-//     passportNumber: string;
-//   };
-
-//   // Partner English variants (partner Hebrew pulled from step5.person by default)
-//   partner: {
-//     firstNameEnglish: string;
-//     lastNameEnglish: string;
-//   };
-
-//   // “meta”
-//   numberChildrenUnder18: string; // PDF wants a number (string is fine)
-//   purposeOfStay: string; // PDF has purposeOfStay (we default from step2.visaType)
-
-//   // Employment / income (not in DB template)
-//   employerName: string;
-//   employerAddress: string;
-//   selfEmploymentStartDate: string;
-//   unemployedWithIncomeStartDate: string;
-//   selfEmployedYearlyIncome: string;
-//   unemployedYearlyIncome: string;
-
-//   // Trips abroad (not in DB template)
-//   trips: TripRow[];
-// };
-
-const emptyTrip = (): TripRow => ({ startDate: "", endDate: "", purpose: "" });
-
-const initialExtras: ExtrasState = {
-  firstNameEnglish: "",
-  lastNameEnglish: "",
-  prevLastNameEnglish: "",
-  birthCountry: "",
-  birthCity: "",
-  addressPhoneNumber: "",
-
-  father: {
-    firstNameHebrew: "",
-    lastNameHebrew: "",
-    firstNameEnglish: "",
-    lastNameEnglish: "",
-    idNumber: "",
-    passportNumber: "",
-  },
-  mother: {
-    firstNameHebrew: "",
-    lastNameHebrew: "",
-    firstNameEnglish: "",
-    lastNameEnglish: "",
-    idNumber: "",
-    passportNumber: "",
-  },
-
-  partner: { firstNameEnglish: "", lastNameEnglish: "" },
-
-  numberChildrenUnder18: "",
-  purposeOfStay: "",
-
-  employerName: "",
-  employerAddress: "",
-  selfEmploymentStartDate: "",
-  unemployedWithIncomeStartDate: "",
-  selfEmployedYearlyIncome: "",
-  unemployedYearlyIncome: "",
-
-  trips: [emptyTrip(), emptyTrip(), emptyTrip()],
-};
+function downloadPdf(filename: string, pdfBytes: Uint8Array) {
+  const bytes = new Uint8Array(pdfBytes);
+  const blob = new Blob([bytes.buffer], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 function downloadJson(filename: string, data: unknown) {
   const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -216,80 +45,13 @@ function downloadJson(filename: string, data: unknown) {
   URL.revokeObjectURL(url);
 }
 
-function downloadPdf(filename: string, pdfBytes: Uint8Array) {
-  // const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const bytes = new Uint8Array(pdfBytes);
-
-      const blob = new Blob([bytes.buffer], { type: "application/pdf" });
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function safePart(title: string) {
-  return (
-    (title ?? "")
-      .toString()
-      .trim()
-      .replace(/[^a-zA-Z0-9_-]+/g, "_")
-      .slice(0, 60) || "Untitled"
-  );
-}
-
 export default function PersonRegistrationPage() {
-  const [draft, setDraft] = useState<IntakeRecord | null>(null);
-  const [extras, setExtras] = useState<ExtrasState>(initialExtras);
-
-  // Hydrate ON PAGE LOAD from demo JSON
-  // useEffect(() => {
-  //   const d = structuredClone(demo) as IntakeRecord;
-  //   setDraft(d);
-
-  //   setExtras((prev) => ({
-  //     ...prev,
-  //     // default these so PDF can be produced immediately
-  //     addressPhoneNumber: d.intake.step1.phone ?? "",
-  //     numberChildrenUnder18: String(d.intake.step6.children?.length ?? 0),
-  //     purposeOfStay: d.intake.step2.visaType ?? "",
-  //   }));
-  // }, []);
-
-  // fix
-  useEffect(() => {
-    const d = structuredClone(demo) as IntakeRecord;
-    setDraft(d);
-
-    setExtras(
-      (prev) =>
-        ({
-          ...prev,
-          ...deriveExtrasFromIntake(d, prev),
-        }) as ExtrasState,
-    );
-  }, []);
-
-  function update(path: string, value: any) {
-    setDraft((prev) => {
-      if (!prev) return prev;
-      const next: any = structuredClone(prev);
-      const parts = path.split(".");
-      let cur: any = next;
-      for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
-      cur[parts[parts.length - 1]] = value;
-      return next;
-    });
-  }
+  const { draft, extras, setExtras, update, isHydrated, instanceId } = useWizard();
 
   const payload = useMemo(() => {
     if (!draft) return null;
 
-    // Keep DB clean (optional): remove empty children rows
+    // optional cleanup: remove empty children rows
     const kids = (draft.intake.step6.children ?? []).filter(
       (c) =>
         (c.firstName ?? "").trim() ||
@@ -303,108 +65,59 @@ export default function PersonRegistrationPage() {
     return cleaned;
   }, [draft]);
 
-  async function onSubmit(e: React.FormEvent) {
+  async function saveDraft(existingInstanceId?: string) {
+    const supabase = createClient();
+
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    if (userErr) throw userErr;
+    const user = userRes.user;
+    if (!user) throw new Error("Not logged in");
+    if (!draft) throw new Error("No draft to save");
+
+    const title =
+      `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
+      draft.intake?.step1?.israeliId ||
+      "Untitled";
+
+    if (!existingInstanceId) {
+      const { data, error } = await supabase
+        .from("form_instances")
+        .insert({
+          user_id: user.id,
+          form_slug: "person-registration-request",
+          title,
+          draft: payload ?? draft,
+          extras,
+        })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+      return data.id as string;
+    } else {
+      const { error } = await supabase
+        .from("form_instances")
+        .update({
+          title,
+          draft: payload ?? draft,
+          extras,
+        })
+        .eq("id", existingInstanceId)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      return existingInstanceId;
+    }
+  }
+
+  async function onDownloadPdf(e: React.FormEvent) {
     e.preventDefault();
     if (!draft) return;
 
-    const fields = intakeToPdfFields(draft, extras);
+    // optional but matches your pattern: save before generate
+    await saveDraft(instanceId ?? undefined);
 
-    const s1 = draft.intake.step1; // ✅ add back
-
-    // const s1 = draft.intake.step1;
-    // const s2 = draft.intake.step2;
-    // const s3 = draft.intake.step3;
-    // const s4 = draft.intake.step4;
-    // const s5 = draft.intake.step5;
-
-    // const addr = s3.registeredAddress;
-
-    // const fields: Record<string, string> = {
-    //   // ===== Page 0 =====
-    //   firstNameHebrew: s1.firstName ?? "",
-    //   firstNameEnglish: extras.firstNameEnglish ?? "",
-    //   lastNameHebrew: s1.lastName ?? "",
-    //   lastNameEnglish: extras.lastNameEnglish ?? "",
-
-    //   prevLastNameHebrew: s1.oldLastName ?? "",
-    //   prevLastNameEnglish: extras.prevLastNameEnglish ?? "",
-    //   prevFirstNameHebrew: s1.oldFirstName ?? "",
-
-    //   birthDate: s1.birthDate ?? "",
-    //   birthCountry: extras.birthCountry ?? "",
-    //   birthCity: extras.birthCity ?? "",
-    //   citizenship: s1.nationality ?? "",
-
-    //   passportNumber: s1.passportNumber ?? "",
-    //   passportIssuanceCountry: s1.passportIssueCountry ?? "",
-    //   passportIssueDate: s1.passportIssueDate ?? "",
-    //   passportExpiryDate: s1.passportExpiryDate ?? "",
-
-    //   visaStartDate: s2.visaStartDate ?? "",
-    //   visaEndDate: s2.visaEndDate ?? "",
-    //   visaDateOfArrival: s2.entryDate ?? "",
-
-    //   "address.street": addr.street ?? "",
-    //   "address.homeNumber": addr.houseNumber ?? "",
-    //   "address.entrance": addr.entry ?? "",
-    //   "address.apartmentNumber": addr.apartment ?? "",
-    //   "address.city": addr.city ?? "",
-    //   "address.zipcode": addr.zip ?? "",
-    //   "address.phoneNumber": extras.addressPhoneNumber || s1.phone || "",
-
-    //   fatherLastNameHebrew: extras.father.lastNameHebrew ?? "",
-    //   fatherLastNameEnglish: extras.father.lastNameEnglish ?? "",
-    //   fatherFirstNameHebrew: extras.father.firstNameHebrew ?? "",
-    //   fatherFirstNameEnglish: extras.father.firstNameEnglish ?? "",
-    //   fatherIdNumber: extras.father.idNumber ?? "",
-    //   fatherPassportNumber: extras.father.passportNumber ?? "",
-
-    //   motherLastNameHebrew: extras.mother.lastNameHebrew ?? "",
-    //   motherLastNameEnglish: extras.mother.lastNameEnglish ?? "",
-    //   motherFirstNameHebrew: extras.mother.firstNameHebrew ?? "",
-    //   motherFirstNameEnglish: extras.mother.firstNameEnglish ?? "",
-    //   motherIdNumber: extras.mother.idNumber ?? "",
-    //   motherPassportNumber: extras.mother.passportNumber ?? "",
-
-    //   maritalStatusLastUpdateDate: s3.statusDate ?? "",
-    //   numberChildrenUnder18:
-    //     extras.numberChildrenUnder18 || String(draft.intake.step6.children?.length ?? 0),
-
-    //   partnerLastNameHebrew: s5.person.lastName ?? "",
-    //   partnerLastNameEnglish: extras.partner.lastNameEnglish ?? "",
-    //   partnerFirstNameHebrew: s5.person.firstName ?? "",
-    //   partnerFirstNameEnglish: extras.partner.firstNameEnglish ?? "",
-    //   partnerIdNumber: s5.person.israeliId ?? "",
-    //   partnerPassportNumber: s5.person.passportNumber ?? "",
-
-    //   // ===== Page 1 =====
-    //   purposeOfStay: extras.purposeOfStay || s2.visaType || "",
-    //   bankName: s4.bank.bankName ?? "",
-    //   bankBranch: s4.bank.branch ?? "",
-    //   bankAccountNumber: s4.bank.accountNumber ?? "",
-
-    //   employerName: extras.employerName ?? "",
-    //   employerAddress: extras.employerAddress ?? "",
-    //   selfEmploymentStartDate: extras.selfEmploymentStartDate ?? "",
-    //   unemployedWithIncomeStartDate: extras.unemployedWithIncomeStartDate ?? "",
-    //   selfEmployedYearlyIncome: extras.selfEmployedYearlyIncome ?? "",
-    //   unemployedYearlyIncome: extras.unemployedYearlyIncome ?? "",
-
-    //   nationalInsuranceFileNumber: s4.nationalInsurance.fileNumber ?? "",
-
-    //   tripAbroad1StartDate: extras.trips[0]?.startDate ?? "",
-    //   tripAbroad1EndDate: extras.trips[0]?.endDate ?? "",
-    //   tripAbroad1Purpose: extras.trips[0]?.purpose ?? "",
-    //   tripAbroad2StartDate: extras.trips[1]?.startDate ?? "",
-    //   tripAbroad2EndDate: extras.trips[1]?.endDate ?? "",
-    //   tripAbroad2Purpose: extras.trips[1]?.purpose ?? "",
-    //   tripAbroad3StartDate: extras.trips[2]?.startDate ?? "",
-    //   tripAbroad3EndDate: extras.trips[2]?.endDate ?? "",
-    //   tripAbroad3Purpose: extras.trips[2]?.purpose ?? "",
-
-    //   NationInsuranceTypeOfAllowance: s4.nationalInsurance.allowanceType ?? "",
-    //   NationInsuranceFileNumber: s4.nationalInsurance.allowanceFileNumber ?? "",
-    // };
+    const fields = intakeToPdfFields(draft as any, extras as any);
 
     const [tplRes, fontRes] = await Promise.all([
       fetch("/forms/person-registration.pdf"),
@@ -433,10 +146,10 @@ export default function PersonRegistrationPage() {
         fontBytes,
         autoDetectRtl: true,
         defaultRtlAlignRight: true,
-        // dateFormat is DMY by default in your fillPdfClient (per your request)
       },
     );
 
+    const s1 = draft.intake.step1;
     const fileName = `person_registration_${safePart(
       s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
     )}_${new Date().toISOString().slice(0, 10)}.pdf`;
@@ -444,30 +157,22 @@ export default function PersonRegistrationPage() {
     downloadPdf(fileName, outBytes);
   }
 
-  if (!draft || !payload) {
-    return (
-      <main style={{ maxWidth: 820, margin: "0 auto", padding: 24 }}>
-        Loading…
-      </main>
-    );
+  if (!isHydrated || !draft || !payload) {
+    return <main className={styles.loadingPage}>Loading…</main>;
   }
 
   return (
-    <main
-      style={{ maxWidth: 820, margin: "0 auto", padding: 24, direction: "rtl" }}
-    >
-      <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 12 }}>
-        טופס רישום אדם (Person Registration)
-      </h1>
+    <main className={styles.page}>
+      <h1 className={styles.title}>טופס רישום אדם (Person Registration)</h1>
 
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
+      <form onSubmit={onDownloadPdf} className={styles.form}>
         <SectionTitle>פרטי המבקש/ת</SectionTitle>
 
         <Field label="שם פרטי (עברית) (DB: step1.firstName)">
           <input
             value={draft.intake.step1.firstName}
             onChange={(e) => update("intake.step1.firstName", e.target.value)}
-            style={inputStyle}
+            className={styles.input}
           />
         </Field>
 
@@ -477,7 +182,7 @@ export default function PersonRegistrationPage() {
             onChange={(e) =>
               setExtras((p) => ({ ...p, firstNameEnglish: e.target.value }))
             }
-            style={inputStyle}
+            className={styles.input}
             dir="ltr"
           />
         </Field>
@@ -486,7 +191,7 @@ export default function PersonRegistrationPage() {
           <input
             value={draft.intake.step1.lastName}
             onChange={(e) => update("intake.step1.lastName", e.target.value)}
-            style={inputStyle}
+            className={styles.input}
           />
         </Field>
 
@@ -496,7 +201,7 @@ export default function PersonRegistrationPage() {
             onChange={(e) =>
               setExtras((p) => ({ ...p, lastNameEnglish: e.target.value }))
             }
-            style={inputStyle}
+            className={styles.input}
             dir="ltr"
           />
         </Field>
@@ -506,10 +211,8 @@ export default function PersonRegistrationPage() {
         <Field label="שם פרטי קודם (עברית) (DB: step1.oldFirstName)">
           <input
             value={draft.intake.step1.oldFirstName}
-            onChange={(e) =>
-              update("intake.step1.oldFirstName", e.target.value)
-            }
-            style={inputStyle}
+            onChange={(e) => update("intake.step1.oldFirstName", e.target.value)}
+            className={styles.input}
           />
         </Field>
 
@@ -517,7 +220,7 @@ export default function PersonRegistrationPage() {
           <input
             value={draft.intake.step1.oldLastName}
             onChange={(e) => update("intake.step1.oldLastName", e.target.value)}
-            style={inputStyle}
+            className={styles.input}
           />
         </Field>
 
@@ -527,7 +230,7 @@ export default function PersonRegistrationPage() {
             onChange={(e) =>
               setExtras((p) => ({ ...p, prevLastNameEnglish: e.target.value }))
             }
-            style={inputStyle}
+            className={styles.input}
             dir="ltr"
           />
         </Field>
@@ -539,27 +242,23 @@ export default function PersonRegistrationPage() {
             type="date"
             value={draft.intake.step1.birthDate}
             onChange={(e) => update("intake.step1.birthDate", e.target.value)}
-            style={inputStyle}
+            className={styles.input}
           />
         </Field>
 
         <Field label="ארץ לידה (PDF בלבד)">
           <input
             value={extras.birthCountry}
-            onChange={(e) =>
-              setExtras((p) => ({ ...p, birthCountry: e.target.value }))
-            }
-            style={inputStyle}
+            onChange={(e) => setExtras((p) => ({ ...p, birthCountry: e.target.value }))}
+            className={styles.input}
           />
         </Field>
 
         <Field label="עיר לידה (PDF בלבד)">
           <input
             value={extras.birthCity}
-            onChange={(e) =>
-              setExtras((p) => ({ ...p, birthCity: e.target.value }))
-            }
-            style={inputStyle}
+            onChange={(e) => setExtras((p) => ({ ...p, birthCity: e.target.value }))}
+            className={styles.input}
           />
         </Field>
 
@@ -567,7 +266,7 @@ export default function PersonRegistrationPage() {
           <input
             value={draft.intake.step1.nationality}
             onChange={(e) => update("intake.step1.nationality", e.target.value)}
-            style={inputStyle}
+            className={styles.input}
           />
         </Field>
 
@@ -576,10 +275,8 @@ export default function PersonRegistrationPage() {
         <Field label="מספר דרכון (DB: step1.passportNumber)">
           <input
             value={draft.intake.step1.passportNumber}
-            onChange={(e) =>
-              update("intake.step1.passportNumber", e.target.value)
-            }
-            style={inputStyle}
+            onChange={(e) => update("intake.step1.passportNumber", e.target.value)}
+            className={styles.input}
             dir="ltr"
           />
         </Field>
@@ -587,24 +284,18 @@ export default function PersonRegistrationPage() {
         <Field label="מדינת הנפקה (DB: step1.passportIssueCountry)">
           <input
             value={draft.intake.step1.passportIssueCountry}
-            onChange={(e) =>
-              update("intake.step1.passportIssueCountry", e.target.value)
-            }
-            style={inputStyle}
+            onChange={(e) => update("intake.step1.passportIssueCountry", e.target.value)}
+            className={styles.input}
           />
         </Field>
 
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-        >
+        <div className={styles.twoCols}>
           <Field label="תאריך הנפקה (DB: step1.passportIssueDate)">
             <input
               type="date"
               value={draft.intake.step1.passportIssueDate}
-              onChange={(e) =>
-                update("intake.step1.passportIssueDate", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step1.passportIssueDate", e.target.value)}
+              className={styles.input}
             />
           </Field>
 
@@ -612,27 +303,21 @@ export default function PersonRegistrationPage() {
             <input
               type="date"
               value={draft.intake.step1.passportExpiryDate}
-              onChange={(e) =>
-                update("intake.step1.passportExpiryDate", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step1.passportExpiryDate", e.target.value)}
+              className={styles.input}
             />
           </Field>
         </div>
 
         <SectionTitle>אשרה / כניסה</SectionTitle>
 
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-        >
+        <div className={styles.twoCols}>
           <Field label="תחילת אשרה (DB: step2.visaStartDate)">
             <input
               type="date"
               value={draft.intake.step2.visaStartDate}
-              onChange={(e) =>
-                update("intake.step2.visaStartDate", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step2.visaStartDate", e.target.value)}
+              className={styles.input}
             />
           </Field>
 
@@ -640,10 +325,8 @@ export default function PersonRegistrationPage() {
             <input
               type="date"
               value={draft.intake.step2.visaEndDate}
-              onChange={(e) =>
-                update("intake.step2.visaEndDate", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step2.visaEndDate", e.target.value)}
+              className={styles.input}
             />
           </Field>
         </div>
@@ -653,17 +336,15 @@ export default function PersonRegistrationPage() {
             type="date"
             value={draft.intake.step2.entryDate}
             onChange={(e) => update("intake.step2.entryDate", e.target.value)}
-            style={inputStyle}
+            className={styles.input}
           />
         </Field>
 
         <Field label="מטרת שהייה (PDF; ברירת מחדל מ-DB: step2.visaType)">
           <input
             value={extras.purposeOfStay}
-            onChange={(e) =>
-              setExtras((p) => ({ ...p, purposeOfStay: e.target.value }))
-            }
-            style={inputStyle}
+            onChange={(e) => setExtras((p) => ({ ...p, purposeOfStay: e.target.value }))}
+            className={styles.input}
           />
         </Field>
 
@@ -672,26 +353,19 @@ export default function PersonRegistrationPage() {
         <Field label="רחוב (DB: step3.registeredAddress.street)">
           <input
             value={draft.intake.step3.registeredAddress.street}
-            onChange={(e) =>
-              update("intake.step3.registeredAddress.street", e.target.value)
-            }
-            style={inputStyle}
+            onChange={(e) => update("intake.step3.registeredAddress.street", e.target.value)}
+            className={styles.input}
           />
         </Field>
 
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-        >
+        <div className={styles.twoCols}>
           <Field label="מספר בית (DB: houseNumber)">
             <input
               value={draft.intake.step3.registeredAddress.houseNumber}
               onChange={(e) =>
-                update(
-                  "intake.step3.registeredAddress.houseNumber",
-                  e.target.value,
-                )
+                update("intake.step3.registeredAddress.houseNumber", e.target.value)
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -699,10 +373,8 @@ export default function PersonRegistrationPage() {
           <Field label="כניסה (DB: entry)">
             <input
               value={draft.intake.step3.registeredAddress.entry}
-              onChange={(e) =>
-                update("intake.step3.registeredAddress.entry", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step3.registeredAddress.entry", e.target.value)}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -711,12 +383,9 @@ export default function PersonRegistrationPage() {
             <input
               value={draft.intake.step3.registeredAddress.apartment}
               onChange={(e) =>
-                update(
-                  "intake.step3.registeredAddress.apartment",
-                  e.target.value,
-                )
+                update("intake.step3.registeredAddress.apartment", e.target.value)
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -724,10 +393,8 @@ export default function PersonRegistrationPage() {
           <Field label="מיקוד (DB: zip)">
             <input
               value={draft.intake.step3.registeredAddress.zip}
-              onChange={(e) =>
-                update("intake.step3.registeredAddress.zip", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step3.registeredAddress.zip", e.target.value)}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -736,10 +403,8 @@ export default function PersonRegistrationPage() {
         <Field label="עיר (DB: city)">
           <input
             value={draft.intake.step3.registeredAddress.city}
-            onChange={(e) =>
-              update("intake.step3.registeredAddress.city", e.target.value)
-            }
-            style={inputStyle}
+            onChange={(e) => update("intake.step3.registeredAddress.city", e.target.value)}
+            className={styles.input}
           />
         </Field>
 
@@ -749,7 +414,7 @@ export default function PersonRegistrationPage() {
             onChange={(e) =>
               setExtras((p) => ({ ...p, addressPhoneNumber: e.target.value }))
             }
-            style={inputStyle}
+            className={styles.input}
             inputMode="tel"
             dir="ltr"
           />
@@ -757,16 +422,8 @@ export default function PersonRegistrationPage() {
 
         <SectionTitle>הורים (PDF בלבד)</SectionTitle>
 
-        <div
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: 12,
-            padding: 12,
-            display: "grid",
-            gap: 10,
-          }}
-        >
-          <div style={{ fontWeight: 800 }}>אב</div>
+        <div className={styles.panel}>
+          <div className={styles.panelTitle}>אב</div>
 
           <Field label="שם פרטי (עברית)">
             <input
@@ -777,7 +434,7 @@ export default function PersonRegistrationPage() {
                   father: { ...p.father, firstNameHebrew: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
             />
           </Field>
 
@@ -790,7 +447,7 @@ export default function PersonRegistrationPage() {
                   father: { ...p.father, lastNameHebrew: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
             />
           </Field>
 
@@ -803,7 +460,7 @@ export default function PersonRegistrationPage() {
                   father: { ...p.father, firstNameEnglish: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -817,14 +474,12 @@ export default function PersonRegistrationPage() {
                   father: { ...p.father, lastNameEnglish: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
 
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-          >
+          <div className={styles.twoCols}>
             <Field label="מספר זהות">
               <input
                 value={extras.father.idNumber}
@@ -834,7 +489,7 @@ export default function PersonRegistrationPage() {
                     father: { ...p.father, idNumber: e.target.value },
                   }))
                 }
-                style={inputStyle}
+                className={styles.input}
                 dir="ltr"
               />
             </Field>
@@ -848,23 +503,15 @@ export default function PersonRegistrationPage() {
                     father: { ...p.father, passportNumber: e.target.value },
                   }))
                 }
-                style={inputStyle}
+                className={styles.input}
                 dir="ltr"
               />
             </Field>
           </div>
         </div>
 
-        <div
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: 12,
-            padding: 12,
-            display: "grid",
-            gap: 10,
-          }}
-        >
-          <div style={{ fontWeight: 800 }}>אם</div>
+        <div className={styles.panel}>
+          <div className={styles.panelTitle}>אם</div>
 
           <Field label="שם פרטי (עברית)">
             <input
@@ -875,7 +522,7 @@ export default function PersonRegistrationPage() {
                   mother: { ...p.mother, firstNameHebrew: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
             />
           </Field>
 
@@ -888,7 +535,7 @@ export default function PersonRegistrationPage() {
                   mother: { ...p.mother, lastNameHebrew: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
             />
           </Field>
 
@@ -901,7 +548,7 @@ export default function PersonRegistrationPage() {
                   mother: { ...p.mother, firstNameEnglish: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -915,14 +562,12 @@ export default function PersonRegistrationPage() {
                   mother: { ...p.mother, lastNameEnglish: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
 
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-          >
+          <div className={styles.twoCols}>
             <Field label="מספר זהות">
               <input
                 value={extras.mother.idNumber}
@@ -932,7 +577,7 @@ export default function PersonRegistrationPage() {
                     mother: { ...p.mother, idNumber: e.target.value },
                   }))
                 }
-                style={inputStyle}
+                className={styles.input}
                 dir="ltr"
               />
             </Field>
@@ -946,7 +591,7 @@ export default function PersonRegistrationPage() {
                     mother: { ...p.mother, passportNumber: e.target.value },
                   }))
                 }
-                style={inputStyle}
+                className={styles.input}
                 dir="ltr"
               />
             </Field>
@@ -960,7 +605,7 @@ export default function PersonRegistrationPage() {
             type="date"
             value={draft.intake.step3.statusDate}
             onChange={(e) => update("intake.step3.statusDate", e.target.value)}
-            style={inputStyle}
+            className={styles.input}
           />
         </Field>
 
@@ -968,47 +613,32 @@ export default function PersonRegistrationPage() {
           <input
             value={extras.numberChildrenUnder18}
             onChange={(e) =>
-              setExtras((p) => ({
-                ...p,
-                numberChildrenUnder18: e.target.value,
-              }))
+              setExtras((p) => ({ ...p, numberChildrenUnder18: e.target.value }))
             }
-            style={inputStyle}
+            className={styles.input}
             dir="ltr"
             inputMode="numeric"
           />
         </Field>
 
-        <div
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: 12,
-            padding: 12,
-            display: "grid",
-            gap: 10,
-          }}
-        >
-          <div style={{ fontWeight: 800 }}>
+        <div className={styles.panel}>
+          <div className={styles.panelTitle}>
             בן/בת זוג (ברירת מחדל מ-DB: step5.person)
           </div>
 
           <Field label="שם פרטי (עברית) (DB: step5.person.firstName)">
             <input
               value={draft.intake.step5.person.firstName}
-              onChange={(e) =>
-                update("intake.step5.person.firstName", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step5.person.firstName", e.target.value)}
+              className={styles.input}
             />
           </Field>
 
           <Field label="שם משפחה (עברית) (DB: step5.person.lastName)">
             <input
               value={draft.intake.step5.person.lastName}
-              onChange={(e) =>
-                update("intake.step5.person.lastName", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step5.person.lastName", e.target.value)}
+              className={styles.input}
             />
           </Field>
 
@@ -1021,7 +651,7 @@ export default function PersonRegistrationPage() {
                   partner: { ...p.partner, firstNameEnglish: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -1035,21 +665,17 @@ export default function PersonRegistrationPage() {
                   partner: { ...p.partner, lastNameEnglish: e.target.value },
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
 
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-          >
+          <div className={styles.twoCols}>
             <Field label="מספר זהות (DB: step5.person.israeliId)">
               <input
                 value={draft.intake.step5.person.israeliId}
-                onChange={(e) =>
-                  update("intake.step5.person.israeliId", e.target.value)
-                }
-                style={inputStyle}
+                onChange={(e) => update("intake.step5.person.israeliId", e.target.value)}
+                className={styles.input}
                 dir="ltr"
               />
             </Field>
@@ -1060,7 +686,7 @@ export default function PersonRegistrationPage() {
                 onChange={(e) =>
                   update("intake.step5.person.passportNumber", e.target.value)
                 }
-                style={inputStyle}
+                className={styles.input}
                 dir="ltr"
               />
             </Field>
@@ -1072,23 +698,17 @@ export default function PersonRegistrationPage() {
         <Field label="שם הבנק (DB: step4.bank.bankName)">
           <input
             value={draft.intake.step4.bank.bankName}
-            onChange={(e) =>
-              update("intake.step4.bank.bankName", e.target.value)
-            }
-            style={inputStyle}
+            onChange={(e) => update("intake.step4.bank.bankName", e.target.value)}
+            className={styles.input}
           />
         </Field>
 
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-        >
+        <div className={styles.twoCols}>
           <Field label="סניף (DB: step4.bank.branch)">
             <input
               value={draft.intake.step4.bank.branch}
-              onChange={(e) =>
-                update("intake.step4.bank.branch", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step4.bank.branch", e.target.value)}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -1096,10 +716,8 @@ export default function PersonRegistrationPage() {
           <Field label="מספר חשבון (DB: step4.bank.accountNumber)">
             <input
               value={draft.intake.step4.bank.accountNumber}
-              onChange={(e) =>
-                update("intake.step4.bank.accountNumber", e.target.value)
-              }
-              style={inputStyle}
+              onChange={(e) => update("intake.step4.bank.accountNumber", e.target.value)}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -1110,10 +728,8 @@ export default function PersonRegistrationPage() {
         <Field label="שם מעסיק">
           <input
             value={extras.employerName}
-            onChange={(e) =>
-              setExtras((p) => ({ ...p, employerName: e.target.value }))
-            }
-            style={inputStyle}
+            onChange={(e) => setExtras((p) => ({ ...p, employerName: e.target.value }))}
+            className={styles.input}
           />
         </Field>
 
@@ -1123,24 +739,19 @@ export default function PersonRegistrationPage() {
             onChange={(e) =>
               setExtras((p) => ({ ...p, employerAddress: e.target.value }))
             }
-            style={inputStyle}
+            className={styles.input}
           />
         </Field>
 
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-        >
+        <div className={styles.twoCols}>
           <Field label="תאריך תחילת עצמאי/ת">
             <input
               type="date"
               value={extras.selfEmploymentStartDate}
               onChange={(e) =>
-                setExtras((p) => ({
-                  ...p,
-                  selfEmploymentStartDate: e.target.value,
-                }))
+                setExtras((p) => ({ ...p, selfEmploymentStartDate: e.target.value }))
               }
-              style={inputStyle}
+              className={styles.input}
             />
           </Field>
 
@@ -1154,24 +765,19 @@ export default function PersonRegistrationPage() {
                   unemployedWithIncomeStartDate: e.target.value,
                 }))
               }
-              style={inputStyle}
+              className={styles.input}
             />
           </Field>
         </div>
 
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-        >
+        <div className={styles.twoCols}>
           <Field label="הכנסה שנתית (עצמאי/ת)">
             <input
               value={extras.selfEmployedYearlyIncome}
               onChange={(e) =>
-                setExtras((p) => ({
-                  ...p,
-                  selfEmployedYearlyIncome: e.target.value,
-                }))
+                setExtras((p) => ({ ...p, selfEmployedYearlyIncome: e.target.value }))
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -1180,12 +786,9 @@ export default function PersonRegistrationPage() {
             <input
               value={extras.unemployedYearlyIncome}
               onChange={(e) =>
-                setExtras((p) => ({
-                  ...p,
-                  unemployedYearlyIncome: e.target.value,
-                }))
+                setExtras((p) => ({ ...p, unemployedYearlyIncome: e.target.value }))
               }
-              style={inputStyle}
+              className={styles.input}
               dir="ltr"
             />
           </Field>
@@ -1197,12 +800,9 @@ export default function PersonRegistrationPage() {
           <input
             value={draft.intake.step4.nationalInsurance.fileNumber}
             onChange={(e) =>
-              update(
-                "intake.step4.nationalInsurance.fileNumber",
-                e.target.value,
-              )
+              update("intake.step4.nationalInsurance.fileNumber", e.target.value)
             }
-            style={inputStyle}
+            className={styles.input}
             dir="ltr"
           />
         </Field>
@@ -1211,12 +811,9 @@ export default function PersonRegistrationPage() {
           <input
             value={draft.intake.step4.nationalInsurance.allowanceType}
             onChange={(e) =>
-              update(
-                "intake.step4.nationalInsurance.allowanceType",
-                e.target.value,
-              )
+              update("intake.step4.nationalInsurance.allowanceType", e.target.value)
             }
-            style={inputStyle}
+            className={styles.input}
           />
         </Field>
 
@@ -1224,12 +821,9 @@ export default function PersonRegistrationPage() {
           <input
             value={draft.intake.step4.nationalInsurance.allowanceFileNumber}
             onChange={(e) =>
-              update(
-                "intake.step4.nationalInsurance.allowanceFileNumber",
-                e.target.value,
-              )
+              update("intake.step4.nationalInsurance.allowanceFileNumber", e.target.value)
             }
-            style={inputStyle}
+            className={styles.input}
             dir="ltr"
           />
         </Field>
@@ -1237,25 +831,10 @@ export default function PersonRegistrationPage() {
         <SectionTitle>נסיעות לחו&quot;ל (PDF בלבד)</SectionTitle>
 
         {extras.trips.map((t, i) => (
-          <div
-            key={i}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: 12,
-              padding: 12,
-              display: "grid",
-              gap: 10,
-            }}
-          >
-            <div style={{ fontWeight: 800 }}>נסיעה #{i + 1}</div>
+          <div key={i} className={styles.panel}>
+            <div className={styles.panelTitle}>נסיעה #{i + 1}</div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 10,
-              }}
-            >
+            <div className={styles.twoCols}>
               <Field label="מתאריך">
                 <input
                   type="date"
@@ -1263,14 +842,11 @@ export default function PersonRegistrationPage() {
                   onChange={(e) =>
                     setExtras((p) => {
                       const next = structuredClone(p);
-                      next.trips[i] = {
-                        ...next.trips[i],
-                        startDate: e.target.value,
-                      };
+                      next.trips[i] = { ...next.trips[i], startDate: e.target.value };
                       return next;
                     })
                   }
-                  style={inputStyle}
+                  className={styles.input}
                 />
               </Field>
 
@@ -1281,14 +857,11 @@ export default function PersonRegistrationPage() {
                   onChange={(e) =>
                     setExtras((p) => {
                       const next = structuredClone(p);
-                      next.trips[i] = {
-                        ...next.trips[i],
-                        endDate: e.target.value,
-                      };
+                      next.trips[i] = { ...next.trips[i], endDate: e.target.value };
                       return next;
                     })
                   }
-                  style={inputStyle}
+                  className={styles.input}
                 />
               </Field>
             </div>
@@ -1299,26 +872,25 @@ export default function PersonRegistrationPage() {
                 onChange={(e) =>
                   setExtras((p) => {
                     const next = structuredClone(p);
-                    next.trips[i] = {
-                      ...next.trips[i],
-                      purpose: e.target.value,
-                    };
+                    next.trips[i] = { ...next.trips[i], purpose: e.target.value };
                     return next;
                   })
                 }
-                style={inputStyle}
+                className={styles.input}
               />
             </Field>
           </div>
         ))}
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div className={styles.actionsRow}>
           <button
             type="button"
-            style={secondaryButtonStyle}
+            className={styles.buttonSecondary}
             onClick={() =>
               downloadJson(
-                `intake_${safePart(draft.intake.step1.email || draft.intake.step1.israeliId || "demo")}.json`,
+                `intake_${safePart(
+                  draft.intake.step1.email || draft.intake.step1.israeliId || "demo",
+                )}.json`,
                 payload,
               )
             }
@@ -1326,24 +898,14 @@ export default function PersonRegistrationPage() {
             הורד JSON (DB record)
           </button>
 
-          <button type="submit" style={buttonStyle}>
+          <button type="submit" className={styles.buttonPrimary}>
             הורד PDF
           </button>
         </div>
 
-        <details style={{ marginTop: 8 }}>
+        <details className={styles.details}>
           <summary>תצוגה מקדימה של ה-JSON (DB record)</summary>
-          <pre
-            style={{
-              background: "#111",
-              color: "#eee",
-              padding: 12,
-              borderRadius: 8,
-              overflowX: "auto",
-            }}
-          >
-            {JSON.stringify(payload, null, 2)}
-          </pre>
+          <pre className={styles.previewBox}>{JSON.stringify(payload, null, 2)}</pre>
         </details>
       </form>
     </main>
@@ -1351,9 +913,7 @@ export default function PersonRegistrationPage() {
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 style={{ fontSize: 18, fontWeight: 800, marginTop: 10 }}>{children}</h2>
-  );
+  return <h2 className={styles.sectionTitle}>{children}</h2>;
 }
 
 function Field({
@@ -1366,37 +926,16 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label style={{ display: "grid", gap: 6 }}>
+    <label className={styles.fieldLabel}>
       <span>
-        {label} {required ? <span style={{ color: "crimson" }}>*</span> : null}
+        {label} {required ? <span className={styles.requiredStar}>*</span> : null}
       </span>
       {children}
     </label>
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 12px",
-  borderRadius: 10,
-  border: "1px solid #ccc",
-  fontSize: 16,
-};
 
-const buttonStyle: React.CSSProperties = {
-  marginTop: 8,
-  padding: "12px 14px",
-  borderRadius: 12,
-  border: "none",
-  fontSize: 16,
-  cursor: "pointer",
-};
 
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid #ccc",
-  background: "transparent",
-  fontSize: 15,
-  cursor: "pointer",
-};
+
+
