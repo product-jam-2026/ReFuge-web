@@ -181,6 +181,10 @@ align-content: start;
   max-width: 56%;
 }
 
+.cardOrange .cardDesc{
+  max-width: 95%;
+}
+
 .cardBlue{ background: #9bbcff; }
 .cardGreen{ background: var(--c-mint); }
 .cardOrange{ background: var(--c-orange); }
