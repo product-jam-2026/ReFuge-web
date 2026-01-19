@@ -42,8 +42,7 @@ export async function GET(request: Request) {
     .eq("id", user.id)
     .maybeSingle();
 
-  const preferredLocale = profile?.PrefLang ? "ar" : "he";
-  const redirectLocale = locale === "ar" || locale === "he" ? locale : preferredLocale;
+  const redirectLocale = profile?.PrefLang ? "ar" : "he";
   const isCompleted = profile?.registration_completed === true;
 
   const target = isCompleted
