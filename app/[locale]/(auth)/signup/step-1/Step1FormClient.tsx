@@ -230,7 +230,7 @@ function PhoneField({ labelAr, labelHe, name, defaultValue, prefixes }: {
 }
 
 // --- Main Form ---
-export default function Step1FormClient({ saved, defaults, saveDraftAction, saveAndNextAction }: Props) {
+export default function Step1FormClient({ locale, saved, defaults, saveDraftAction, saveAndNextAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
   
