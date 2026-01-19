@@ -28,8 +28,13 @@ export async function GET(request: Request) {
 
       const preferredLocale = profile?.PrefLang ? "ar" : "he";
       const redirectLocale = locale === "ar" || locale === "he" ? locale : preferredLocale;
+      const isCompleted = profile?.registration_completed === true;
 
-      return NextResponse.redirect(new URL(`/${redirectLocale}/home`, requestUrl.origin));
+      if (isCompleted) {
+        return NextResponse.redirect(new URL(`/${redirectLocale}/home`, requestUrl.origin));
+      }
+
+      return NextResponse.redirect(new URL(`/${redirectLocale}/signup/intake`, requestUrl.origin));
     }
   }
 

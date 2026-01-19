@@ -45,6 +45,12 @@ type CookieToSet = {
 export default async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
+  if (pathname.match(/^\/(he|ar)\/callback\/?$/i)) {
+    const redirectUrl = req.nextUrl.clone();
+    redirectUrl.pathname = pathname.replace(/^\/(he|ar)\/callback\/?$/i, "/$1/auth/callback");
+    return NextResponse.redirect(redirectUrl);
+  }
+
   if (pathname.startsWith("/en/") || pathname === "/en") {
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = pathname.replace(/^\/en\b/, "/he");
