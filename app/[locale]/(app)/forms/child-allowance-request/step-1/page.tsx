@@ -47,7 +47,7 @@ export default function Step1() {
     <main className={styles.page}>
       <div className={styles.header}>
         <div className={styles.headerText}>
-          בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי
+          תביעה לקצבת ילדים
         </div>
       </div>
 

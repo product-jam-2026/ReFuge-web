@@ -213,7 +213,7 @@ export default function Step3() {
         ))}
       </div>
 
-      <div className={styles.footer}>
+      <div className={styles.footerRow}>
         {/* <button
           type="button"
           className={styles.navBtn}
