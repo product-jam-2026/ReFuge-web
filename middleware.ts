@@ -26,6 +26,7 @@ function isPublicPath(pathname: string) {
   // דפי auth שפתוחים גם בלי התחברות
   // (התאימי אם אצלך הנתיבים נקראים אחרת)
   const publicRoutes = [
+    /^\/(he|ar)\/?$/i,
     /^\/(he|ar)\/login\/?$/i,
     /^\/(he|ar)\/signup\/?$/i,
     /^\/(he|ar)\/signup\/.*$/i,
