@@ -160,6 +160,7 @@ export default function PersonRegistrationPage() {
   if (!isHydrated || !draft || !payload) {
     return <main className={styles.loadingPage}>Loading…</main>;
   }
+  
 
   return (
     <main className={styles.page}>

@@ -1,34 +1,13 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import demo from "@/public/demo/intake.demo.json";
+import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useWizard } from "../WizardProvider";
+import { fieldMap } from "../fieldMap";
+import { intakeToPdfFields } from "../intakeToPdfFields";
+import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./page.module.css";
-
-type IntakeRecord = typeof demo;
-
-type ExtrasState = {
-  father: {
-    phoneHome: string;
-    emailPrefix: string;
-    emailPostfix: string;
-  };
-  allowanceRequester: {
-    phoneHome: string;
-    emailPrefix: string;
-    emailPostfix: string;
-  };
-  bankAccount: {
-    branchName: string;
-    branchNumber: string;
-    owner1: string;
-    owner2: string;
-  };
-  children: Array<{
-    firstEntryDate: string;
-    fileJoinDate: string;
-  }>;
-};
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h2 className={styles.sectionTitle}>{children}</h2>;
@@ -49,666 +28,310 @@ function Field({
   );
 }
 
-function safePart(s: string) {
+function safeFileName(title: string) {
   return (
-    (s ?? "")
+    (title ?? "")
       .toString()
       .trim()
       .replace(/[^a-zA-Z0-9_-]+/g, "_")
-      .slice(0, 40) || "unknown"
+      .slice(0, 60) || "Untitled"
   );
 }
 
-function splitEmail(email: string) {
-  const e = (email ?? "").trim();
-  const at = e.indexOf("@");
-  if (at === -1) return { prefix: e, postfix: "" };
-  return { prefix: e.slice(0, at), postfix: e.slice(at + 1) };
-}
-
-function fullName(first: string, last: string) {
-  return `${(first ?? "").trim()} ${(last ?? "").trim()}`.trim();
-}
-
-function emptyChildExtras(): ExtrasState["children"][number] {
-  return { firstEntryDate: "", fileJoinDate: "" };
-}
-
-function deriveExtrasFromIntake(d: IntakeRecord): ExtrasState {
-  const fatherEmail = splitEmail(d.intake.step1.email);
-  const reqEmail = splitEmail(d.intake.step5.email);
-
-  const owners = {
-    owner1: fullName(d.intake.step1.firstName, d.intake.step1.lastName),
-    owner2: fullName(
-      d.intake.step5.person.firstName,
-      d.intake.step5.person.lastName,
-    ),
-  };
-
-  const kids = d.intake.step6.children ?? [];
-  const kidsExtras = kids.map((k) => ({
-    firstEntryDate: k.entryDate ?? "",
-    fileJoinDate: "",
-  }));
-
-  while (kidsExtras.length < 3) kidsExtras.push(emptyChildExtras());
-
-  return {
-    father: {
-      phoneHome: "",
-      emailPrefix: fatherEmail.prefix,
-      emailPostfix: fatherEmail.postfix,
-    },
-    allowanceRequester: {
-      phoneHome: "",
-      emailPrefix: reqEmail.prefix,
-      emailPostfix: reqEmail.postfix,
-    },
-    bankAccount: {
-      branchName: "",
-      branchNumber: d.intake.step4.bank.branch ?? "",
-      owner1: owners.owner1,
-      owner2: owners.owner2,
-    },
-    children: kidsExtras,
-  };
-}
-
-export default function ChildAllowanceStepLikeWizardPage() {
+export default function Step4() {
   const router = useRouter();
-  const sp = useSearchParams();
-  const instanceId = sp.get("instanceId");
+  const { draft, extras, setExtras, instanceId } = useWizard();
 
-  const [draft, setDraft] = useState<IntakeRecord | null>(null);
-  const [extras, setExtras] = useState<ExtrasState | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const lastPt = useRef<{ x: number; y: number } | null>(null);
+
+  // keep these matching CSS values (.canvas)
+  const CANVAS_W = 520;
+  const CANVAS_H = 170;
 
   useEffect(() => {
-    const d = structuredClone(demo) as IntakeRecord;
-    setDraft(d);
-    setExtras(deriveExtrasFromIntake(d));
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.floor(CANVAS_W * dpr);
+    canvas.height = Math.floor(CANVAS_H * dpr);
+
+    // set CSS size (no inline styles needed)
+    canvas.style.width = `${CANVAS_W}px`;
+    canvas.style.height = `${CANVAS_H}px`;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = "#111";
+
+    const sig = (extras as any)?.applicantSignatureDataUrl as
+      | string
+      | undefined;
+    if (sig?.startsWith("data:image/")) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+        ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+      };
+      img.src = sig;
+    } else {
+      ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function update(path: string, value: any) {
-    setDraft((prev) => {
-      if (!prev) return prev;
-      const next: any = structuredClone(prev);
-      const parts = path.split(".");
-      let cur: any = next;
-      for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
-      cur[parts[parts.length - 1]] = value;
-      return next;
-    });
+  function getPos(e: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 
-  function updateChild(
-    index: number,
-    key: keyof IntakeRecord["intake"]["step6"]["children"][number],
-    value: string,
+  function startDraw(e: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.setPointerCapture(e.pointerId);
+    setIsDrawing(true);
+    lastPt.current = getPos(e);
+  }
+
+  function draw(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const p = getPos(e);
+    const prev = lastPt.current;
+    if (!prev) {
+      lastPt.current = p;
+      return;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(prev.x, prev.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+
+    lastPt.current = p;
+  }
+
+  function endDraw(e: React.PointerEvent<HTMLCanvasElement>) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setIsDrawing(false);
+    lastPt.current = null;
+
+    const dataUrl = canvas.toDataURL("image/png");
+    setExtras((p: any) => ({ ...p, applicantSignatureDataUrl: dataUrl }));
+  }
+
+  function clearSignature() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+    setExtras((p: any) => ({ ...p, applicantSignatureDataUrl: "" }));
+  }
+
+  if (!draft) {
+    return <main className={styles.loadingPage}>Loading…</main>;
+  }
+
+  const sigPreview = (extras as any)?.applicantSignatureDataUrl as
+    | string
+    | undefined;
+
+  async function uploadPdf(
+    outBytes: Uint8Array,
+    instanceId: string,
+    pdfTitle: string,
   ) {
-    setDraft((prev) => {
-      if (!prev) return prev;
-      const next = structuredClone(prev);
-      if (!next.intake.step6.children[index]) return next;
-      (next.intake.step6.children[index] as any)[key] = value;
-      return next;
+    const supabase = createClient();
+
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    if (userErr) throw userErr;
+    const user = userRes.user;
+    if (!user) throw new Error("Not logged in");
+
+    // no timezone suffix: drop trailing Z from ISO
+    const ts = new Date().toISOString().replace("Z", "").replace(/[:.]/g, "-");
+    const base = safeFileName(pdfTitle);
+    const fileName = `${base}_${ts}.pdf`;
+
+    const path = `${user.id}/person-registration-request/${instanceId}/${fileName}`;
+
+    const bytes = new Uint8Array(outBytes);
+    const blob = new Blob([bytes.buffer], { type: "application/pdf" });
+
+    const { data, error } = await supabase.storage
+      .from("generated-pdfs")
+      .upload(path, blob, { contentType: "application/pdf", upsert: false });
+
+    if (error) throw error;
+
+    const { error: insErr } = await supabase.from("generated_pdfs").insert({
+      user_id: user.id,
+      bucket: "generated-pdfs",
+      path: data.path,
+      form_instance_id: instanceId,
+      pdf_title: pdfTitle,
     });
+
+    if (insErr) throw insErr;
+    return data.path;
   }
 
-  function addChildRow() {
-    setDraft((prev) => {
-      if (!prev) return prev;
-      const next = structuredClone(prev);
-      next.intake.step6.children.push({
-        lastName: "",
-        firstName: "",
-        gender: "",
-        birthDate: "",
-        nationality: "",
-        israeliId: "",
-        residenceCountry: "",
-        entryDate: "",
-      });
-      return next;
-    });
+  async function saveDraft(existingInstanceId?: string) {
+    const supabase = createClient();
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    if (userErr) throw userErr;
+    const user = userRes.user;
+    if (!user) throw new Error("Not logged in");
+    if (!draft) throw new Error("No draft to save");
 
-    setExtras((prev) => {
-      if (!prev) return prev;
-      return { ...prev, children: [...prev.children, emptyChildExtras()] };
-    });
+    const title =
+      (extras as any).formTitle?.trim() ||
+      `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
+      "Untitled";
+
+    const { applicantSignatureDataUrl, ...extrasToSave } = extras;
+
+    if (!existingInstanceId) {
+      const { data, error } = await supabase
+        .from("form_instances")
+        .insert({
+          user_id: user.id,
+          form_slug: "person-registration-request",
+          title,
+          draft,
+          extras: extrasToSave,
+        })
+        .select("id")
+        .single();
+
+      if (error) throw error;
+      return data.id;
+    } else {
+      const { error } = await supabase
+        .from("form_instances")
+        .update({ title, draft, extras: extrasToSave })
+        .eq("id", existingInstanceId)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      return existingInstanceId;
+    }
   }
 
-  const payload = useMemo(() => {
-    if (!draft) return null;
-    const kids = (draft.intake.step6.children ?? []).filter(
-      (c) =>
-        (c.firstName ?? "").trim() ||
-        (c.lastName ?? "").trim() ||
-        (c.israeliId ?? "").trim() ||
-        (c.birthDate ?? "").trim(),
+  async function onGenerate() {
+    if (!draft) {
+      // still loading / wizard not ready
+      return;
+    }
+
+    const pdfTitle =
+      (extras as any).formTitle?.trim() ||
+      `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
+      "Untitled";
+
+    const fields = intakeToPdfFields(draft as any, {
+      formDate: extras.formDate,
+      poBox: extras.poBox,
+      applicantSignatureDataUrl: extras.applicantSignatureDataUrl,
+    });
+
+    const [tplRes, fontRes] = await Promise.all([
+      fetch("/forms/person-registration.pdf"),
+      fetch("/fonts/SimplerPro-Regular.otf"),
+    ]);
+
+    const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
+    const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
+
+    const outBytes = await fillFieldsToNewPdfBytesClient(
+      templateBytes,
+      fields,
+      fieldMap,
+      { fontBytes, autoDetectRtl: true, defaultRtlAlignRight: true },
     );
-    const cleaned = structuredClone(draft);
-    cleaned.intake.step6.children = kids;
-    return cleaned;
-  }, [draft]);
 
-  if (!draft || !payload || !extras) {
-    return <main className={styles.page}>Loading…</main>;
+    const savedInstanceId = await saveDraft(instanceId ?? undefined);
+    await uploadPdf(outBytes, savedInstanceId, pdfTitle);
   }
-
-  const kids = draft.intake.step6.children ?? [];
-  const nextUrl = instanceId
-    ? `./step-5?instanceId=${encodeURIComponent(instanceId)}`
-    : "./step-5";
 
   return (
     <main className={styles.page}>
-      {/* Header like your Step3 */}
       <div className={styles.header}>
-        <div className={styles.headerText}>طلب مخصصات الأطفال</div>
-        <div className={styles.headerText}>טופס בקשה לקצבת ילדים</div>
+        <div className={styles.headerText}>
+          استبيان تسجيل شخص
+        </div>
+
+        <div className={styles.headerText}>
+          שאלון לרישום נפש
+        </div>
       </div>
 
-      {/* <SectionTitle>פרטי האב</SectionTitle>
-
-      <Field label="שם פרטי">
+      {/* <SectionTitle>כללי</SectionTitle> */}
+      <Field label="تاريخ   תאריך  ">
         <input
-          className={styles.input}
-          value={draft.intake.step1.firstName}
-          onChange={(e) => update("intake.step1.firstName", e.target.value)}
-        />
-      </Field>
-
-      <Field label="שם משפחה">
-        <input
-          className={styles.input}
-          value={draft.intake.step1.lastName}
-          onChange={(e) => update("intake.step1.lastName", e.target.value)}
-        />
-      </Field>
-
-      <Field label="מספר זהות">
-        <input
-          className={styles.input}
-          value={draft.intake.step1.israeliId}
-          onChange={(e) => update("intake.step1.israeliId", e.target.value)}
-          dir="ltr"
-        />
-      </Field>
-
-      <Field label="תאריך לידה">
-        <input
-          className={styles.input}
           type="date"
-          value={draft.intake.step1.birthDate}
-          onChange={(e) => update("intake.step1.birthDate", e.target.value)}
-        />
-      </Field>
-
-      <Field label="תאריך כניסה לישראל (step2.entryDate)">
-        <input
-          className={styles.input}
-          type="date"
-          value={draft.intake.step2.entryDate}
-          onChange={(e) => update("intake.step2.entryDate", e.target.value)}
-        />
-      </Field>
-
-      <SectionTitle>כתובת האב</SectionTitle>
-
-      <Field label="רחוב">
-        <input
-          className={styles.input}
-          value={draft.intake.step3.registeredAddress.street}
+          value={(extras as any).formDate}
           onChange={(e) =>
-            update("intake.step3.registeredAddress.street", e.target.value)
+            setExtras((p: any) => ({ ...p, formDate: e.target.value }))
           }
+          className={styles.input}
         />
       </Field>
 
-      <div className={styles.row2}>
-        <Field label="מספר בית">
-          <input
-            className={styles.input}
-            value={draft.intake.step3.registeredAddress.houseNumber}
-            onChange={(e) =>
-              update(
-                "intake.step3.registeredAddress.houseNumber",
-                e.target.value,
-              )
-            }
-            dir="ltr"
-          />
-        </Field>
+      <Field label="اسم النموذج   שם הטופס">
+        <input
+          value={(extras as any).formTitle}
+          onChange={(e) =>
+            setExtras((p: any) => ({ ...p, formTitle: e.target.value }))
+          }
+          className={styles.input}
+          placeholder="שם לזיהוי ברשימות"
+        />
+      </Field>
 
-        <Field label="כניסה">
-          <input
-            className={styles.input}
-            value={draft.intake.step3.registeredAddress.entry}
-            onChange={(e) =>
-              update("intake.step3.registeredAddress.entry", e.target.value)
-            }
-            dir="ltr"
-          />
-        </Field>
+      <SectionTitle>חתימה (כתב יד)</SectionTitle>
 
-        <Field label="דירה">
-          <input
-            className={styles.input}
-            value={draft.intake.step3.registeredAddress.apartment}
-            onChange={(e) =>
-              update("intake.step3.registeredAddress.apartment", e.target.value)
-            }
-            dir="ltr"
+      <div className={styles.signatureWrap}>
+        <div className={styles.canvasFrame}>
+          <canvas
+            ref={canvasRef}
+            onPointerDown={startDraw}
+            onPointerMove={draw}
+            onPointerUp={endDraw}
+            onPointerCancel={endDraw}
+            className={styles.canvas}
           />
-        </Field>
+        </div>
 
-        <Field label="מיקוד">
-          <input
-            className={styles.input}
-            value={draft.intake.step3.registeredAddress.zip}
-            onChange={(e) =>
-              update("intake.step3.registeredAddress.zip", e.target.value)
-            }
-            dir="ltr"
-          />
-        </Field>
       </div>
 
-      <Field label="עיר">
-        <input
-          className={styles.input}
-          value={draft.intake.step3.registeredAddress.city}
-          onChange={(e) =>
-            update("intake.step3.registeredAddress.city", e.target.value)
-          }
-        />
-      </Field>
-
-      <SectionTitle>טלפון / אימייל האב</SectionTitle>
-
-      <Field label="טלפון נייד (step1.phone)">
-        <input
-          className={styles.input}
-          value={draft.intake.step1.phone}
-          onChange={(e) => update("intake.step1.phone", e.target.value)}
-          inputMode="tel"
-          dir="ltr"
-        />
-      </Field>
-
-      <Field label="טלפון בבית (PDF בלבד)">
-        <input
-          className={styles.input}
-          value={extras.father.phoneHome}
-          onChange={(e) =>
-            setExtras((p) =>
-              p
-                ? { ...p, father: { ...p.father, phoneHome: e.target.value } }
-                : p,
-            )
-          }
-          inputMode="tel"
-          dir="ltr"
-        />
-      </Field>
-
-      <div className={styles.row2}>
-        <Field label="אימייל (לפני @) (PDF בלבד)">
-          <input
-            className={styles.input}
-            value={extras.father.emailPrefix}
-            onChange={(e) =>
-              setExtras((p) =>
-                p
-                  ? { ...p, father: { ...p.father, emailPrefix: e.target.value } }
-                  : p,
-              )
-            }
-            dir="ltr"
-          />
-        </Field>
-
-        <Field label="אימייל (אחרי @) (PDF בלבד)">
-          <input
-            className={styles.input}
-            value={extras.father.emailPostfix}
-            onChange={(e) =>
-              setExtras((p) =>
-                p
-                  ? {
-                      ...p,
-                      father: { ...p.father, emailPostfix: e.target.value },
-                    }
-                  : p,
-              )
-            }
-            dir="ltr"
-          />
-        </Field>
-      </div>
-
-      <SectionTitle>פרטי מבקש הקצבה</SectionTitle>
-
-      <Field label="שם פרטי (step5.person.firstName)">
-        <input
-          className={styles.input}
-          value={draft.intake.step5.person.firstName}
-          onChange={(e) =>
-            update("intake.step5.person.firstName", e.target.value)
-          }
-        />
-      </Field>
-
-      <Field label="שם משפחה (step5.person.lastName)">
-        <input
-          className={styles.input}
-          value={draft.intake.step5.person.lastName}
-          onChange={(e) =>
-            update("intake.step5.person.lastName", e.target.value)
-          }
-        />
-      </Field>
-
-      <Field label="מספר זהות (step5.person.israeliId)">
-        <input
-          className={styles.input}
-          value={draft.intake.step5.person.israeliId}
-          onChange={(e) =>
-            update("intake.step5.person.israeliId", e.target.value)
-          }
-          dir="ltr"
-        />
-      </Field>
-
-      <Field label="טלפון נייד (step5.phone)">
-        <input
-          className={styles.input}
-          value={draft.intake.step5.phone}
-          onChange={(e) => update("intake.step5.phone", e.target.value)}
-          inputMode="tel"
-          dir="ltr"
-        />
-      </Field>
-
-      <Field label="טלפון בבית (PDF בלבד)">
-        <input
-          className={styles.input}
-          value={extras.allowanceRequester.phoneHome}
-          onChange={(e) =>
-            setExtras((p) =>
-              p
-                ? {
-                    ...p,
-                    allowanceRequester: {
-                      ...p.allowanceRequester,
-                      phoneHome: e.target.value,
-                    },
-                  }
-                : p,
-            )
-          }
-          inputMode="tel"
-          dir="ltr"
-        />
-      </Field>
-
-      <div className={styles.row2}>
-        <Field label="אימייל (לפני @) (PDF בלבד)">
-          <input
-            className={styles.input}
-            value={extras.allowanceRequester.emailPrefix}
-            onChange={(e) =>
-              setExtras((p) =>
-                p
-                  ? {
-                      ...p,
-                      allowanceRequester: {
-                        ...p.allowanceRequester,
-                        emailPrefix: e.target.value,
-                      },
-                    }
-                  : p,
-              )
-            }
-            dir="ltr"
-          />
-        </Field>
-
-        <Field label="אימייל (אחרי @) (PDF בלבד)">
-          <input
-            className={styles.input}
-            value={extras.allowanceRequester.emailPostfix}
-            onChange={(e) =>
-              setExtras((p) =>
-                p
-                  ? {
-                      ...p,
-                      allowanceRequester: {
-                        ...p.allowanceRequester,
-                        emailPostfix: e.target.value,
-                      },
-                    }
-                  : p,
-              )
-            }
-            dir="ltr"
-          />
-        </Field>
-      </div>
-
-      <SectionTitle>חשבון בנק</SectionTitle>
-
-      <Field label="בעל/ת חשבון 1 (PDF בלבד)">
-        <input
-          className={styles.input}
-          value={extras.bankAccount.owner1}
-          onChange={(e) =>
-            setExtras((p) =>
-              p
-                ? {
-                    ...p,
-                    bankAccount: { ...p.bankAccount, owner1: e.target.value },
-                  }
-                : p,
-            )
-          }
-        />
-      </Field>
-
-      <Field label="בעל/ת חשבון 2 (PDF בלבד)">
-        <input
-          className={styles.input}
-          value={extras.bankAccount.owner2}
-          onChange={(e) =>
-            setExtras((p) =>
-              p
-                ? {
-                    ...p,
-                    bankAccount: { ...p.bankAccount, owner2: e.target.value },
-                  }
-                : p,
-            )
-          }
-        />
-      </Field>
-
-      <Field label="שם הבנק (step4.bank.bankName)">
-        <input
-          className={styles.input}
-          value={draft.intake.step4.bank.bankName}
-          onChange={(e) =>
-            update("intake.step4.bank.bankName", e.target.value)
-          }
-        />
-      </Field>
-
-      <div className={styles.row2}>
-        <Field label="שם סניף (PDF בלבד)">
-          <input
-            className={styles.input}
-            value={extras.bankAccount.branchName}
-            onChange={(e) =>
-              setExtras((p) =>
-                p
-                  ? {
-                      ...p,
-                      bankAccount: {
-                        ...p.bankAccount,
-                        branchName: e.target.value,
-                      },
-                    }
-                  : p,
-              )
-            }
-          />
-        </Field>
-
-        <Field label="מספר סניף (step4.bank.branch)">
-          <input
-            className={styles.input}
-            value={extras.bankAccount.branchNumber}
-            onChange={(e) =>
-              setExtras((p) =>
-                p
-                  ? {
-                      ...p,
-                      bankAccount: {
-                        ...p.bankAccount,
-                        branchNumber: e.target.value,
-                      },
-                    }
-                  : p,
-              )
-            }
-            dir="ltr"
-          />
-        </Field>
-      </div>
-
-      <Field label="מספר חשבון (step4.bank.accountNumber)">
-        <input
-          className={styles.input}
-          value={draft.intake.step4.bank.accountNumber}
-          onChange={(e) =>
-            update("intake.step4.bank.accountNumber", e.target.value)
-          }
-          dir="ltr"
-        />
-      </Field>
-
-      <SectionTitle>פרטי הילדים (עד 3 ב-PDF)</SectionTitle>
-
-      <div className={styles.childrenGrid}>
-        {kids.map((child, i) => (
-          <div key={i} className={styles.childCard}>
-            <Field label="מספר זהות">
-              <input
-                className={styles.input}
-                value={child.israeliId}
-                onChange={(e) => updateChild(i, "israeliId", e.target.value)}
-                dir="ltr"
-              />
-            </Field>
-
-            <Field label="שם משפחה">
-              <input
-                className={styles.input}
-                value={child.lastName}
-                onChange={(e) => updateChild(i, "lastName", e.target.value)}
-              />
-            </Field>
-
-            <Field label="שם פרטי">
-              <input
-                className={styles.input}
-                value={child.firstName}
-                onChange={(e) => updateChild(i, "firstName", e.target.value)}
-              />
-            </Field>
-
-            <Field label="תאריך לידה">
-              <input
-                className={styles.input}
-                type="date"
-                value={child.birthDate}
-                onChange={(e) => updateChild(i, "birthDate", e.target.value)}
-              />
-            </Field>
-
-            <Field label="תאריך כניסה">
-              <input
-                className={styles.input}
-                type="date"
-                value={child.entryDate}
-                onChange={(e) => updateChild(i, "entryDate", e.target.value)}
-              />
-            </Field>
-
-            <Field label="תאריך כניסה ראשון (PDF בלבד)">
-              <input
-                className={styles.input}
-                type="date"
-                value={extras.children[i]?.firstEntryDate ?? ""}
-                onChange={(e) =>
-                  setExtras((p) => {
-                    if (!p) return p;
-                    const next = structuredClone(p);
-                    if (!next.children[i]) next.children[i] = emptyChildExtras();
-                    next.children[i]!.firstEntryDate = e.target.value;
-                    return next;
-                  })
-                }
-              />
-            </Field>
-
-            <Field label="תאריך פתיחת תיק/הצטרפות (PDF בלבד)">
-              <input
-                className={styles.input}
-                type="date"
-                value={extras.children[i]?.fileJoinDate ?? ""}
-                onChange={(e) =>
-                  setExtras((p) => {
-                    if (!p) return p;
-                    const next = structuredClone(p);
-                    if (!next.children[i]) next.children[i] = emptyChildExtras();
-                    next.children[i]!.fileJoinDate = e.target.value;
-                    return next;
-                  })
-                }
-              />
-            </Field> */}
-
-            {/* {i >= 2 ? (
-              <div className={styles.note}>
-                שים לב: ה-PDF תומך עד 3 ילדים. ילדים נוספים לא ייכנסו ל-PDF.
-              </div>
-            ) : null} */}
-          {/* </div> */}
-        {/* ))} */}
-      {/* </div> */}
-
-      {/* <button
-        type="button"
-        onClick={addChildRow}
-        className={styles.secondaryBtn}
-      >
-        + הוסף ילד/ה נוסף/ת
-      </button> */}
-
-      {/* Footer button like your Step3 */}
       <div className={styles.footerRow}>
         <button
           type="button"
+          onClick={async () => {
+            await onGenerate();
+            router.push("./review");
+          }}
           className={styles.primaryButton}
-          onClick={() => router.push(nextUrl)}
         >
-          אישור
+          סיום
         </button>
       </div>
-
-      {/* Debug helper if you want */}
-      {/* <pre>{JSON.stringify(payload, null, 2)}</pre> */}
     </main>
   );
 }

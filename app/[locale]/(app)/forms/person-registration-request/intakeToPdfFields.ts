@@ -1,6 +1,12 @@
 // intakeToPdfFields.ts
 // Mapping from IntakeRecord (+ UI-only extras) -> flat PDF fields (keys match fieldMap.ts)
 
+// export type PdfExtras = {
+//   formDate?: string;
+//   poBox?: string;
+//   applicantSignature?: string; // dataURL
+// };
+
 export type IntakeRecord = {
   intake: {
     step1: {
@@ -148,6 +154,13 @@ export type ExtrasState = {
 
   // Trips abroad (not in DB template)
   trips: TripRow[]; // expect 0..3 (we'll safely read up to 3)
+  // --- Step4 / meta (DB-saved) ---
+  formDate: string; // yyyy-mm-dd
+  formTitle: string; // title used for lists + filenames
+  poBox: string; // if your PDF has a PO Box field
+
+  // --- UI-only (NOT saved to DB) ---
+  applicantSignatureDataUrl: string; // data:image/png;base64,...
 };
 
 /**
@@ -156,20 +169,20 @@ export type ExtrasState = {
  * - numberChildrenUnder18 defaults to children length
  * - purposeOfStay defaults to step2.visaType
  */
-export function deriveExtrasFromIntake(
-  draft: IntakeRecord,
-  current?: Partial<ExtrasState>
-): Partial<ExtrasState> {
-  return {
-    ...current,
-    addressPhoneNumber:
-      current?.addressPhoneNumber ?? draft.intake.step1.phone ?? "",
-    numberChildrenUnder18:
-      current?.numberChildrenUnder18 ??
-      String(draft.intake.step6.children?.length ?? 0),
-    purposeOfStay: current?.purposeOfStay ?? draft.intake.step2.visaType ?? "",
-  };
-}
+// export function deriveExtrasFromIntake(
+//   draft: IntakeRecord,
+//   current?: Partial<ExtrasState>
+// ): Partial<ExtrasState> {
+//   return {
+//     ...current,
+//     addressPhoneNumber:
+//       current?.addressPhoneNumber ?? draft.intake.step1.phone ?? "",
+//     numberChildrenUnder18:
+//       current?.numberChildrenUnder18 ??
+//       String(draft.intake.step6.children?.length ?? 0),
+//     purposeOfStay: current?.purposeOfStay ?? draft.intake.step2.visaType ?? "",
+//   };
+// }
 
 function tripAt(extras: Partial<ExtrasState> | undefined, i: number): TripRow {
   const t = extras?.trips?.[i];
@@ -180,14 +193,104 @@ function tripAt(extras: Partial<ExtrasState> | undefined, i: number): TripRow {
   };
 }
 
+export function deriveExtrasFromIntake(
+  draft: IntakeRecord,
+  current?: Partial<ExtrasState>,
+): ExtrasState {
+  const base: ExtrasState = {
+    firstNameEnglish: "",
+    lastNameEnglish: "",
+    prevLastNameEnglish: "",
+
+    birthCountry: "",
+    birthCity: "",
+
+    addressPhoneNumber: "",
+
+    father: {
+      firstNameHebrew: "",
+      lastNameHebrew: "",
+      firstNameEnglish: "",
+      lastNameEnglish: "",
+      idNumber: "",
+      passportNumber: "",
+    },
+
+    mother: {
+      firstNameHebrew: "",
+      lastNameHebrew: "",
+      firstNameEnglish: "",
+      lastNameEnglish: "",
+      idNumber: "",
+      passportNumber: "",
+    },
+
+    partner: {
+      firstNameEnglish: "",
+      lastNameEnglish: "",
+    },
+
+    numberChildrenUnder18: "0",
+    purposeOfStay: "",
+
+    employerName: "",
+    employerAddress: "",
+    selfEmploymentStartDate: "",
+    unemployedWithIncomeStartDate: "",
+    selfEmployedYearlyIncome: "",
+    unemployedYearlyIncome: "",
+
+    trips: [],
+    formDate: "",
+    formTitle: "",
+    poBox: "",
+
+    applicantSignatureDataUrl: "",
+  };
+
+  // merge current over base (shallow + nested blocks)
+  const merged: ExtrasState = {
+    ...base,
+    ...current,
+    father: { ...base.father, ...(current?.father ?? {}) },
+    mother: { ...base.mother, ...(current?.mother ?? {}) },
+    partner: { ...base.partner, ...(current?.partner ?? {}) },
+    trips: (current?.trips ?? base.trips).map((t) => ({
+      startDate: t?.startDate ?? "",
+      endDate: t?.endDate ?? "",
+      purpose: t?.purpose ?? "",
+    })),
+  };
+
+  // apply your “default from draft” logic
+  merged.addressPhoneNumber =
+    merged.addressPhoneNumber || draft.intake.step1.phone || "";
+
+  merged.numberChildrenUnder18 =
+    merged.numberChildrenUnder18 ||
+    String(draft.intake.step6.children?.length ?? 0);
+
+  merged.purposeOfStay =
+    merged.purposeOfStay || draft.intake.step2.visaType || "";
+
+  return merged;
+}
+
 /**
  * Main mapper: builds the flat `fields` object where keys match fieldMap.ts.
  * This is literally the same mapping that is currently hardcoded in page.tsx,
  * just moved into a reusable function.
  */
+
+// export function intakeToPdfFields(
+//   draft: IntakeRecord,
+//   extras?: Partial<ExtrasState>,
+// ): Record<string, string> {
+
+
 export function intakeToPdfFields(
   draft: IntakeRecord,
-  extras?: Partial<ExtrasState>
+  extras?: Partial<ExtrasState>,
 ): Record<string, string> {
   const s1 = draft.intake.step1;
   const s2 = draft.intake.step2;
@@ -232,8 +335,7 @@ export function intakeToPdfFields(
     "address.apartmentNumber": addr.apartment ?? "",
     "address.city": addr.city ?? "",
     "address.zipcode": addr.zip ?? "",
-    "address.phoneNumber":
-      (extras?.addressPhoneNumber ?? "") || s1.phone || "",
+    "address.phoneNumber": (extras?.addressPhoneNumber ?? "") || s1.phone || "",
 
     fatherLastNameHebrew: extras?.father?.lastNameHebrew ?? "",
     fatherLastNameEnglish: extras?.father?.lastNameEnglish ?? "",
@@ -290,5 +392,12 @@ export function intakeToPdfFields(
 
     NationInsuranceTypeOfAllowance: s4.nationalInsurance.allowanceType ?? "",
     NationInsuranceFileNumber: s4.nationalInsurance.allowanceFileNumber ?? "",
+
+    // ✅ Step4 fields (keys MUST match your fieldMap.ts)
+    formDate: extras?.formDate ?? "",
+    poBox: extras?.poBox ?? "",
+
+    // If your PDF engine expects the signature as a field value (dataURL)
+    applicantSignature: (extras as any)?.applicantSignature ?? "",
   };
 }
