@@ -24,6 +24,15 @@ function getGreetingKey(hour: number) {
   return 'night';
 }
 
+function getLocalizedText(
+  value: string | { he?: string; ar?: string } | null | undefined,
+  locale: string
+): string | undefined {
+  if (!value) return undefined;
+  if (typeof value === 'string') return value;
+  return locale === 'ar' ? value.ar || value.he : value.he || value.ar;
+}
+
 export default async function HomePage({
   params,
 }: {
@@ -51,11 +60,10 @@ export default async function HomePage({
     if (error) dbError = error.message;
 
     const step1 = (profileRow as any)?.data?.intake?.step1 ?? {};
-    const nameFromDb =
-      step1?.firstName?.[locale] ||
-      step1?.first_name?.[locale] ||
-      step1?.firstName ||
-      step1?.first_name;
+    const nameFromDb = getLocalizedText(
+      step1?.firstName ?? step1?.first_name,
+      locale
+    );
 
     firstName = nameFromDb || firstName;
     gender = step1?.gender || (profileRow as any)?.data?.gender || null;
