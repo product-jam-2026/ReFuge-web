@@ -78,6 +78,9 @@ html, body, button, input, select, textarea{
   --space-1: 6px;
   --space-2: 10px;
   --space-3: 14px;
+
+  /* Shared header positioning */
+  --page-header-top: 72px;
   --space-4: 18px;
   --space-5: 24px;
 
@@ -319,7 +322,7 @@ button:focus {
    ========================= */
 .langFab{
   position: fixed;
-  top: var(--langFabTop, 85px);
+  top: var(--langFabTop, var(--page-header-top, 85px));
   left: 20px;
   right: auto;  z-index: 9999;
 

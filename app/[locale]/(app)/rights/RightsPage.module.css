@@ -13,8 +13,8 @@
   text-align: right;        /* ✅ יישור טקסט */
   width: 100%;          
   padding-right: 50px; /* כדי שלא תידבק לחץ */
-  min-height: 44px;
-  margin-top: 56px;
+  min-height: 15px;
+  margin-top: var(--page-header-top, 15px);
   margin-bottom: 24px;
 }
 

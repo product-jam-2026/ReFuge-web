@@ -259,11 +259,18 @@ export default async function DocumentsPage({
     ? data.intake.step6.children
     : [];
 
-  const entries: Array<{ id: string; label: string; doc: DocRecord | null; otherIndex?: number }> = [];
+  const entries: Array<{ id: string; label: string; subLabel?: string; doc: DocRecord | null; otherIndex?: number }> = [];
+  const otherEntries: typeof entries = [];
   const bucketName = "intake_docs";
 
-  const addEntry = (id: string, label: string, doc: DocRecord | null, otherIndex?: number) => {
-    entries.push({ id, label, doc, otherIndex });
+  const addEntry = (
+    id: string,
+    label: string,
+    doc: DocRecord | null,
+    otherIndex?: number,
+    subLabel?: string
+  ) => {
+    entries.push({ id, label, subLabel, doc, otherIndex });
   };
 
   addEntry(
@@ -292,19 +299,22 @@ export default async function DocumentsPage({
     normalizeDoc(documents.propertyOwnership)
   );
 
+  const childEntries: typeof entries = [];
   if (children.length > 0) {
     children.forEach((child: any, index: number) => {
       const doc = normalizeDoc(documents[`child_doc_${index}`]);
-      if (!doc) return;
       const childName =
         getLocalizedText(child?.firstName, locale) ||
         pickFirst(child?.firstName) ||
         pickFirst(child?.first_name) ||
         "";
-      const label = childName
-        ? `${childName} - ${t("fields.childPassportPhoto")}`
-        : t("fields.childPassportPhoto");
-      addEntry(`child_doc_${index}`, label, doc);
+      const label = childName || t("fields.childLabelFallback");
+      childEntries.push({
+        id: `child_doc_${index}`,
+        label,
+        subLabel: t("fields.childPassportPhoto"),
+        doc,
+      });
     });
   } else {
     addEntry(
@@ -322,15 +332,19 @@ export default async function DocumentsPage({
     : [];
   if (otherDocs.length > 0) {
     otherDocs.forEach((doc: any, index: number) => {
-      addEntry(
-        `otherDocs_${index}`,
-        t("fields.otherDocs"),
-        normalizeDoc(doc),
-        index
-      );
+      otherEntries.push({
+        id: `otherDocs_${index}`,
+        label: t("fields.otherDocs"),
+        doc: normalizeDoc(doc),
+        otherIndex: index,
+      });
     });
   } else {
-    addEntry("otherDocs_empty", t("fields.otherDocs"), null);
+    otherEntries.push({
+      id: "otherDocs_empty",
+      label: t("fields.otherDocs"),
+      doc: null,
+    });
   }
 
   return (
@@ -376,7 +390,7 @@ export default async function DocumentsPage({
         {entries.length === 0 ? (
           <div className={styles.empty}>{t("empty")}</div>
         ) : (
-          entries.map(({ id, label, doc, otherIndex }) => {
+          entries.map(({ id, label, subLabel, doc, otherIndex }) => {
             const publicUrl = doc?.path
               ? supabase.storage.from(bucketName).getPublicUrl(doc.path).data.publicUrl
               : "";
@@ -388,6 +402,7 @@ export default async function DocumentsPage({
               <DocumentRowClient
                 key={id}
                 label={label}
+                subLabel={subLabel}
                 docKey={docKey}
                 otherIndex={otherIndex}
                 locale={locale}
@@ -404,6 +419,59 @@ export default async function DocumentsPage({
             );
           })
         )}
+        {childEntries.length > 0 ? (
+          <>
+            <div className={intakeStyles.sectionHead} style={{ marginTop: 20 }}>
+              <div className={intakeStyles.sectionTitle}>{t("sections.children")}</div>
+            </div>
+            {childEntries.map(({ id, label, subLabel, doc }) => {
+              const publicUrl = doc?.path
+                ? supabase.storage.from(bucketName).getPublicUrl(doc.path).data.publicUrl
+                : "";
+              return (
+                <DocumentRowClient
+                  key={id}
+                  label={label}
+                  subLabel={subLabel}
+                  docKey={id}
+                  locale={locale}
+                  docName={doc?.name || doc?.path || ""}
+                  publicUrl={publicUrl}
+                  emptyText={t("emptyField")}
+                  fileTooLargeText={t("fileTooLarge")}
+                  deleteText={t("actions.delete")}
+                  hasDoc={Boolean(doc?.path)}
+                  maxFileSizeBytes={MAX_FILE_SIZE_BYTES}
+                  uploadAction={uploadDocument}
+                  deleteAction={deleteDocument}
+                />
+              );
+            })}
+          </>
+        ) : null}
+        {otherEntries.map(({ id, label, doc, otherIndex }) => {
+          const publicUrl = doc?.path
+            ? supabase.storage.from(bucketName).getPublicUrl(doc.path).data.publicUrl
+            : "";
+          return (
+            <DocumentRowClient
+              key={id}
+              label={label}
+              docKey="otherDocs"
+              otherIndex={otherIndex}
+              locale={locale}
+              docName={doc?.name || doc?.path || ""}
+              publicUrl={publicUrl}
+              emptyText={t("emptyField")}
+              fileTooLargeText={t("fileTooLarge")}
+              deleteText={t("actions.delete")}
+              hasDoc={Boolean(doc?.path)}
+              maxFileSizeBytes={MAX_FILE_SIZE_BYTES}
+              uploadAction={uploadDocument}
+              deleteAction={deleteDocument}
+            />
+          );
+        })}
       </div>
     </div>
   );

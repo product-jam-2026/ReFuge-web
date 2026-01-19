@@ -9,6 +9,7 @@ type DeleteAction = (formData: FormData) => Promise<void>;
 
 type DocumentRowClientProps = {
   label: string;
+  subLabel?: string;
   docKey: string;
   otherIndex?: number;
   locale: string;
@@ -25,6 +26,7 @@ type DocumentRowClientProps = {
 
 export default function DocumentRowClient({
   label,
+  subLabel,
   docKey,
   otherIndex,
   locale,
@@ -65,8 +67,9 @@ export default function DocumentRowClient({
 
   return (
     <div className={intakeStyles.fieldGroup}>
-      <div className={intakeStyles.label}>
+      <div className={`${intakeStyles.label} ${styles.labelStack}`}>
         <span>{label}</span>
+        {subLabel ? <span className={styles.labelSub}>{subLabel}</span> : null}
       </div>
 
       <form

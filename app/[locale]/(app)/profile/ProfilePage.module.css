@@ -7,8 +7,8 @@
   justify-content: flex-start;
   width: 100%;
   text-align: right;
-  min-height: 44px;
-  margin-top: 85px;
+  min-height: 15px;
+  margin-top: var(--page-header-top, 15px);
   margin-bottom: 50px;
   padding-right: 52px; /* space for back button */
 }

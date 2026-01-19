@@ -419,7 +419,11 @@
       "rentalContract": "عقد إيجار",
       "propertyOwnership": "شهادة ملكية الممتلكات",
       "childPassportPhoto": "صورة جواز سفر الطفل/الطفلة",
+      "childLabelFallback": "طفل/طفلة",
       "otherDocs": "وثائق إضافية"
+    },
+    "sections": {
+      "children": "جوازات سفر الأطفال"
     },
     "actions": {
       "view": "عرض",

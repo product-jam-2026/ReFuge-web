@@ -445,7 +445,11 @@
       "rentalContract": "חוזה שכירות",
       "propertyOwnership": "אישור בעלות רכוש",
       "childPassportPhoto": "תמונת פספורט ילד.ה",
+      "childLabelFallback": "ילד.ה",
       "otherDocs": "מסמכים נוספים"
+    },
+    "sections": {
+      "children": "דרכונים/תמונות של הילדים"
     },
     "actions": {
       "view": "צפייה",

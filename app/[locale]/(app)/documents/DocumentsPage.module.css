@@ -8,7 +8,7 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 0 24px 24px;
+  padding: 0 0 24px;
   font-family: var(--font-simpler), sans-serif;
   direction: rtl;
 }
@@ -21,8 +21,8 @@
   width: 100%;
   text-align: right;
   min-height: 44px;
-  margin-top: 85px;
-  margin-bottom: 10px;
+  margin-top: var(--page-header-top, 85px);
+  margin-bottom: 50px;
   padding-right: 52px;
 }
 
@@ -34,7 +34,7 @@
 }
 
 .pageSubtitle {
-  margin: 0 0 20px;
+  margin: 0 18px 20px;
   color: rgba(20, 30, 50, 0.65);
   font-weight: 600;
   font-size: 14px;
@@ -63,7 +63,20 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 0;
   padding-bottom: calc(var(--screen-bottom-padding) + env(safe-area-inset-bottom));
+}
+
+.labelStack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.labelSub {
+  font-size: 13px;
+  color: #6B7280;
+  opacity: 0.8;
 }
 
 .docActions {
