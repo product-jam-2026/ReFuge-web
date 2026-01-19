@@ -167,7 +167,7 @@ export default async function ProfilePage({
       </section>
 
       <section className={styles.profileActions}>
-        <Link href={`/${locale}/forms/saved`} className={styles.bigOrangeBtn}>
+        <Link href={`/${locale}/documents`} className={styles.bigOrangeBtn}>
           {t("actions.savedForms")}
         </Link>
 

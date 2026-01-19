@@ -1,0 +1,109 @@
+.page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.header {
+  position: relative;
+  background: #ff8d29;
+  border-radius: 28px;
+  padding: 20px 18px 22px;
+  color: #111;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: clamp(20px, 5.5vw, 28px);
+  font-weight: 800;
+  text-align: center;
+}
+
+.headerSubtitle {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(17, 17, 17, 0.7);
+}
+
+.backBtn {
+  position: absolute;
+  inset-inline-start: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(17, 17, 17, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.docRow {
+  border: 1px solid #d5dbe4;
+  border-radius: 999px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.docMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.docLabel {
+  font-weight: 700;
+  color: #1b2b42;
+  font-size: 14px;
+}
+
+.docName {
+  font-size: 13px;
+  color: #5b6a7c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 46vw;
+}
+
+.docActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.docBtn {
+  border: 1px solid rgba(20, 30, 50, 0.4);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff;
+  color: #111;
+  text-decoration: none;
+}
+
+.empty {
+  text-align: center;
+  color: #7b8794;
+  padding: 22px 0;
+  font-weight: 600;
+}

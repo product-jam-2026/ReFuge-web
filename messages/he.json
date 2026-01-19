@@ -429,5 +429,25 @@
       "savedForms": "מסמכים שהעלאתי",
       "editIntake": "עריכת שאלון כניסה"
     }
+  },
+  "DocumentsPage": {
+    "title": "מסמכים שהעלאתי",
+    "subtitle": "כאן אפשר לצפות ולהוריד את המסמכים שהעלית",
+    "notLoggedIn": "על מנת לצפות במסמכים יש להתחבר למערכת",
+    "goToLogin": "להתחברות",
+    "empty": "לא הועלו מסמכים",
+    "fields": {
+      "passportCopy": "צילום דרכון",
+      "familyStatusDoc": "תיעוד מצב משפחתי",
+      "secondParentStatusDoc": "תיעוד מצב משפחתי של ההורה השני",
+      "rentalContract": "חוזה שכירות",
+      "propertyOwnership": "אישור בעלות רכוש",
+      "childPassportPhoto": "תמונת פספורט ילד.ה",
+      "otherDocs": "מסמכים נוספים"
+    },
+    "actions": {
+      "view": "צפייה",
+      "download": "הורדה"
+    }
   }
 }

@@ -403,5 +403,25 @@
       "savedForms": "الملفات التي رفعتها",
       "editIntake": "تعديل استبيان الدخول"
     }
+  },
+  "DocumentsPage": {
+    "title": "الملفات التي رفعتها",
+    "subtitle": "هنا يمكنك عرض وتحميل الملفات التي رفعتها",
+    "notLoggedIn": "للاطلاع على الملفات يجب تسجيل الدخول",
+    "goToLogin": "تسجيل الدخول",
+    "empty": "لم يتم رفع ملفات",
+    "fields": {
+      "passportCopy": "نسخة من جواز السفر",
+      "familyStatusDoc": "توثيق الحالة العائلية",
+      "secondParentStatusDoc": "توثيق الحالة العائلية للوالد الثاني",
+      "rentalContract": "عقد إيجار",
+      "propertyOwnership": "شهادة ملكية الممتلكات",
+      "childPassportPhoto": "صورة جواز سفر الطفل/الطفلة",
+      "otherDocs": "وثائق إضافية"
+    },
+    "actions": {
+      "view": "عرض",
+      "download": "تنزيل"
+    }
   }
 }
