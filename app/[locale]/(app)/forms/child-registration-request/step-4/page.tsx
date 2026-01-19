@@ -318,39 +318,9 @@ export default function Step4() {
           />
         </div>
 
-        {/* <div className={styles.actionsRow}>
-          <button
-            type="button"
-            onClick={clearSignature}
-            className={styles.secondaryBtn}
-          >
-            נקה חתימה
-          </button>
-        </div> */}
-
-        {/* {sigPreview?.startsWith("data:image/") ? (
-          <div className={styles.preview}>
-            נשמרה חתימה (תצוגה מקדימה):
-            <div className={styles.previewInner}>
-              <img
-                src={sigPreview}
-                alt="signature preview"
-                className={styles.previewImg}
-              />
-            </div>
-          </div>
-        ) : null} */}
       </div>
 
       <div className={styles.footerRow}>
-        {/* <button
-          type="button"
-          onClick={() => router.back()}
-          className={styles.secondaryBtn}
-        >
-          ← הקודם
-        </button> */}
-
         <button
           type="button"
           onClick={async () => {

@@ -15,6 +15,14 @@ import { createClient } from "@/lib/supabase/client";
 export type IntakeRecord = typeof emptyIntakeTemplate;
 
 export type ExtrasState = {
+  formDate: string;
+  formTitle: string;
+  poBox: string;
+  applicantSignatureDataUrl: string;
+
+  // ✅ NEW: not in step5, but needed by your UI
+  requesterEntryDate: string;
+
   father: {
     phoneHome: string;
     emailPrefix: string;
@@ -48,7 +56,7 @@ type Ctx = {
   updateChild: (
     index: number,
     key: keyof IntakeRecord["intake"]["step6"]["children"][number],
-    value: string
+    value: string,
   ) => void;
   addChildRow: () => void;
 
@@ -76,12 +84,18 @@ function emptyChildExtras(): ExtrasState["children"][number] {
 }
 
 function deriveExtrasFromIntake(d: IntakeRecord): ExtrasState {
-  const fatherEmail = splitEmail(d.intake.step1.email);
-  const reqEmail = splitEmail(d.intake.step5.email);
+  const fatherEmail = splitEmail(d.intake.step5.email);
+  const reqEmail = splitEmail(d.intake.step1.email);
+
+
+
 
   const owners = {
     owner1: fullName(d.intake.step1.firstName, d.intake.step1.lastName),
-    owner2: fullName(d.intake.step5.person.firstName, d.intake.step5.person.lastName),
+    owner2: fullName(
+      d.intake.step5.person.firstName,
+      d.intake.step5.person.lastName,
+    ),
   };
 
   const kids = d.intake.step6.children ?? [];
@@ -94,6 +108,15 @@ function deriveExtrasFromIntake(d: IntakeRecord): ExtrasState {
   while (kidsExtras.length < 3) kidsExtras.push(emptyChildExtras());
 
   return {
+    // ✅ NEW defaults
+    formDate: "",
+    formTitle: "",
+    poBox: "",
+    applicantSignatureDataUrl: "",
+
+    // ✅ NEW
+    requesterEntryDate: "",
+
     father: {
       phoneHome: "",
       emailPrefix: fatherEmail.prefix,
@@ -118,6 +141,21 @@ function mergeExtras(defaults: ExtrasState, stored: any): ExtrasState {
   const out: ExtrasState = structuredClone(defaults);
 
   if (stored && typeof stored === "object") {
+    // ✅ NEW: merge top-level fields
+    if ("formDate" in stored) out.formDate = stored.formDate ?? out.formDate;
+    if ("formTitle" in stored)
+      out.formTitle = stored.formTitle ?? out.formTitle;
+    if ("poBox" in stored) out.poBox = stored.poBox ?? out.poBox;
+
+    if ("requesterEntryDate" in stored)
+      out.requesterEntryDate =
+        stored.requesterEntryDate ?? out.requesterEntryDate;
+
+    // NOTE: signature is intentionally not saved, but if it ever exists, keep it
+    if ("applicantSignatureDataUrl" in stored)
+      out.applicantSignatureDataUrl =
+        stored.applicantSignatureDataUrl ?? out.applicantSignatureDataUrl;
+
     // shallow merge the 3 nested objects
     out.father = { ...out.father, ...(stored.father ?? {}) };
     out.allowanceRequester = {
@@ -129,7 +167,8 @@ function mergeExtras(defaults: ExtrasState, stored: any): ExtrasState {
     // children: overlay per index
     if (Array.isArray(stored.children)) {
       const maxLen = Math.max(out.children.length, stored.children.length);
-      while (out.children.length < maxLen) out.children.push(emptyChildExtras());
+      while (out.children.length < maxLen)
+        out.children.push(emptyChildExtras());
 
       for (let i = 0; i < stored.children.length; i++) {
         const s = stored.children[i];
@@ -164,9 +203,12 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
 
   const defaultDraft = useMemo(
     () => structuredClone(emptyIntakeTemplate) as IntakeRecord,
-    []
+    [],
   );
-  const defaultExtras = useMemo(() => deriveExtrasFromIntake(defaultDraft), [defaultDraft]);
+  const defaultExtras = useMemo(
+    () => deriveExtrasFromIntake(defaultDraft),
+    [defaultDraft],
+  );
 
   const [draft, setDraft] = useState<IntakeRecord | null>(null);
   const [extras, setExtras] = useState<ExtrasState>(defaultExtras);
@@ -217,7 +259,9 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
         let intakeObj: any;
         try {
           intakeObj =
-            typeof profile.data === "string" ? JSON.parse(profile.data) : profile.data;
+            typeof profile.data === "string"
+              ? JSON.parse(profile.data)
+              : profile.data;
         } catch (e) {
           console.error("profiles.data is not valid JSON", e);
           setDraft(structuredClone(defaultDraft) as IntakeRecord);
@@ -226,7 +270,8 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        const nextDraft = (intakeObj ?? structuredClone(defaultDraft)) as IntakeRecord;
+        const nextDraft = (intakeObj ??
+          structuredClone(defaultDraft)) as IntakeRecord;
 
         // make sure required arrays exist
         if (!nextDraft.intake?.step6?.children) {
@@ -288,7 +333,7 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
   function updateChild(
     index: number,
     key: keyof IntakeRecord["intake"]["step6"]["children"][number],
-    value: string
+    value: string,
   ) {
     setDraft((prev) => {
       if (!prev) return prev;
@@ -345,7 +390,7 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
       instanceId,
       isHydrated,
     }),
-    [draft, extras, instanceId, isHydrated]
+    [draft, extras, instanceId, isHydrated],
   );
 
   return <WizardCtx.Provider value={ctx}>{children}</WizardCtx.Provider>;

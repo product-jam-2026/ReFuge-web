@@ -110,6 +110,9 @@
   display: flex;
   gap: 8px;
   margin-top: 12px;
+  /* align-items: center; */
+  justify-content: center;
+
 }
 
 .primaryButton {

@@ -168,7 +168,7 @@ export default function Step4() {
     const base = safeFileName(pdfTitle);
     const fileName = `${base}_${ts}.pdf`;
 
-    const path = `${user.id}/child-registration-request/${instanceId}/${fileName}`;
+    const path = `${user.id}/child-allowance-request/${instanceId}/${fileName}`;
 
     const bytes = new Uint8Array(outBytes);
     const blob = new Blob([bytes.buffer], { type: "application/pdf" });
@@ -211,7 +211,7 @@ export default function Step4() {
         .from("form_instances")
         .insert({
           user_id: user.id,
-          form_slug: "child-registration-request",
+          form_slug: "child-allowance-request",
           title,
           draft,
           extras: extrasToSave,
@@ -251,7 +251,7 @@ export default function Step4() {
     });
 
     const [tplRes, fontRes] = await Promise.all([
-      fetch("/forms/child-registration-request.pdf"),
+      fetch("/forms/child-allowance-request.pdf"),
       fetch("/fonts/SimplerPro-Regular.otf"),
     ]);
 
@@ -318,39 +318,9 @@ export default function Step4() {
           />
         </div>
 
-        {/* <div className={styles.actionsRow}>
-          <button
-            type="button"
-            onClick={clearSignature}
-            className={styles.secondaryBtn}
-          >
-            נקה חתימה
-          </button>
-        </div> */}
-
-        {/* {sigPreview?.startsWith("data:image/") ? (
-          <div className={styles.preview}>
-            נשמרה חתימה (תצוגה מקדימה):
-            <div className={styles.previewInner}>
-              <img
-                src={sigPreview}
-                alt="signature preview"
-                className={styles.previewImg}
-              />
-            </div>
-          </div>
-        ) : null} */}
       </div>
 
       <div className={styles.footerRow}>
-        {/* <button
-          type="button"
-          onClick={() => router.back()}
-          className={styles.secondaryBtn}
-        >
-          ← הקודם
-        </button> */}
-
         <button
           type="button"
           onClick={async () => {
