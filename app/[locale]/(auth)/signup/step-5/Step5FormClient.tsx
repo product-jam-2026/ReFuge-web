@@ -103,7 +103,7 @@ function CountrySelect({ defaultValue, name, labelAr, labelHe }: { defaultValue:
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIso, setSelectedIso] = useState(defaultValue);
 
-  // הוספתי useEffect כדי לעדכן את השדה אם defaultValue משתנה (כשחוזרים אחורה)
+  // הוספתי useEffect כדי לעדכן את    השדה אם defaultValue משתנה (כשחוזרים אחורה)
   useState(() => {
       if (defaultValue) {
         const found = countriesList.find((c: any) => c.iso2 === defaultValue || c.he === defaultValue);
@@ -211,7 +211,7 @@ function PhoneField({ labelAr, labelHe, name, defaultValue, prefixes }: {
 }
 
 // --- Main Component ---
-export default function Step5FormClient({ saved, defaults, saveDraftAction, saveAndNextAction, saveDraftAndBackAction }: Props) {
+export default function Step5FormClient({ locale, saved, defaults, saveDraftAction, saveAndNextAction, saveDraftAndBackAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
   
@@ -241,7 +241,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
     setIsTranslating(true);
 
     try {
-      const translatedResult = await translateStep5Data(formData);
+      const translatedResult = await translateStep5Data(formData, locale);
       setTranslations(translatedResult || {});
       setScreen(TOTAL_SCREENS + 1);
     } catch (error) {
