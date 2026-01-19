@@ -303,52 +303,45 @@ export default async function DocumentsPage({
   }
 
   return (
-    <div className={intakeStyles.pageContainer}>
-      <div className={intakeStyles.topBar}>
-        <div className={intakeStyles.headerArea}>
-          <div className={intakeStyles.topRow}>
-            <Link
-              href={`/${locale}/profile`}
-              className={intakeStyles.backBtn}
-              aria-label={isArabic ? "رجوع" : "חזרה"}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="11"
-                height="22"
-                viewBox="0 0 11 22"
-                fill="none"
-                aria-hidden="true"
-              >
-                <g clipPath="url(#clip0_1820_2548)">
-                  <path
-                    d="M3.19922 4.25879L9.19922 10.2588L3.19922 16.2588"
-                    stroke="#011429"
-                    strokeWidth="1.5"
-                  />
-                </g>
-                <defs>
-                  <clipPath id="clip0_1820_2548">
-                    <rect
-                      width="22"
-                      height="11"
-                      fill="white"
-                      transform="translate(0 22) rotate(-90)"
-                    />
-                  </clipPath>
-                </defs>
-              </svg>
-            </Link>
-          </div>
-
-          <div className={intakeStyles.titleBlock}>
-            <h1 className={intakeStyles.formTitle}>{t("title")}</h1>
-            <p className={intakeStyles.formSubtitle}>{t("subtitle")}</p>
-          </div>
-        </div>
+    <div className={styles.page}>
+      <div className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>{t("title")}</h1>
+        <Link
+          href={`/${locale}/profile`}
+          className={styles.pageBackBtn}
+          aria-label={isArabic ? "رجوع" : "חזרה"}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="11"
+            height="22"
+            viewBox="0 0 11 22"
+            fill="none"
+            aria-hidden="true"
+          >
+            <g clipPath="url(#clip0_1820_2548)">
+              <path
+                d="M3.19922 4.25879L9.19922 10.2588L3.19922 16.2588"
+                stroke="#011429"
+                strokeWidth="1.5"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0_1820_2548">
+                <rect
+                  width="22"
+                  height="11"
+                  fill="white"
+                  transform="translate(0 22) rotate(-90)"
+                />
+              </clipPath>
+            </defs>
+          </svg>
+        </Link>
       </div>
+      <p className={styles.pageSubtitle}>{t("subtitle")}</p>
 
-      <div className={intakeStyles.scrollableContent}>
+      <div className={styles.content}>
         {entries.length === 0 ? (
           <div className={styles.empty}>{t("empty")}</div>
         ) : (

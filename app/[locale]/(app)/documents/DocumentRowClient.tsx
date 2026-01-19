@@ -124,7 +124,6 @@ export default function DocumentRowClient({
               aria-hidden="true"
             />
           )}
-          <span className={intakeStyles.plusIcon}>+</span>
         </div>
       </div>
     </div>
