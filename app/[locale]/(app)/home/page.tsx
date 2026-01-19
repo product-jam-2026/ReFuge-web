@@ -90,7 +90,7 @@ export default async function HomePage({
 
   return (
     <>
-      <style>{`:root{ --langFabBg: #E6F2FF; }`}</style>
+      <style>{`:root{ --langFabBg: #E6F2FF; } body{ background:#E6F2FF; }`}</style>
       <main className={`${styles.root} homeFullBleed`}>
       {/* ✅ תכלת למעלה (full width) */}
       <section className={styles.topCard}>
