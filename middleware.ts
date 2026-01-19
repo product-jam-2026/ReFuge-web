@@ -65,6 +65,10 @@ export default async function middleware(req: NextRequest) {
     return intlResponse;
   }
 
+  if (pathname.includes("/auth/callback")) {
+    return intlResponse;
+  }
+
   // 2) מתג שמדליק/מכבה חסימה דרך ENV
   const guardEnabled = process.env.NEXT_PUBLIC_ENABLE_AUTH_GUARD === "true";
   if (!guardEnabled) {
