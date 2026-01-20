@@ -244,11 +244,13 @@ export default function Step4() {
       `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
       "Untitled";
 
-    const fields = intakeToPdfFields(draft as any, {
-      formDate: extras.formDate,
-      poBox: extras.poBox,
-      applicantSignatureDataUrl: extras.applicantSignatureDataUrl,
-    });
+    // const fields = intakeToPdfFields(draft as any, {
+    //   formDate: extras.formDate,
+    //   poBox: extras.poBox,
+    //   applicantSignatureDataUrl: extras.applicantSignatureDataUrl,
+    // });
+
+    const fields = intakeToPdfFields(draft as any, extras as any);
 
     const [tplRes, fontRes] = await Promise.all([
       fetch("/forms/person-registration.pdf"),

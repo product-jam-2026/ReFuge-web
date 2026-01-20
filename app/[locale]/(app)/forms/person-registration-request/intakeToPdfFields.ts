@@ -1,11 +1,13 @@
 // intakeToPdfFields.ts
 // Mapping from IntakeRecord (+ UI-only extras) -> flat PDF fields (keys match fieldMap.ts)
 
-// export type PdfExtras = {
-//   formDate?: string;
-//   poBox?: string;
-//   applicantSignature?: string; // dataURL
-// };
+export type PdfExtras = {
+  formDate?: string;
+  formTitle?: string;
+
+  poBox?: string;
+  applicantSignature?: string; // dataURL
+};
 
 export type IntakeRecord = {
   intake: {
@@ -103,92 +105,109 @@ export type IntakeRecord = {
 
 export type TripRow = { startDate: string; endDate: string; purpose: string };
 
+export type ParentExtras = {
+  firstNameHebrew: string;
+  lastNameHebrew: string;
+  firstNameEnglish: string;
+  lastNameEnglish: string;
+  idNumber: string;
+  passportNumber: string;
+};
+
 export type ChildExtrasRow = {
   firstEntryDate: string;
   fileJoinDate: string;
 };
 
+export type Trip = { from: string; to: string; purpose: string };
+
+export type PartnerExtras = {
+  firstNameEnglish: string;
+  lastNameEnglish: string;
+};
+
 export type ExtrasState = {
-  // English name variants (PDF has both Hebrew+English fields)
+  // already have:
   firstNameEnglish: string;
   lastNameEnglish: string;
   prevLastNameEnglish: string;
-
-  // Birth details (not in DB template)
   birthCountry: string;
   birthCity: string;
-
-  // Phone for the address block (PDF has it as part of address)
+  purposeOfStay: string;
   addressPhoneNumber: string;
-
-  // Parents (not in DB template)
-  father: {
-    firstNameHebrew: string;
-    lastNameHebrew: string;
-    firstNameEnglish: string;
-    lastNameEnglish: string;
-    idNumber: string;
-    passportNumber: string;
-  };
-  mother: {
-    firstNameHebrew: string;
-    lastNameHebrew: string;
-    firstNameEnglish: string;
-    lastNameEnglish: string;
-    idNumber: string;
-    passportNumber: string;
-  };
-
-  // Partner English variants (partner Hebrew pulled from step5.person by default)
-  partner: {
-    firstNameEnglish: string;
-    lastNameEnglish: string;
-  };
-
-  // “meta”
-  numberChildrenUnder18: string; // PDF wants a number (string is fine)
-  purposeOfStay: string; // PDF has purposeOfStay (default from step2.visaType)
-
-  // Employment / income (not in DB template)
+  father: ParentExtras;
+  mother: ParentExtras;
+  partner: PartnerExtras;
+  numberChildrenUnder18: string;
   employerName: string;
   employerAddress: string;
   selfEmploymentStartDate: string;
   unemployedWithIncomeStartDate: string;
   selfEmployedYearlyIncome: string;
   unemployedYearlyIncome: string;
+  trips: TripRow[];
+  children: ChildExtrasRow[];
 
-  // Trips abroad (not in DB template)
-  trips: TripRow[]; // expect 0..3 (we'll safely read up to 3)
-  children: ChildExtrasRow[]; // aligns with step-3/page.tsx usage
-  // --- Step4 / meta (DB-saved) ---
-  formDate: string; // yyyy-mm-dd
-  formTitle: string; // title used for lists + filenames
-  poBox: string; // if your PDF has a PO Box field
+  // ✅ add (page 1)
+  poBox: string;
+  formDate: string;
+  formTitle: string;
 
-  // --- UI-only (NOT saved to DB) ---
-  applicantSignatureDataUrl: string; // data:image/png;base64,...
+  maritalStatus: "" | "single" | "married" | "widowed" | "divorced" | "other";
+  maritalStatusFromDate: string;
+
+  spouse: {
+    firstName: string;
+    lastName: string;
+    idNumber: string;
+    passportNumber: string;
+  };
+
+  // ✅ add (page 2 - F/G/H)
+  purposeInIsrael: string;
+
+  assets: {
+    apartment: boolean;
+    business: boolean;
+    other: boolean;
+    otherText: string;
+    ownershipCertificateAttached: boolean;
+  };
+
+  residence: {
+    rentalApartment: boolean;
+    rentalAgreementAttached: boolean;
+    other: boolean;
+    otherText: string;
+  };
+
+  healthFund: "" | "clalit" | "meuhedet" | "leumit" | "maccabi";
+
+  occupationStatus:
+    | ""
+    | "employee"
+    | "selfEmployed"
+    | "unemployedWithIncome"
+    | "unemployedNoIncome";
+
+  niPaymentsStatus: "" | "paid" | "notPaid";
+  niPaidAs: "" | "employee" | "selfEmployed" | "unemployed";
+  niFileNumber: string;
+
+  allowance: {
+    receives: "" | "yes" | "no";
+    type: string;
+    fileNumber: string;
+  };
+
+  declaration: {
+    date: string;
+    name: string;
+    signatureDataUrl: string; // for your canvas step
+  };
+
+  applicantSignatureDataUrl: string;
 };
-
-/**
- * Optional helper (same defaulting logic as your page.tsx useEffect):
- * - addressPhoneNumber defaults to step1.phone
- * - numberChildrenUnder18 defaults to children length
- * - purposeOfStay defaults to step2.visaType
- */
-// export function deriveExtrasFromIntake(
-//   draft: IntakeRecord,
-//   current?: Partial<ExtrasState>
-// ): Partial<ExtrasState> {
-//   return {
-//     ...current,
-//     addressPhoneNumber:
-//       current?.addressPhoneNumber ?? draft.intake.step1.phone ?? "",
-//     numberChildrenUnder18:
-//       current?.numberChildrenUnder18 ??
-//       String(draft.intake.step6.children?.length ?? 0),
-//     purposeOfStay: current?.purposeOfStay ?? draft.intake.step2.visaType ?? "",
-//   };
-// }
 
 function tripAt(extras: Partial<ExtrasState> | undefined, i: number): TripRow {
   const t = extras?.trips?.[i];
@@ -258,6 +277,43 @@ export function deriveExtrasFromIntake(
     poBox: "",
 
     applicantSignatureDataUrl: "",
+    maritalStatus: "",
+    maritalStatusFromDate: "",
+    spouse: {
+      firstName: "",
+      lastName: "",
+      idNumber: "",
+      passportNumber: "",
+    },
+    purposeInIsrael: "",
+    assets: {
+      apartment: false,
+      business: false,
+      other: false,
+      otherText: "",
+      ownershipCertificateAttached: false,
+    },
+    residence: {
+      rentalApartment: false,
+      rentalAgreementAttached: false,
+      other: false,
+      otherText: "",
+    },
+    healthFund: "",
+    occupationStatus: "",
+    niPaymentsStatus: "",
+    niPaidAs: "",
+    niFileNumber: "",
+    allowance: {
+      receives: "",
+      type: "",
+      fileNumber: "",
+    },
+    declaration: {
+      date: "",
+      name: "",
+      signatureDataUrl: "",
+    },
   };
 
   // merge current over base (shallow + nested blocks)
@@ -289,10 +345,11 @@ export function deriveExtrasFromIntake(
   merged.purposeOfStay =
     merged.purposeOfStay || draft.intake.step2.visaType || "";
 
-    // ✅ Ensure children extras array exists and is long enough
+  // ✅ Ensure children extras array exists and is long enough
   const kidsLen = draft.intake.step6.children?.length ?? 0;
   const minRows = Math.max(3, kidsLen); // keep at least 3 if you want
-  while (merged.children.length < minRows) merged.children.push(emptyChildExtras());
+  while (merged.children.length < minRows)
+    merged.children.push(emptyChildExtras());
 
   return merged;
 }
@@ -324,7 +381,124 @@ export function intakeToPdfFields(
   const t2 = tripAt(extras, 1);
   const t3 = tripAt(extras, 2);
 
+
+    // --- Checkbox helpers ---
+  const cb = (on: boolean) => (on ? "1" : ""); // adjust if your renderer expects "true"/"X"
+
+  const norm = (v: string | undefined | null) => (v ?? "").trim();
+  const normLower = (v: string | undefined | null) => norm(v).toLowerCase();
+
+  // gender normalization (support a few common variants)
+  const genderRaw = normLower(s1.gender);
+  const gender =
+    genderRaw === "male" || genderRaw === "m" || genderRaw === "זכר"
+      ? "male"
+      : genderRaw === "female" || genderRaw === "f" || genderRaw === "נקבה"
+        ? "female"
+        : genderRaw
+            ? "other"
+            : "";
+
+  // visa type normalization (A/1 -> A1, "A1" -> A1, etc.)
+  const visa = norm(s2.visaType).toUpperCase().replace(/[^A-Z0-9]/g, ""); // "A/1" -> "A1"
+
+  // marital status normalization (prefer extras if you use it in UI)
+  const msRaw = normLower((extras as any)?.maritalStatus ?? s3.maritalStatus);
+  const maritalStatus =
+    msRaw === "single"
+      ? "single"
+      : msRaw === "married"
+        ? "married"
+        : msRaw === "widowed" || msRaw === "widow"
+          ? "widow"
+          : msRaw === "divorced"
+            ? "divorced"
+            : msRaw === "other"
+              ? "other"
+              : "";
+
+  // NI yes/no
+  const hasFile = normLower(s4.nationalInsurance.hasFile); // "yes" / "no"
+  const getsAllowance = normLower(s4.nationalInsurance.getsAllowance); // "yes" / "no"
+
+  // allowance type
+  const allowanceType = normLower(s4.nationalInsurance.allowanceType); // e.g. "childAllowance"
+
+  // Occupation / NI paid-as: prefer extras.occupationStatus (covers 4 options)
+  const occ = normLower((extras as any)?.occupationStatus ?? s3.employmentStatus);
+
+  const niPaidAs =
+    occ === "employee" || occ === "employed"
+      ? "employed"
+      : occ === "selfemployed" || occ === "self_employed" || occ === "self-employed" || occ === "selfemployed"
+        ? "selfEmployed"
+        : occ === "unemployedwithincome" || occ === "unemployed_with_income" || occ === "unemployed-with-income"
+          ? "unemployedWithIncome"
+          : occ === "unemployednoincome" || occ === "unemployed_no_income" || occ === "unemployed-without-income"
+            ? "unemployedNoIncome"
+            : "";
+
+  // NI payments status: from extras
+  const payStatusRaw = normLower((extras as any)?.niPaymentsStatus);
+  const niPaymentsStatus =
+    payStatusRaw === "paid" ? "paid" : payStatusRaw === "notpaid" || payStatusRaw === "not_paid" ? "notPaid" : "";
+
+
+
   return {
+
+        // ===============================
+    // ✅ Checkbox fields (fieldMap.ts keys)
+    // ===============================
+
+    // gender
+    "israeliApplicant.gender.male": cb(gender === "male"),
+    "israeliApplicant.gender.female": cb(gender === "female"),
+    "israeliApplicant.gender.other": cb(gender === "other"),
+
+    // visa type
+    "israeliApplicant.visaType.A1": cb(visa === "A1"),
+    "israeliApplicant.visaType.A2": cb(visa === "A2"),
+    "israeliApplicant.visaType.A3": cb(visa === "A3"),
+    "israeliApplicant.visaType.A4": cb(visa === "A4"),
+    "israeliApplicant.visaType.A5": cb(visa === "A5"),
+    "israeliApplicant.visaType.B1": cb(visa === "B1"),
+    "israeliApplicant.visaType.B2": cb(visa === "B2"),
+    "israeliApplicant.visaType.B3": cb(visa === "B3"),
+    "israeliApplicant.visaType.B4": cb(visa === "B4"),
+
+    // marital status
+    "israeliApplicant.maritalStatus.single": cb(maritalStatus === "single"),
+    "israeliApplicant.maritalStatus.married": cb(maritalStatus === "married"),
+    "israeliApplicant.maritalStatus.widow": cb(maritalStatus === "widow"),
+    "israeliApplicant.maritalStatus.divorced": cb(maritalStatus === "divorced"),
+    "israeliApplicant.maritalStatus.other": cb(maritalStatus === "other"),
+
+    // NI has file
+    "israeliApplicant.nationalInsurance.hasFile.yes": cb(hasFile === "yes"),
+    "israeliApplicant.nationalInsurance.hasFile.no": cb(hasFile === "no"),
+
+    // gets allowance
+    "israeliApplicant.nationalInsurance.getsAllowance.yes": cb(getsAllowance === "yes"),
+    "israeliApplicant.nationalInsurance.getsAllowance.no": cb(getsAllowance === "no"),
+
+    // allowance type
+    "israeliApplicant.nationalInsurance.allowanceType.childAllowance": cb(
+      allowanceType === "childallowance" || allowanceType === "child_allowance" || allowanceType.includes("child")
+    ),
+
+    // NI paid as
+    "israeliApplicant.niPaidAs.employed": cb(niPaidAs === "employed"),
+    "israeliApplicant.niPaidAs.selfEmployed": cb(niPaidAs === "selfEmployed"),
+    "israeliApplicant.niPaidAs.unemployedWithIncome": cb(niPaidAs === "unemployedWithIncome"),
+    "israeliApplicant.niPaidAs.unemployedNoIncome": cb(niPaidAs === "unemployedNoIncome"),
+
+    // payments status
+    "israeliApplicant.niPaymentsStatus.paid": cb(niPaymentsStatus === "paid"),
+    "israeliApplicant.niPaymentsStatus.notPaid": cb(niPaymentsStatus === "notPaid"),
+
+
+
     // ===== Page 0 =====
     firstNameHebrew: s1.firstName ?? "",
     firstNameEnglish: extras?.firstNameEnglish ?? "",
