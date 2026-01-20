@@ -26,7 +26,7 @@ async function uploadPdf(outBytes: Uint8Array, fileName: string) {
   const user = userRes.user;
   if (!user) throw new Error("Not logged in");
 
-  const path = `${user.id}/child-registration-request/${fileName}`;
+  const path = `${user.id}/child-allowance-request/${fileName}`;
 
   const bytes = new Uint8Array(outBytes);
   const blob = new Blob([bytes.buffer], { type: "application/pdf" });
@@ -97,7 +97,7 @@ export default function Review() {
     });
 
     const [tplRes, fontRes] = await Promise.all([
-      fetch("/forms/child-registration-request.pdf"),
+      fetch("/forms/child-allowance-request.pdf"),
       fetch("/fonts/SimplerPro-Regular.otf"),
     ]);
 

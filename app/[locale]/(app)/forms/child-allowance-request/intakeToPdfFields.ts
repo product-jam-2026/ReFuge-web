@@ -208,8 +208,8 @@ export function intakeToPdfFields(
 
   const kids = db.intake.step6.children ?? [];
 
-  const fatherEmail = splitEmail(s1.email);
-  const reqEmail = splitEmail(s5.email);
+  const fatherEmail = splitEmail(s5.email);
+  const reqEmail = splitEmail(s1.email);
 
   const fatherAddr = s3.registeredAddress;
   const reqAddr = s3.mailingDifferent
@@ -218,10 +218,10 @@ export function intakeToPdfFields(
 
   const base: Record<string, string> = {
     // ===== Page 0: Father =====
-    "father.familyName": s1.lastName ?? "",
-    "father.firstName": s1.firstName ?? "",
-    "father.idNumber": s1.israeliId || s1.passportNumber || "",
-    "father.birthDate": s1.birthDate ?? "",
+    "father.familyName": s5.person.lastName ?? "",
+    "father.firstName": s5.person.firstName ?? "",
+    "father.idNumber": s5.person.israeliId || s5.person.passportNumber || "",
+    "father.birthDate": s5.person.birthDate ?? "",
     "father.entryDate": s2.entryDate ?? "",
 
     "father.address.street": fatherAddr.street ?? "",
@@ -231,19 +231,19 @@ export function intakeToPdfFields(
     "father.address.city": fatherAddr.city ?? "",
     "father.address.zipcode": fatherAddr.zip ?? "",
 
-    "father.phoneMobile": s1.phone ?? "",
+    "father.phoneMobile": s5.phone ?? "",
     "father.phoneHome": "",
     "father.emailPrefix": fatherEmail.prefix,
     "father.emailPostfix": fatherEmail.postfix,
+    "father.email": s5.email ?? "",
 
-    // ===== Page 1: Allowance requester =====
-    "allowanceRequester.lastName": s5.person.lastName ?? "",
-    "allowanceRequester.firstName": s5.person.firstName ?? "",
-    "allowanceRequester.idNumber":
-      s5.person.israeliId || s5.person.passportNumber || "",
-    "allowanceRequester.birthDate": s5.person.birthDate ?? "",
+    // ✅ allowanceRequester now takes data from s1
+    "allowanceRequester.lastName": s1.lastName ?? "",
+    "allowanceRequester.firstName": s1.firstName ?? "",
+    "allowanceRequester.idNumber": s1.israeliId || s1.passportNumber || "",
+    "allowanceRequester.birthDate": s1.birthDate ?? "",
     "allowanceRequester.entryDate": s2.entryDate ?? "",
-
+    
     "allowanceRequester.address.street": reqAddr.street ?? "",
     "allowanceRequester.address.homeNumber": reqAddr.houseNumber ?? "",
     "allowanceRequester.address.enteranceNumber": reqAddr.entry ?? "",
@@ -251,10 +251,11 @@ export function intakeToPdfFields(
     "allowanceRequester.address.city": reqAddr.city ?? "",
     "allowanceRequester.address.zipcode": reqAddr.zip ?? "",
 
-    "allowanceRequester.phoneMobile": s5.phone ?? "",
+    "allowanceRequester.phoneMobile": s1.phone ?? "",
     "allowanceRequester.phoneHome": "",
     "allowanceRequester.emailPrefix": reqEmail.prefix,
     "allowanceRequester.emailPostfix": reqEmail.postfix,
+    "allowanceRequester.email": s1.email ?? "",
 
     // ===== Page 1: Bank account =====
     "bankAccount.owner1": fullName(s1.firstName, s1.lastName),

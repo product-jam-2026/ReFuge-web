@@ -325,7 +325,10 @@ export default function Step4() {
           type="button"
           onClick={async () => {
             await onGenerate();
-            router.push("./review");
+            // router.push("./review");
+            router.push("./step-5");
+
+
           }}
           className={styles.primaryButton}
         >

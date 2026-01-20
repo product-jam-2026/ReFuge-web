@@ -45,6 +45,7 @@ export type ExtrasState = {
   }>;
 };
 
+
 type Ctx = {
   draft: IntakeRecord | null;
   setDraft: React.Dispatch<React.SetStateAction<IntakeRecord | null>>;
@@ -67,6 +68,24 @@ type Ctx = {
 const WizardCtx = createContext<Ctx | null>(null);
 
 // ---------------- helpers (same logic as your page.tsx) ----------------
+
+function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function makeInitialExtras(): Pick<
+  ExtrasState,
+  "formDate" | "formTitle" | "poBox" | "applicantSignatureDataUrl" | "requesterEntryDate"
+> {
+  return {
+    formDate: todayIsoDate(),          // ✅ match example: default date
+    formTitle: "",
+    poBox: "",
+    applicantSignatureDataUrl: "",
+    requesterEntryDate: "",
+  };
+}
+
 
 function splitEmail(email: string) {
   const e = (email ?? "").trim();
@@ -107,35 +126,29 @@ function deriveExtrasFromIntake(d: IntakeRecord): ExtrasState {
   // PDF supports up to 3 kids; keep at least 3 rows for convenience
   while (kidsExtras.length < 3) kidsExtras.push(emptyChildExtras());
 
-  return {
-    // ✅ NEW defaults
-    formDate: "",
-    formTitle: "",
-    poBox: "",
-    applicantSignatureDataUrl: "",
+const initial = makeInitialExtras();
 
-    // ✅ NEW
-    requesterEntryDate: "",
+return {
+  ...initial,
 
-    father: {
-      phoneHome: "",
-      emailPrefix: fatherEmail.prefix,
-      emailPostfix: fatherEmail.postfix,
-    },
-    allowanceRequester: {
-      phoneHome: "",
-      emailPrefix: reqEmail.prefix,
-      emailPostfix: reqEmail.postfix,
-    },
-    bankAccount: {
-      branchName: "",
-      branchNumber: d.intake.step4.bank.branch ?? "",
-      owner1: owners.owner1,
-      owner2: owners.owner2,
-    },
-    children: kidsExtras,
-  };
-}
+  father: {
+    phoneHome: "",
+    emailPrefix: fatherEmail.prefix,
+    emailPostfix: fatherEmail.postfix,
+  },
+  allowanceRequester: {
+    phoneHome: "",
+    emailPrefix: reqEmail.prefix,
+    emailPostfix: reqEmail.postfix,
+  },
+  bankAccount: {
+    branchName: "",
+    branchNumber: d.intake.step4.bank.branch ?? "",
+    owner1: owners.owner1,
+    owner2: owners.owner2,
+  },
+  children: kidsExtras,
+};}
 
 function mergeExtras(defaults: ExtrasState, stored: any): ExtrasState {
   const out: ExtrasState = structuredClone(defaults);
@@ -319,7 +332,7 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [instanceId, defaultDraft, defaultExtras]);
+  }, [instanceId, defaultDraft]);
 
   function update(path: string, value: any) {
     setDraft((prev) => {
