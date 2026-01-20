@@ -42,13 +42,13 @@ export default function Step7FormClient({
   const draftTimerRef = useRef<number | null>(null);
   
   const [fileNames, setFileNames] = useState<Record<string, string>>({
-    passportCopy: defaults.passportCopy ? "קובץ קיים / ملف موجود" : "",
-    familyStatusDoc: defaults.familyStatusDoc ? "קובץ קיים / ملف موجود" : "",
-    secondParentStatusDoc: defaults.secondParentStatusDoc ? "קובץ קיים / ملف موجود" : "",
-    rentalContract: defaults.rentalContract ? "קובץ קיים / ملف موجود" : "",
-    propertyOwnership: defaults.propertyOwnership ? "קובץ קיים / ملف موجود" : "",
-    childPassportPhoto: defaults.childPassportPhoto ? "קובץ קיים / ملف موجود" : "", // למקרה הגנרי
-    otherDocs: defaults.otherDocs ? "קובץ קיים / ملف موجود" : "",
+    passportCopy: defaults.passportCopy || "",
+    familyStatusDoc: defaults.familyStatusDoc || "",
+    secondParentStatusDoc: defaults.secondParentStatusDoc || "",
+    rentalContract: defaults.rentalContract || "",
+    propertyOwnership: defaults.propertyOwnership || "",
+    childPassportPhoto: defaults.childPassportPhoto || "", // למקרה הגנרי
+    otherDocs: defaults.otherDocs || "",
   });
 
   const goBack = () => setScreen(0);

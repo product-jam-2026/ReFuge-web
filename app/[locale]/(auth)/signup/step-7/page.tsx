@@ -30,17 +30,17 @@ export default async function Step7Page({
 
   // הכנת ערכי ברירת המחדל (שמות הקבצים אם קיימים)
   const defaults = {
-    passportCopy: docs.passportCopy?.path || "",
-    familyStatusDoc: docs.familyStatusDoc?.path || "",
-    secondParentStatusDoc: docs.secondParentStatusDoc?.path || "",
-    rentalContract: docs.rentalContract?.path || "",
-    propertyOwnership: docs.propertyOwnership?.path || "",
-    childPassportPhoto: docs.childPassportPhoto?.path || "", // fallback
-    otherDocs: docs.otherDocs?.map((f:any) => f.path).join(", ") || "",
+    passportCopy: docs.passportCopy?.name || docs.passportCopy?.path || "",
+    familyStatusDoc: docs.familyStatusDoc?.name || docs.familyStatusDoc?.path || "",
+    secondParentStatusDoc: docs.secondParentStatusDoc?.name || docs.secondParentStatusDoc?.path || "",
+    rentalContract: docs.rentalContract?.name || docs.rentalContract?.path || "",
+    propertyOwnership: docs.propertyOwnership?.name || docs.propertyOwnership?.path || "",
+    childPassportPhoto: docs.childPassportPhoto?.name || docs.childPassportPhoto?.path || "", // fallback
+    otherDocs: docs.otherDocs?.map((f:any) => f.name || f.path).join(", ") || "",
     // נוסיף דינמית גם את מסמכי הילדים
     ...childrenList.reduce((acc: any, _: any, index: number) => {
         const key = `child_doc_${index}`;
-        if (docs[key]) acc[key] = docs[key].path;
+        if (docs[key]) acc[key] = docs[key].name || docs[key].path;
         return acc;
     }, {})
   };
