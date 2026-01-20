@@ -98,7 +98,7 @@ type Props = {
   saved: boolean;
   existingChildren: any[];
   // הוספת הפעולה לשמירת טיוטה
-  saveDraftAction: (formData: FormData) => Promise<void>;
+  saveDraftAction: (formData: FormData) => Promise<any>;
 };
 
 export default function Step6FormClient({ locale, saved, saveDraftAction }: Props) {

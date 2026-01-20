@@ -14,11 +14,13 @@ export default function Step2() {
         <img
           className={styles.imageRight}
           src="/images/child-registration-step2-right.svg"
-        ></img>
+          alt=""
+        />
         <img
           className={styles.imageLeft}
           src="/images/child-registration-step2-left.svg"
-        ></img>
+          alt=""
+        />
       </div>
       <div className={styles.textContainer}>
         <div className={styles.mainTextContainer}>
