@@ -105,7 +105,7 @@ async function runTranslation(text: string, targetLang: 'hebrew' | 'arabic') {
 
   } catch (error) {
     console.error(`${targetLang} Translation error:`, error);
-    return inputText; // במקרה שגיאה מחזירים את המקור
+    return "لا يوجد ترجمة  לא נמצא תרגום";
   }
 }
 
