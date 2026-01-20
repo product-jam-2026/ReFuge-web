@@ -1,0 +1,168 @@
+/* lib/styles/IntakeSuccess.module.css */
+
+/* הקונטיינר הראשי - מקובע למסך כדי למנוע שוליים לבנים */
+.fullScreenContainer {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  overflow-y: auto;
+  font-family: var(--font-simpler), sans-serif;
+  direction: rtl;
+  z-index: 50; /* מבטיח שזה מעל הכל */
+}
+
+/* --- מסך 1: פתיחה (ירוק מלא) --- */
+.introScreen {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px;
+  
+  /* רקע ירוק ליים מלא שמכסה הכל */
+  background-color: #DFFC8E; 
+  color: #011429;
+}
+
+.imageWrapper {
+  margin-top: 40px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* הקטנת הדמות */
+.womanImage {
+  width: auto;
+  height: auto;
+  max-height: 250px; /* הגבלת גובה */
+  max-width: 180px;  /* הגבלת רוחב */
+  object-fit: contain;
+}
+
+.contentWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* יישור הכל לימין */
+  align-items: flex-start; 
+  text-align: right;
+  gap: 16px;
+  margin-bottom: 40px; 
+}
+
+.greetingTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #011429;
+  line-height: 1.3;
+  margin: 0;
+  width: 100%;
+}
+
+.greetingText {
+  font-size: 16px;
+  color: #011429;
+  line-height: 1.6;
+  width: 100%;
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* --- מסך 2: בחירת שפה --- */
+.langScreen {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.langTitle {
+  font-size: 28px;
+  font-weight: 800;
+  color: #011429;
+  line-height: 1.3;
+  margin-top: 100px; /* רווח מלמעלה */
+  width: 100%;
+  text-align: center;
+}
+
+/* קונטיינר כפתורי השפה */
+.langButtonsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  align-items: center;
+  
+  /* מיקום: דוחף למטה, ואז עולה 250px מעל הכפתור התחתון */
+  margin-top: auto; 
+  padding-bottom: 300px; /* הרווח הגדול מעל הכפתור התחתון */
+}
+
+/* כפתור שפה (לא נבחר) */
+.langBtn {
+  width: 100%;
+  max-width: 353px;
+  height: 64px;
+  border-radius: 30px;
+  border: none;
+  
+  /* צבע ברירת מחדל: תכלת בהיר */
+  background-color: #C0DEFF; 
+  
+  color: #011429;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* כפתור שפה (נבחר) */
+.langBtnSelected {
+  background-color: #88AEFF !important; 
+  font-weight: 700;
+  box-shadow: 0 0 0 2px #5CA0F2;
+}
+
+/* כפתור כהה כללי */
+.actionBtn {
+  width: 100%;
+  max-width: 353px;
+  height: 56px;
+  background-color: #011429;
+  color: #ffffff;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* עטיפה לכפתור התחתון במסך 2 */
+.fixedBottomBtnWrapper {
+  position: absolute;
+  bottom: 65px; /* PADDING 65 למטה */
+  left: 0;
+  right: 0;
+  padding: 0 24px;
+  display: flex;
+  justify-content: center;
+}

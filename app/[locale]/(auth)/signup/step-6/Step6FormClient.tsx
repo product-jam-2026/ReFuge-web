@@ -104,11 +104,13 @@ type Props = {
 export default function Step6FormClient({ locale, saved, saveDraftAction }: Props) {
   const [screen, setScreen] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
   
   // מפתח לריענון הטופס - כשזה משתנה, הטופס נמחק ומתאפס
   const [formKey, setFormKey] = useState(0); 
   const [formGender, setFormGender] = useState(""); // לאיפוס כפתורי רדיו
   const formRef = useRef<HTMLFormElement>(null);
+  const draftTimerRef = useRef<number | null>(null);
   
   const [allChildrenTranslated, setAllChildrenTranslated] = useState<any[]>([]);
   const [showSavedMsg, setShowSavedMsg] = useState(false);
@@ -173,6 +175,25 @@ export default function Step6FormClient({ locale, saved, saveDraftAction }: Prop
      await proceedToStep7(locale);
   };
 
+  const handleSaveDraft = async () => {
+    if (!formRef.current) return;
+    const start = Date.now();
+    setShowDraftSaved(true);
+    try {
+      const formData = new FormData(formRef.current);
+      await saveDraftAction(formData);
+    } catch (error) {
+      console.error("Draft save error:", error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (draftTimerRef.current) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => setShowDraftSaved(false), remaining);
+    }
+  };
+
   return (
     <div className={styles.pageContainer} dir="rtl">
       
@@ -182,6 +203,15 @@ export default function Step6FormClient({ locale, saved, saveDraftAction }: Prop
           <div className={styles.loadingText} style={{marginTop: 20}}>
              <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
              <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
+          </div>
+        </div>
+      )}
+      {showDraftSaved && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>تم حفظ البيانات، ويمكن تعديلها في المنطقة الشخصية في أي وقت</p>
+            <p style={{fontSize: 14, color: '#666'}}>הנתונים נשמרו, ניתן לערוך אותם תמיד באזור האישי</p>
           </div>
         </div>
       )}
@@ -220,8 +250,19 @@ export default function Step6FormClient({ locale, saved, saveDraftAction }: Prop
             </div>
             {showSavedMsg && (
                 <div style={{
-                    background: '#C0DEFF', color: '#166534', padding: '12px', 
-                    borderRadius: '8px', textAlign: 'center', fontSize: '15px', marginBottom: '15px', fontWeight: 'bold'
+                    background: '#C0DEFF', 
+                    color: '#011429', // צבע הכתב שביקשת
+                    padding: '12px', 
+                    borderRadius: '8px', 
+                    textAlign: 'center', 
+                    fontSize: '15px', 
+                    marginBottom: '15px', 
+                    fontWeight: 'bold',
+                    // --- תוספות לשבירת שורות ---
+                    display: 'flex',
+                    flexDirection: 'column', // זה מה ששם אותם אחד מעל השני
+                    alignItems: 'center',
+                    gap: '4px' // רווח קטן בין השורות
                 }}>
                     <BiInline ar="تم حفظ الطفل بنجاح" he="הילד נשמר בהצלחה! ניתן להזין ילד נוסף" />
                 </div>
@@ -256,7 +297,7 @@ export default function Step6FormClient({ locale, saved, saveDraftAction }: Prop
 
               <div className={styles.fixedFooter}>
                   <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
-                  <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
+                  <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
               </div>
             </div>
 
@@ -269,7 +310,7 @@ export default function Step6FormClient({ locale, saved, saveDraftAction }: Prop
               
               <div className={styles.fixedFooter}>
                   <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
-                  <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
+                  <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
               </div>
             </div>
 
@@ -291,7 +332,7 @@ export default function Step6FormClient({ locale, saved, saveDraftAction }: Prop
                    <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
                  </button>
 
-                 <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
+                 <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
                    <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
                  </button>
               </div>

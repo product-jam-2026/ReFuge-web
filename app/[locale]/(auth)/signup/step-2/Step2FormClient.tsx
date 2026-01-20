@@ -262,9 +262,11 @@ function CountrySelect({ defaultValue, name, labelAr, labelHe }: { defaultValue:
 export default function Step2FormClient({ locale, saved, defaults, saveDraftAction, saveAndNextAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
   const [formDataState, setFormDataState] = useState<any>({});
   const [translations, setTranslations] = useState<any>({});
   const formRef = useRef<HTMLFormElement>(null);
+  const draftTimerRef = useRef<number | null>(null);
   
   const progress = useMemo(() => {
     if (screen === 1) return 0;
@@ -322,6 +324,25 @@ export default function Step2FormClient({ locale, saved, defaults, saveDraftActi
     }
   };
 
+  const handleSaveDraft = async () => {
+    if (!formRef.current) return;
+    const start = Date.now();
+    setShowDraftSaved(true);
+    try {
+      const formData = new FormData(formRef.current);
+      await saveDraftAction(formData);
+    } catch (error) {
+      console.error("Draft save error:", error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (draftTimerRef.current) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => setShowDraftSaved(false), remaining);
+    }
+  };
+
   return (
     <div className={styles.pageContainer} dir="rtl">
       
@@ -332,6 +353,15 @@ export default function Step2FormClient({ locale, saved, defaults, saveDraftActi
                 <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
                 <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
             </div>
+        </div>
+      )}
+      {showDraftSaved && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>تم حفظ البيانات، ويمكن تعديلها في المنطقة الشخصية في أي وقت</p>
+            <p style={{fontSize: 14, color: '#666'}}>הנתונים נשמרו, ניתן לערוך אותם תמיד באזור האישי</p>
+          </div>
         </div>
       )}
       
@@ -422,7 +452,7 @@ export default function Step2FormClient({ locale, saved, defaults, saveDraftActi
                     
                     <div className={styles.fixedFooter}>
                         <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
-                        <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
+                        <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
                     </div>
                 </div>
 
@@ -464,7 +494,7 @@ export default function Step2FormClient({ locale, saved, defaults, saveDraftActi
                         <button type="button" className={styles.btnPrimary} onClick={handleFinishStep2}>
                             <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
                         </button>
-                        <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
+                        <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
                             <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
                         </button>
                     </div>

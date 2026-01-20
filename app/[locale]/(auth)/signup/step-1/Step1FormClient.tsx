@@ -235,11 +235,13 @@ function PhoneField({ labelAr, labelHe, name, defaultValue, prefixes }: {
 export default function Step1FormClient({ locale, saved, defaults, nameTranslations, saveDraftAction, saveAndNextAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
   
   const [formDataState, setFormDataState] = useState<any>({});
   const [translations, setTranslations] = useState<any>({});
 
   const formRef = useRef<HTMLFormElement>(null);
+  const draftTimerRef = useRef<number | null>(null);
 
   const progress = useMemo(() => screen <= 0 ? 0 : Math.min(100, Math.round((screen / 7) * 100)), [screen]);
   const goNext = () => setScreen(s => Math.min(4, s + 1));
@@ -318,6 +320,25 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
     }
   };
 
+  const handleSaveDraft = async () => {
+    if (!formRef.current) return;
+    const start = Date.now();
+    setShowDraftSaved(true);
+    try {
+      const formData = new FormData(formRef.current);
+      await saveDraftAction(formData);
+    } catch (error) {
+      console.error("Draft save error:", error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (draftTimerRef.current) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => setShowDraftSaved(false), remaining);
+    }
+  };
+
   // Helper to render translated field
   const renderTranslatedField = (key: string, labelAr: string, labelHe: string) => {
     const data = translations[key];
@@ -374,6 +395,15 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
           <div className={styles.loadingText} style={{marginTop: 20}}>
              <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
              <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
+          </div>
+        </div>
+      )}
+      {showDraftSaved && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>تم حفظ البيانات، ويمكن تعديلها في المنطقة الشخصية في أي وقت</p>
+            <p style={{fontSize: 14, color: '#666'}}>הנתונים נשמרו, ניתן לערוך אותם תמיד באזור האישי</p>
           </div>
         </div>
       )}
@@ -475,7 +505,7 @@ export default function Step1FormClient({ locale, saved, defaults, nameTranslati
              <button type={screen === 4 ? "submit" : "button"} onClick={screen === 4 ? undefined : goNext} className={styles.btnPrimary}>
                <BiInline ar={screen === 4 ? "إنهاء المرحلة" : "التالي"} he={screen === 4 ? "סיום שלב" : "המשך"} />
              </button>
-             <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
+             <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
              </button>
           </div>

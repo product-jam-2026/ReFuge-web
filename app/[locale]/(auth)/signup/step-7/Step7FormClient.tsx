@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import styles from "@/lib/styles/IntakeForm.module.css"; 
 
@@ -36,7 +36,10 @@ export default function Step7FormClient({
   const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
   const [screen, setScreen] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
   const [fileErrors, setFileErrors] = useState<Record<string, boolean>>({});
+  const formRef = useRef<HTMLFormElement>(null);
+  const draftTimerRef = useRef<number | null>(null);
   
   const [fileNames, setFileNames] = useState<Record<string, string>>({
     passportCopy: defaults.passportCopy ? "קובץ קיים / ملف موجود" : "",
@@ -93,6 +96,25 @@ export default function Step7FormClient({
       await finishAction(formData);
   };
 
+  const handleSaveDraft = async () => {
+    if (!formRef.current) return;
+    const start = Date.now();
+    setShowDraftSaved(true);
+    try {
+      const formData = new FormData(formRef.current);
+      await saveDraftAction(formData);
+    } catch (error) {
+      console.error("Draft save error:", error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (draftTimerRef.current) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => setShowDraftSaved(false), remaining);
+    }
+  };
+
   return (
     <div className={styles.pageContainer} dir="rtl">
       
@@ -102,6 +124,15 @@ export default function Step7FormClient({
           <div className={styles.loadingText} style={{marginTop: 20}}>
              <p style={{fontSize: 18, fontWeight: 'bold'}}>שומר נתונים...</p>
              <p style={{fontSize: 14, color: '#666'}}>جاري الحفظ...</p>
+          </div>
+        </div>
+      )}
+      {showDraftSaved && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>تم حفظ البيانات، ويمكن تعديلها في المنطقة الشخصية في أي وقت</p>
+            <p style={{fontSize: 14, color: '#666'}}>הנתונים נשמרו, ניתן לערוך אותם תמיד באזור האישי</p>
           </div>
         </div>
       )}
@@ -127,7 +158,7 @@ export default function Step7FormClient({
 
       {/* Main Form Screen */}
       {screen === 1 && (
-        <form className={styles.scrollableContent} action={handleSubmit} encType="multipart/form-data">
+        <form className={styles.scrollableContent} ref={formRef} action={handleSubmit} encType="multipart/form-data">
           
           <div className={styles.topBar}>
             <div className={styles.topRow} style={{justifyContent: 'flex-start'}}>
@@ -330,7 +361,7 @@ export default function Step7FormClient({
               <BiInline ar="إنهاء التسجيل" he="סיום הרשמה" />
             </button>
 
-            <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
+            <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
               <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
             </button>
           </div>

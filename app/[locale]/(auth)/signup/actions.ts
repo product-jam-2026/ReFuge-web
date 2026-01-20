@@ -245,9 +245,9 @@ export async function saveSignupStep(params: {
   if (params.goNext) {
     const nextStep = Math.min(params.step + 1, 7);
     redirect(`/${params.locale}/signup/step-${nextStep}`);
-  } else {
-    redirect(`/${params.locale}/signup/step-${params.step}?saved=1`);
   }
+
+  return { saved: true };
 }
 
 export async function saveDraftAndGoToStep(params: {
@@ -771,5 +771,31 @@ export async function submitStep7(locale: string, mode: "draft" | "finish" | "ba
     await finishRegistration({ locale, step: 7, patch });
   } else {
     await saveSignupStep({ locale, step: 7, patch, goNext: false });
+  }
+}
+
+export async function updateLanguagePreference(selectedLocale: string) {
+  "use server";
+  
+  try {
+    const { supabase, user } = await getAuthedSupabase();
+
+    // המרה לבוליאני לפי ההיגיון: ערבית = true, עברית = false
+    const isArabic = selectedLocale === 'ar';
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ PrefLang: isArabic })
+      .eq("id", user.id);
+
+    if (error) {
+      console.error("Error updating language preference:", error);
+      return { success: false };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Unexpected error updating language:", err);
+    return { success: false };
   }
 }
