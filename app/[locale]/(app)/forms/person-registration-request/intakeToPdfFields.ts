@@ -103,6 +103,11 @@ export type IntakeRecord = {
 
 export type TripRow = { startDate: string; endDate: string; purpose: string };
 
+export type ChildExtrasRow = {
+  firstEntryDate: string;
+  fileJoinDate: string;
+};
+
 export type ExtrasState = {
   // English name variants (PDF has both Hebrew+English fields)
   firstNameEnglish: string;
@@ -154,6 +159,7 @@ export type ExtrasState = {
 
   // Trips abroad (not in DB template)
   trips: TripRow[]; // expect 0..3 (we'll safely read up to 3)
+  children: ChildExtrasRow[]; // aligns with step-3/page.tsx usage
   // --- Step4 / meta (DB-saved) ---
   formDate: string; // yyyy-mm-dd
   formTitle: string; // title used for lists + filenames
@@ -191,6 +197,10 @@ function tripAt(extras: Partial<ExtrasState> | undefined, i: number): TripRow {
     endDate: t?.endDate ?? "",
     purpose: t?.purpose ?? "",
   };
+}
+
+function emptyChildExtras(): ChildExtrasRow {
+  return { firstEntryDate: "", fileJoinDate: "" };
 }
 
 export function deriveExtrasFromIntake(
@@ -241,6 +251,8 @@ export function deriveExtrasFromIntake(
     unemployedYearlyIncome: "",
 
     trips: [],
+    children: [],
+
     formDate: "",
     formTitle: "",
     poBox: "",
@@ -260,6 +272,10 @@ export function deriveExtrasFromIntake(
       endDate: t?.endDate ?? "",
       purpose: t?.purpose ?? "",
     })),
+    children: (current?.children ?? base.children).map((c) => ({
+      firstEntryDate: c?.firstEntryDate ?? "",
+      fileJoinDate: c?.fileJoinDate ?? "",
+    })),
   };
 
   // apply your “default from draft” logic
@@ -272,6 +288,11 @@ export function deriveExtrasFromIntake(
 
   merged.purposeOfStay =
     merged.purposeOfStay || draft.intake.step2.visaType || "";
+
+    // ✅ Ensure children extras array exists and is long enough
+  const kidsLen = draft.intake.step6.children?.length ?? 0;
+  const minRows = Math.max(3, kidsLen); // keep at least 3 if you want
+  while (merged.children.length < minRows) merged.children.push(emptyChildExtras());
 
   return merged;
 }
@@ -286,7 +307,6 @@ export function deriveExtrasFromIntake(
 //   draft: IntakeRecord,
 //   extras?: Partial<ExtrasState>,
 // ): Record<string, string> {
-
 
 export function intakeToPdfFields(
   draft: IntakeRecord,

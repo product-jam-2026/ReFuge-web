@@ -17,6 +17,19 @@ import {
   deriveExtrasFromIntake,
 } from "./intakeToPdfFields";
 
+// type Ctx = {
+//   draft: IntakeRecord | null;
+//   setDraft: React.Dispatch<React.SetStateAction<IntakeRecord | null>>;
+
+//   extras: ExtrasState;
+//   setExtras: React.Dispatch<React.SetStateAction<ExtrasState>>;
+
+//   update: (path: string, value: any) => void;
+
+//   instanceId: string | null;
+//   isHydrated: boolean;
+// };
+
 type Ctx = {
   draft: IntakeRecord | null;
   setDraft: React.Dispatch<React.SetStateAction<IntakeRecord | null>>;
@@ -26,9 +39,18 @@ type Ctx = {
 
   update: (path: string, value: any) => void;
 
+  // ✅ add these
+  updateChild: (
+    index: number,
+    key: keyof IntakeRecord["intake"]["step6"]["children"][number],
+    value: string,
+  ) => void;
+  addChildRow: () => void;
+
   instanceId: string | null;
   isHydrated: boolean;
 };
+
 
 const WizardCtx = createContext<Ctx | null>(null);
 
@@ -191,10 +213,16 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
     }
 
     hydrate();
-    return () => {
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [instanceId, defaultDraft, defaultExtras]);
+
+
+      return () => {
       cancelled = true;
     };
-  }, [instanceId, defaultDraft, defaultExtras]);
+  }, [instanceId, defaultDraft]);
 
   function update(path: string, value: any) {
     setDraft((prev) => {
@@ -205,18 +233,89 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
+  function ensureChildrenArray(next: any) {
+  if (!next.intake) next.intake = {};
+  if (!next.intake.step6) next.intake.step6 = {};
+  if (!Array.isArray(next.intake.step6.children)) next.intake.step6.children = [];
+}
+
+function updateChild(
+  index: number,
+  key: keyof IntakeRecord["intake"]["step6"]["children"][number],
+  value: string,
+) {
+  setDraft((prev) => {
+    if (!prev) return prev;
+    const next: any = structuredClone(prev);
+    ensureChildrenArray(next);
+
+    if (!next.intake.step6.children[index]) return next;
+
+    next.intake.step6.children[index][key] = value;
+    return next as IntakeRecord;
+  });
+}
+
+function addChildRow() {
+  setDraft((prev) => {
+    if (!prev) return prev;
+    const next: any = structuredClone(prev);
+    ensureChildrenArray(next);
+
+    next.intake.step6.children.push({
+      lastName: "",
+      firstName: "",
+      gender: "",
+      birthDate: "",
+      nationality: "",
+      israeliId: "",
+      residenceCountry: "",
+      entryDate: "",
+    });
+
+    return next as IntakeRecord;
+  });
+
+  // If your extras has children-extras aligned with step6.children,
+  // keep it in sync (optional, but helpful)
+  setExtras((prev) => {
+    const next: any = structuredClone(prev);
+    if (!Array.isArray(next.children)) next.children = [];
+    next.children.push({ firstEntryDate: "", fileJoinDate: "" });
+    return next as ExtrasState;
+  });
+}
+
+  
+
+  // const ctx = useMemo<Ctx>(
+  //   () => ({
+  //     draft,
+  //     setDraft,
+  //     extras,
+  //     setExtras,
+  //     update,
+  //     instanceId,
+  //     isHydrated,
+  //   }),
+  //   [draft, extras, instanceId, isHydrated],
+  // );
+
   const ctx = useMemo<Ctx>(
-    () => ({
-      draft,
-      setDraft,
-      extras,
-      setExtras,
-      update,
-      instanceId,
-      isHydrated,
-    }),
-    [draft, extras, instanceId, isHydrated],
-  );
+  () => ({
+    draft,
+    setDraft,
+    extras,
+    setExtras,
+    update,
+    updateChild,   // ✅
+    addChildRow,   // ✅
+    instanceId,
+    isHydrated,
+  }),
+  [draft, extras, instanceId, isHydrated],
+);
+
 
   return <WizardCtx.Provider value={ctx}>{children}</WizardCtx.Provider>;
 }

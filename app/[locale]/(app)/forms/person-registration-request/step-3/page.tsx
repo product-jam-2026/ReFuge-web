@@ -1,8 +1,210 @@
+// "use client";
+
+// import React, { useEffect, useMemo, useState } from "react";
+// import { useRouter, useSearchParams } from "next/navigation";
+// import demo from "@/public/demo/intake.demo.json";
+
+// import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
+// import { createClient } from "@/lib/supabase/client";
+
+// import { fieldMap } from "../fieldMap";
+// import { intakeToPdfFields } from "../intakeToPdfFields";
+// import styles from "./page.module.css";
+
+// type IntakeRecord = typeof demo;
+
+// type Trip = { startDate: string; endDate: string; purpose: string };
+
+// type ParentExtras = {
+//   firstNameHebrew: string;
+//   lastNameHebrew: string;
+//   firstNameEnglish: string;
+//   lastNameEnglish: string;
+//   idNumber: string;
+//   passportNumber: string;
+// };
+
+// type PartnerExtras = {
+//   firstNameEnglish: string;
+//   lastNameEnglish: string;
+// };
+
+// type ChildExtras = {
+//   firstEntryDate: string;
+//   fileJoinDate: string;
+// };
+
+// type ExtrasState = {
+//   // basic english names + previous name
+//   firstNameEnglish: string;
+//   lastNameEnglish: string;
+//   prevLastNameEnglish: string;
+
+//   // birth
+//   birthCountry: string;
+//   birthCity: string;
+
+//   // visa
+//   purposeOfStay: string;
+
+//   // address phone
+//   addressPhoneNumber: string;
+
+//   // parents
+//   father: ParentExtras;
+//   mother: ParentExtras;
+
+//   // partner + family
+//   partner: PartnerExtras;
+//   numberChildrenUnder18: string;
+
+//   // work/income
+//   employerName: string;
+//   employerAddress: string;
+//   selfEmploymentStartDate: string;
+//   unemployedWithIncomeStartDate: string;
+//   selfEmployedYearlyIncome: string;
+//   unemployedYearlyIncome: string;
+
+//   // trips
+//   trips: Trip[];
+
+//   // optional “extras-only” dates/fields you had in other pages
+//   requesterEntryDate?: string;
+
+//   // children extra dates (aligned with intake.step6.children)
+//   children: ChildExtras[];
+// };
+
+// function SectionTitle({ children }: { children: React.ReactNode }) {
+//   return <h2 className={styles.sectionTitle}>{children}</h2>;
+// }
+
+// function Field({
+//   label,
+//   required,
+//   children,
+// }: {
+//   label: string;
+//   required?: boolean;
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <label className={styles.field}>
+//       <span className={styles.fieldLabel}>
+//         {label}{" "}
+//         {required ? <span className={styles.requiredStar}>*</span> : null}
+//       </span>
+//       {children}
+//     </label>
+//   );
+// }
+
+// function safePart(title: string) {
+//   return (
+//     (title ?? "")
+//       .toString()
+//       .trim()
+//       .replace(/[^a-zA-Z0-9_-]+/g, "_")
+//       .slice(0, 60) || "Untitled"
+//   );
+// }
+
+// function downloadPdf(filename: string, pdfBytes: Uint8Array) {
+//   const bytes = new Uint8Array(pdfBytes);
+//   const blob = new Blob([bytes.buffer], { type: "application/pdf" });
+//   const url = URL.createObjectURL(blob);
+//   const a = document.createElement("a");
+//   a.href = url;
+//   a.download = filename;
+//   document.body.appendChild(a);
+//   a.click();
+//   a.remove();
+//   URL.revokeObjectURL(url);
+// }
+
+// function downloadJson(filename: string, data: unknown) {
+//   const blob = new Blob([JSON.stringify(data, null, 2)], {
+//     type: "application/json;charset=utf-8",
+//   });
+//   const url = URL.createObjectURL(blob);
+//   const a = document.createElement("a");
+//   a.href = url;
+//   a.download = filename;
+//   document.body.appendChild(a);
+//   a.click();
+//   a.remove();
+//   URL.revokeObjectURL(url);
+// }
+
+// function emptyTrip(): Trip {
+//   return { startDate: "", endDate: "", purpose: "" };
+// }
+
+// function emptyChildExtras(): ChildExtras {
+//   return { firstEntryDate: "", fileJoinDate: "" };
+// }
+
+// function deriveExtrasFromIntake(d: IntakeRecord): ExtrasState {
+//   const kids = d.intake.step6.children ?? [];
+//   const kidsExtras: ChildExtras[] = kids.map((k) => ({
+//     firstEntryDate: k.entryDate ?? "",
+//     fileJoinDate: "",
+//   }));
+
+//   return {
+//     firstNameEnglish: "",
+//     lastNameEnglish: "",
+//     prevLastNameEnglish: "",
+
+//     birthCountry: "",
+//     birthCity: "",
+
+//     purposeOfStay: d.intake.step2.visaType ?? "",
+
+//     addressPhoneNumber: d.intake.step1.phone ?? "",
+
+//     father: {
+//       firstNameHebrew: "",
+//       lastNameHebrew: "",
+//       firstNameEnglish: "",
+//       lastNameEnglish: "",
+//       idNumber: "",
+//       passportNumber: "",
+//     },
+
+//     mother: {
+//       firstNameHebrew: "",
+//       lastNameHebrew: "",
+//       firstNameEnglish: "",
+//       lastNameEnglish: "",
+//       idNumber: "",
+//       passportNumber: "",
+//     },
+
+//     partner: {
+//       firstNameEnglish: "",
+//       lastNameEnglish: "",
+//     },
+
+//     numberChildrenUnder18: String((kids.length ?? 0) || ""),
+
+//     employerName: "",
+//     employerAddress: "",
+//     selfEmploymentStartDate: "",
+//     unemployedWithIncomeStartDate: "",
+//     selfEmployedYearlyIncome: "",
+//     unemployedYearlyIncome: "",
+
+//     trips: [emptyTrip()],
+//     children: kidsExtras,
+//   };
+// }
+
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import demo from "@/public/demo/intake.demo.json";
+import React, { useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
 import { createClient } from "@/lib/supabase/client";
@@ -10,71 +212,7 @@ import { createClient } from "@/lib/supabase/client";
 import { fieldMap } from "../fieldMap";
 import { intakeToPdfFields } from "../intakeToPdfFields";
 import styles from "./page.module.css";
-
-type IntakeRecord = typeof demo;
-
-type Trip = { startDate: string; endDate: string; purpose: string };
-
-type ParentExtras = {
-  firstNameHebrew: string;
-  lastNameHebrew: string;
-  firstNameEnglish: string;
-  lastNameEnglish: string;
-  idNumber: string;
-  passportNumber: string;
-};
-
-type PartnerExtras = {
-  firstNameEnglish: string;
-  lastNameEnglish: string;
-};
-
-type ChildExtras = {
-  firstEntryDate: string;
-  fileJoinDate: string;
-};
-
-type ExtrasState = {
-  // basic english names + previous name
-  firstNameEnglish: string;
-  lastNameEnglish: string;
-  prevLastNameEnglish: string;
-
-  // birth
-  birthCountry: string;
-  birthCity: string;
-
-  // visa
-  purposeOfStay: string;
-
-  // address phone
-  addressPhoneNumber: string;
-
-  // parents
-  father: ParentExtras;
-  mother: ParentExtras;
-
-  // partner + family
-  partner: PartnerExtras;
-  numberChildrenUnder18: string;
-
-  // work/income
-  employerName: string;
-  employerAddress: string;
-  selfEmploymentStartDate: string;
-  unemployedWithIncomeStartDate: string;
-  selfEmployedYearlyIncome: string;
-  unemployedYearlyIncome: string;
-
-  // trips
-  trips: Trip[];
-
-  // optional “extras-only” dates/fields you had in other pages
-  requesterEntryDate?: string;
-
-  // children extra dates (aligned with intake.step6.children)
-  children: ChildExtras[];
-};
+import { useWizard } from "../WizardProvider"; // ✅ use wizard
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h2 className={styles.sectionTitle}>{children}</h2>;
@@ -123,124 +261,22 @@ function downloadPdf(filename: string, pdfBytes: Uint8Array) {
   URL.revokeObjectURL(url);
 }
 
-function downloadJson(filename: string, data: unknown) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: "application/json;charset=utf-8",
-  });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function emptyTrip(): Trip {
-  return { startDate: "", endDate: "", purpose: "" };
-}
-
-function emptyChildExtras(): ChildExtras {
+function emptyChildExtras() {
   return { firstEntryDate: "", fileJoinDate: "" };
-}
-
-function deriveExtrasFromIntake(d: IntakeRecord): ExtrasState {
-  const kids = d.intake.step6.children ?? [];
-  const kidsExtras: ChildExtras[] = kids.map((k) => ({
-    firstEntryDate: k.entryDate ?? "",
-    fileJoinDate: "",
-  }));
-
-  return {
-    firstNameEnglish: "",
-    lastNameEnglish: "",
-    prevLastNameEnglish: "",
-
-    birthCountry: "",
-    birthCity: "",
-
-    purposeOfStay: d.intake.step2.visaType ?? "",
-
-    addressPhoneNumber: d.intake.step1.phone ?? "",
-
-    father: {
-      firstNameHebrew: "",
-      lastNameHebrew: "",
-      firstNameEnglish: "",
-      lastNameEnglish: "",
-      idNumber: "",
-      passportNumber: "",
-    },
-
-    mother: {
-      firstNameHebrew: "",
-      lastNameHebrew: "",
-      firstNameEnglish: "",
-      lastNameEnglish: "",
-      idNumber: "",
-      passportNumber: "",
-    },
-
-    partner: {
-      firstNameEnglish: "",
-      lastNameEnglish: "",
-    },
-
-    numberChildrenUnder18: String((kids.length ?? 0) || ""),
-
-    employerName: "",
-    employerAddress: "",
-    selfEmploymentStartDate: "",
-    unemployedWithIncomeStartDate: "",
-    selfEmployedYearlyIncome: "",
-    unemployedYearlyIncome: "",
-
-    trips: [emptyTrip()],
-    children: kidsExtras,
-  };
 }
 
 export default function PersonRegistrationPage() {
   const router = useRouter();
 
-  const sp = useSearchParams();
-  const instanceId = sp.get("instanceId") ?? undefined;
-
-  const [draft, setDraft] = useState<IntakeRecord | null>(null);
-  const [extras, setExtras] = useState<ExtrasState | null>(null);
-
-  useEffect(() => {
-    const d = structuredClone(demo) as IntakeRecord;
-    setDraft(d);
-    setExtras(deriveExtrasFromIntake(d));
-  }, []);
-
-  function update(path: string, value: any) {
-    setDraft((prev) => {
-      if (!prev) return prev;
-      const next: any = structuredClone(prev);
-      const parts = path.split(".");
-      let cur: any = next;
-      for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
-      cur[parts[parts.length - 1]] = value;
-      return next;
-    });
-  }
-
-  function updateChild(
-    index: number,
-    key: keyof IntakeRecord["intake"]["step6"]["children"][number],
-    value: string,
-  ) {
-    setDraft((prev) => {
-      if (!prev) return prev;
-      const next = structuredClone(prev);
-      if (!next.intake.step6.children[index]) return next;
-      (next.intake.step6.children[index] as any)[key] = value;
-      return next;
-    });
-  }
+  const {
+    draft,
+    extras,
+    setExtras,
+    update,
+    updateChild, // ✅ must exist in this form’s WizardProvider
+    instanceId,
+    isHydrated,
+  } = useWizard();
 
   const payload = useMemo(() => {
     if (!draft) return null;
@@ -258,14 +294,20 @@ export default function PersonRegistrationPage() {
     return cleaned;
   }, [draft]);
 
+  if (!isHydrated || !draft || !payload || !extras) {
+    return <main className={styles.page}>Loading…</main>;
+  }
+
   async function saveDraft(existingInstanceId?: string) {
     const supabase = createClient();
 
     const { data: userRes, error: userErr } = await supabase.auth.getUser();
     if (userErr) throw userErr;
+
     const user = userRes.user;
     if (!user) throw new Error("Not logged in");
-    if (!draft || !extras) throw new Error("No data to save");
+
+    if (!draft) throw new Error("No draft to save");
 
     const title =
       `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
@@ -279,7 +321,7 @@ export default function PersonRegistrationPage() {
           user_id: user.id,
           form_slug: "person-registration-request",
           title,
-          draft: payload ?? draft,
+          draft: payload,
           extras,
         })
         .select("id")
@@ -292,7 +334,7 @@ export default function PersonRegistrationPage() {
         .from("form_instances")
         .update({
           title,
-          draft: payload ?? draft,
+          draft: payload,
           extras,
         })
         .eq("id", existingInstanceId)
@@ -305,9 +347,9 @@ export default function PersonRegistrationPage() {
 
   async function onDownloadPdf(e: React.FormEvent) {
     e.preventDefault();
-    if (!draft || !extras) return;
 
-    await saveDraft(instanceId);
+    // ensure draft is saved (so instanceId exists)
+    const savedId = await saveDraft(instanceId ?? undefined);
 
     const fields = intakeToPdfFields(draft as any, extras as any);
 
@@ -341,22 +383,180 @@ export default function PersonRegistrationPage() {
       },
     );
 
+      if (!draft) return;
+
     const s1 = draft.intake.step1;
     const fileName = `person_registration_${safePart(
       s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
     )}_${new Date().toISOString().slice(0, 10)}.pdf`;
 
     downloadPdf(fileName, outBytes);
-  }
 
-  if (!draft || !payload || !extras) {
-    return <main className={styles.page}>Loading…</main>;
+    // optional: if you want to keep editing next steps with the saved instanceId
+    // router.push(savedId ? `./step-4?instanceId=${encodeURIComponent(savedId)}` : "./step-4");
   }
 
   const kids = draft.intake.step6.children ?? [];
   const nextUrl = instanceId
     ? `./step-4?instanceId=${encodeURIComponent(instanceId)}`
     : "./step-4";
+
+// export default function PersonRegistrationPage() {
+//   const router = useRouter();
+
+//   const sp = useSearchParams();
+//   const instanceId = sp.get("instanceId") ?? undefined;
+
+//   const [draft, setDraft] = useState<IntakeRecord | null>(null);
+//   const [extras, setExtras] = useState<ExtrasState | null>(null);
+
+//   useEffect(() => {
+//     const d = structuredClone(demo) as IntakeRecord;
+//     setDraft(d);
+//     setExtras(deriveExtrasFromIntake(d));
+//   }, []);
+
+//   function update(path: string, value: any) {
+//     setDraft((prev) => {
+//       if (!prev) return prev;
+//       const next: any = structuredClone(prev);
+//       const parts = path.split(".");
+//       let cur: any = next;
+//       for (let i = 0; i < parts.length - 1; i++) cur = cur[parts[i]];
+//       cur[parts[parts.length - 1]] = value;
+//       return next;
+//     });
+//   }
+
+//   function updateChild(
+//     index: number,
+//     key: keyof IntakeRecord["intake"]["step6"]["children"][number],
+//     value: string,
+//   ) {
+//     setDraft((prev) => {
+//       if (!prev) return prev;
+//       const next = structuredClone(prev);
+//       if (!next.intake.step6.children[index]) return next;
+//       (next.intake.step6.children[index] as any)[key] = value;
+//       return next;
+//     });
+//   }
+
+//   const payload = useMemo(() => {
+//     if (!draft) return null;
+
+//     const kids = (draft.intake.step6.children ?? []).filter(
+//       (c) =>
+//         (c.firstName ?? "").trim() ||
+//         (c.lastName ?? "").trim() ||
+//         (c.israeliId ?? "").trim() ||
+//         (c.birthDate ?? "").trim(),
+//     );
+
+//     const cleaned = structuredClone(draft);
+//     cleaned.intake.step6.children = kids;
+//     return cleaned;
+//   }, [draft]);
+
+//   async function saveDraft(existingInstanceId?: string) {
+//     const supabase = createClient();
+
+//     const { data: userRes, error: userErr } = await supabase.auth.getUser();
+//     if (userErr) throw userErr;
+//     const user = userRes.user;
+//     if (!user) throw new Error("Not logged in");
+//     if (!draft || !extras) throw new Error("No data to save");
+
+//     const title =
+//       `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
+//       draft.intake?.step1?.israeliId ||
+//       "Untitled";
+
+//     if (!existingInstanceId) {
+//       const { data, error } = await supabase
+//         .from("form_instances")
+//         .insert({
+//           user_id: user.id,
+//           form_slug: "person-registration-request",
+//           title,
+//           draft: payload ?? draft,
+//           extras,
+//         })
+//         .select("id")
+//         .single();
+
+//       if (error) throw error;
+//       return data.id as string;
+//     } else {
+//       const { error } = await supabase
+//         .from("form_instances")
+//         .update({
+//           title,
+//           draft: payload ?? draft,
+//           extras,
+//         })
+//         .eq("id", existingInstanceId)
+//         .eq("user_id", user.id);
+
+//       if (error) throw error;
+//       return existingInstanceId;
+//     }
+//   }
+
+//   async function onDownloadPdf(e: React.FormEvent) {
+//     e.preventDefault();
+//     if (!draft || !extras) return;
+
+//     await saveDraft(instanceId);
+
+//     const fields = intakeToPdfFields(draft as any, extras as any);
+
+//     const [tplRes, fontRes] = await Promise.all([
+//       fetch("/forms/person-registration.pdf"),
+//       fetch("/fonts/SimplerPro-Regular.otf"),
+//     ]);
+
+//     if (!tplRes.ok) {
+//       throw new Error(
+//         `Failed to load template PDF: ${tplRes.status} ${tplRes.statusText} url=${tplRes.url}`,
+//       );
+//     }
+//     if (!fontRes.ok) {
+//       throw new Error(
+//         `Failed to load font: ${fontRes.status} ${fontRes.statusText} url=${fontRes.url}`,
+//       );
+//     }
+
+//     const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
+//     const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
+
+//     const outBytes = await fillFieldsToNewPdfBytesClient(
+//       templateBytes,
+//       fields,
+//       fieldMap,
+//       {
+//         fontBytes,
+//         autoDetectRtl: true,
+//         defaultRtlAlignRight: true,
+//       },
+//     );
+
+//     const s1 = draft.intake.step1;
+//     const fileName = `person_registration_${safePart(
+//       s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
+//     )}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+//     downloadPdf(fileName, outBytes);
+//   }
+
+//   if (!draft || !payload || !extras) {
+//     return <main className={styles.page}>Loading…</main>;
+//   }
+
+//   const kids = draft.intake.step6.children ?? [];
+//   const nextUrl = instanceId
+//     ? `./step-4?instanceId=${encodeURIComponent(instanceId)}`
+//     : "./step-4";
 
   return (
     <main className={styles.page}>
