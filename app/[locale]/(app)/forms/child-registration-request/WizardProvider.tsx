@@ -7,17 +7,151 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import demo from "@/public/demo/intake.empty.json";
 import { createClient } from "@/lib/supabase/client"; // <-- your browser supabase client
 
-export type IntakeRecord = typeof demo;
+// export type IntakeRecord = typeof demo;
+
+
+
+export type IntakeRecord = {
+  intake: {
+    step1: {
+      email: string;
+      phone: string;
+      gender: string;
+
+      lastName: { ar: string; he: string };
+      firstName: { ar: string; he: string };
+      oldLastName: { ar: string; he: string };
+      oldFirstName: { ar: string; he: string };
+
+      birthDate: string;
+      israeliId: string;
+      nationality: string;
+
+      passportNumber: string;
+      passportIssueDate: string;
+      passportExpiryDate: string;
+      passportIssueCountry: string;
+    };
+
+    step2: {
+      visaType: string;
+      entryDate: string;
+      visaEndDate: string;
+
+      residenceCity: { ar: string; he: string };
+      residenceAddress: { ar: string; he: string };
+      residenceCountry: string;
+
+      visaStartDate: string;
+    };
+
+    step3: {
+      occupation: {
+        assets: string[];
+        workAddress: { ar: string; he: string };
+        employerName: { ar: string; he: string };
+        notWorkingSub: string;
+        workStartDate: string;
+        occupationText: string;
+      };
+
+      statusDate: string;
+      housingType: string;
+      maritalStatus: string;
+
+      mailingAddress: {
+        zip: string;
+        city: string;
+        entry: string;
+        street: string;
+        apartment: string;
+        houseNumber: string;
+      };
+
+      employmentStatus: string;
+      mailingDifferent: boolean;
+
+      registeredAddress: {
+        zip: string;
+        city: string;
+        entry: string;
+        street: { ar: string; he: string };
+        apartment: string;
+        houseNumber: string;
+      };
+    };
+
+    step4: {
+      bank: {
+        branch: string;
+        bankName: string;
+        accountNumber: string;
+      };
+      healthFund: string;
+      nationalInsurance: {
+        hasFile: string;
+        fileNumber: string;
+        allowanceType: string;
+        getsAllowance: string;
+        allowanceFileNumber: string;
+      };
+    };
+
+    step5: {
+      spouse: {
+        email: string;
+        phone: string;
+        gender: string;
+
+        lastName: { ar: string; he: string };
+        firstName: { ar: string; he: string };
+        oldLastName: { ar: string; he: string };
+        oldFirstName: { ar: string; he: string };
+
+        birthDate: string;
+        israeliId: string;
+        nationality: string;
+
+        passportNumber: string;
+        passportIssueDate: string;
+        passportExpiryDate: string;
+        passportIssueCountry: string;
+      };
+    };
+
+    step6: {
+      children: Array<{
+        gender: string;
+        lastName: string;
+        birthDate: string;
+        entryDate: string;
+        firstName: string;
+        israeliId: string;
+        nationality: string;
+        residenceCountry: string;
+        arrivalToIsraelDate: string;
+      }>;
+    };
+
+    step7: {
+      documents: Record<string, unknown>;
+    };
+
+    currentStep: number;
+  };
+};
+
 
 export type ExtrasState = {
   formDate: string;
   poBox: string;
   applicantSignatureDataUrl: string;
   formTitle: string; // ✅ new
+  currentStep: number; // or string like "step4"
 };
 
 const initialExtras: ExtrasState = {
@@ -25,6 +159,7 @@ const initialExtras: ExtrasState = {
   poBox: "",
   applicantSignatureDataUrl: "",
   formTitle: "", // ✅ new
+  currentStep: 1, // ✅ start step
 };
 
 type Ctx = {
@@ -37,6 +172,11 @@ type Ctx = {
   // optional: helpful elsewhere
   instanceId: string | null;
   isHydrated: boolean;
+
+  // ✅ add
+  saveNow: () => Promise<string | null>;
+  saveStatus: "idle" | "saving" | "saved" | "error";
+  saveError?: string;
 };
 
 const WizardCtx = createContext<Ctx | null>(null);
@@ -48,58 +188,74 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
   const [draft, setDraft] = useState<IntakeRecord | null>(null);
   const [extras, setExtras] = useState<ExtrasState>(initialExtras);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [liveInstanceId, setLiveInstanceId] = useState<string | null>(
+    instanceId,
+  );
+  useEffect(() => setLiveInstanceId(instanceId), [instanceId]);
 
-  // useEffect(() => {
-  //   let cancelled = false;
+  const router = useRouter();
 
-  //   async function hydrate() {
-  //     setIsHydrated(false);
+  const [saveStatus, setSaveStatus] = useState<Ctx["saveStatus"]>("idle");
+  const [saveError, setSaveError] = useState<string | undefined>(undefined);
+  
 
-  //     // 1) If no instanceId -> start new from demo
-  //     if (!instanceId) {
-  //       if (cancelled) return;
-  //       setDraft(structuredClone(demo) as any);
-  //       setExtras(initialExtras);
-  //       setIsHydrated(true);
-  //       return;
-  //     }
+  async function saveNow() {
+    if (!draft) return null;
 
-  //     // 2) Load from DB
-  //     const supabase = createClient();
+    setSaveStatus("saving");
+    setSaveError(undefined);
 
-  //     const { data: row, error } = await supabase
-  //       .from("form_instances")
-  //       .select("draft, extras")
-  //       .eq("id", instanceId)
-  //       .single();
+    try {
+      const supabase = createClient();
+      const { data: userRes, error: userErr } = await supabase.auth.getUser();
+      if (userErr) throw userErr;
+      const user = userRes.user;
+      if (!user) throw new Error("Not logged in");
 
-  //     if (cancelled) return;
+      const title =
+        extras.formTitle?.trim() ||
+        `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
+        "Untitled";
 
-  //     if (error || !row?.draft) {
-  //       // fallback (or you can show an error UI)
-  //       console.error("Failed to load instance", error);
-  //       setDraft(structuredClone(demo) as any);
-  //       setExtras(initialExtras);
-  //       setIsHydrated(true);
-  //       return;
-  //     }
+      // decide what you actually want to persist
+      const { applicantSignatureDataUrl, ...extrasToSave } = extras;
 
-  //     setDraft(row.draft as IntakeRecord);
+      if (!liveInstanceId) {
+        const { data, error } = await supabase
+          .from("form_instances")
+          .insert({
+            user_id: user.id,
+            form_slug: "child-registration-request", // or paramize per form
+            title,
+            draft,
+            extras: extrasToSave,
+          })
+          .select("id")
+          .single();
 
-  //     // merge extras with defaults (so missing keys won't crash)
-  //     setExtras({
-  //       ...initialExtras,
-  //       ...(row.extras ?? {}),
-  //     });
+        if (error) throw error;
+        setLiveInstanceId(data.id);
+        setSaveStatus("saved");
+        router.replace(`?instanceId=${data.id}`);
+        return data.id;
+      } else {
+        const { error } = await supabase
+          .from("form_instances")
+          .update({ title, draft, extras: extrasToSave })
+          .eq("id", liveInstanceId)
+          .eq("user_id", user.id);
 
-  //     setIsHydrated(true);
-  //   }
+        if (error) throw error;
+        setSaveStatus("saved");
+        return liveInstanceId;
+      }
+    } catch (e: any) {
+      setSaveStatus("error");
+      setSaveError(e?.message ?? String(e));
+      return null;
+    }
+  }
 
-  //   hydrate();
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, [instanceId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -206,6 +362,19 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
+  // const ctx = useMemo(
+  //   () => ({
+  //     draft,
+  //     setDraft,
+  //     extras,
+  //     setExtras,
+  //     update,
+  //     instanceId,
+  //     isHydrated,
+  //   }),
+  //   [draft, extras, instanceId, isHydrated],
+  // );
+
   const ctx = useMemo(
     () => ({
       draft,
@@ -213,10 +382,13 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
       extras,
       setExtras,
       update,
-      instanceId,
+      instanceId: liveInstanceId,
       isHydrated,
+      saveNow,
+      saveStatus,
+      saveError,
     }),
-    [draft, extras, instanceId, isHydrated],
+    [draft, extras, liveInstanceId, isHydrated, saveStatus, saveError],
   );
 
   return <WizardCtx.Provider value={ctx}>{children}</WizardCtx.Provider>;

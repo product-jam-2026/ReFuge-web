@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-
-import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useWizard } from "../WizardProvider";
 import { fieldMap } from "../fieldMap";
 import { intakeToPdfFields } from "../intakeToPdfFields";
@@ -39,16 +38,23 @@ function safeFileName(title: string) {
   );
 }
 
-export default function Step4() {
+export default function Step5() {
   const router = useRouter();
   const params = useParams();
   const locale = params.locale as string;
-  const { draft, extras, setExtras, instanceId, saveNow, saveStatus } =
-    useWizard();
 
+  const { draft, extras, setExtras, instanceId } = useWizard();
+
+  // ✅ Persist where the user is (so home page can resume to step-5)
   useEffect(() => {
-    setExtras((p) => ({ ...p, currentStep: 4 }));
+    setExtras((p: any) => ({ ...p, currentStep: 5 }));
   }, [setExtras]);
+
+  // local save UI state (keeps your logic in this page)
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -66,7 +72,6 @@ export default function Step4() {
     canvas.width = Math.floor(CANVAS_W * dpr);
     canvas.height = Math.floor(CANVAS_H * dpr);
 
-    // set CSS size (no inline styles needed)
     canvas.style.width = `${CANVAS_W}px`;
     canvas.style.height = `${CANVAS_H}px`;
 
@@ -82,6 +87,7 @@ export default function Step4() {
     const sig = (extras as any)?.applicantSignatureDataUrl as
       | string
       | undefined;
+
     if (sig?.startsWith("data:image/")) {
       const img = new Image();
       img.onload = () => {
@@ -141,28 +147,14 @@ export default function Step4() {
     setExtras((p: any) => ({ ...p, applicantSignatureDataUrl: dataUrl }));
   }
 
-  function clearSignature() {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
-
-    setExtras((p: any) => ({ ...p, applicantSignatureDataUrl: "" }));
-  }
-
   if (!draft) {
     return <main className={styles.loadingPage}>Loading…</main>;
   }
 
-  const sigPreview = (extras as any)?.applicantSignatureDataUrl as
-    | string
-    | undefined;
-
   async function uploadPdf(
     outBytes: Uint8Array,
+    instanceId: string,
     pdfTitle: string,
-    instanceId?: string,
   ) {
     const supabase = createClient();
 
@@ -171,12 +163,11 @@ export default function Step4() {
     const user = userRes.user;
     if (!user) throw new Error("Not logged in");
 
-    // no timezone suffix: drop trailing Z from ISO
     const ts = new Date().toISOString().replace("Z", "").replace(/[:.]/g, "-");
     const base = safeFileName(pdfTitle);
     const fileName = `${base}_${ts}.pdf`;
 
-    const path = `${user.id}/child-registration-request/${instanceId}/${fileName}`;
+    const path = `${user.id}/child-allowance-request/${instanceId}/${fileName}`;
 
     const bytes = new Uint8Array(outBytes);
     const blob = new Blob([bytes.buffer], { type: "application/pdf" });
@@ -212,14 +203,15 @@ export default function Step4() {
       `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
       "Untitled";
 
-    const { applicantSignatureDataUrl, ...extrasToSave } = extras;
+    // decide what you actually want to persist
+    const { applicantSignatureDataUrl, ...extrasToSave } = extras as any;
 
     if (!existingInstanceId) {
       const { data, error } = await supabase
         .from("form_instances")
         .insert({
           user_id: user.id,
-          form_slug: "child-registration-request",
+          form_slug: "child-allowance-request",
           title,
           draft,
           extras: extrasToSave,
@@ -228,7 +220,7 @@ export default function Step4() {
         .single();
 
       if (error) throw error;
-      return data.id;
+      return data.id as string;
     } else {
       const { error } = await supabase
         .from("form_instances")
@@ -242,10 +234,7 @@ export default function Step4() {
   }
 
   async function onGenerate() {
-    if (!draft) {
-      // still loading / wizard not ready
-      return;
-    }
+    if (!draft) return;
 
     const pdfTitle =
       (extras as any).formTitle?.trim() ||
@@ -253,13 +242,13 @@ export default function Step4() {
       "Untitled";
 
     const fields = intakeToPdfFields(draft as any, {
-      formDate: extras.formDate,
-      poBox: extras.poBox,
-      applicantSignature: extras.applicantSignatureDataUrl,
+      formDate: (extras as any).formDate,
+      poBox: (extras as any).poBox,
+      applicantSignature: (extras as any).applicantSignatureDataUrl,
     });
 
     const [tplRes, fontRes] = await Promise.all([
-      fetch("/forms/child-registration-request.pdf"),
+      fetch("/forms/child-allowance-request.pdf"),
       fetch("/fonts/SimplerPro-Regular.otf"),
     ]);
 
@@ -273,24 +262,32 @@ export default function Step4() {
       { fontBytes, autoDetectRtl: true, defaultRtlAlignRight: true },
     );
 
-    // const savedInstanceId = await saveDraft(instanceId ?? undefined);
-    await uploadPdf(outBytes, pdfTitle);
+    const savedInstanceId = await saveDraft(instanceId ?? undefined);
+    await uploadPdf(outBytes, savedInstanceId, pdfTitle);
+  }
+
+  async function onSaveDraftAndExit() {
+    setSaveStatus("saving");
+    setSaveError(null);
+
+    try {
+      await saveDraft(instanceId ?? undefined);
+      setSaveStatus("saved");
+      router.push(`/${locale}/forms/child-allowance-request`);
+    } catch (e: any) {
+      setSaveStatus("error");
+      setSaveError(e?.message ?? String(e));
+    }
   }
 
   return (
     <main className={styles.page}>
       <div className={styles.header}>
-        <div className={styles.headerText}>
-          لتسجيل مولود ولد في اسرائيل لوالد/ة مواطن اسرائيلي
-        </div>
-
-        <div className={styles.headerText}>
-          בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי
-        </div>
+        <div className={styles.headerText}>طلب مخصصات الأطفال</div>
+        <div className={styles.headerText}>טופס בקשה לקצבת ילדים</div>
       </div>
 
-      {/* <SectionTitle>כללי</SectionTitle> */}
-      <Field label="تاريخ   תאריך  ">
+      <Field label="תאריך">
         <input
           type="date"
           value={(extras as any).formDate}
@@ -301,7 +298,7 @@ export default function Step4() {
         />
       </Field>
 
-      <Field label="اسم النموذج   שם הטופס">
+      <Field label="שם הטופס">
         <input
           value={(extras as any).formTitle}
           onChange={(e) =>
@@ -327,47 +324,30 @@ export default function Step4() {
         </div>
       </div>
 
-      <span className={styles.deleteSignature}
-        role="button"
-        tabIndex={0}
-        onClick={clearSignature}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") clearSignature();
-        }}
-        style={{
-          cursor: (extras as any)?.applicantSignatureDataUrl
-            ? "pointer"
-            : "default",
-          // textDecoration: "underline",
-          // opacity: (extras as any)?.applicantSignatureDataUrl ? 1 : 0.5,
-          userSelect: "none",
-        }}
-        aria-disabled={!(extras as any)?.applicantSignatureDataUrl}
-        title="מחק חתימה"
-      >
-        איפוס חתימה
-      </span>
-      <div className={styles.footer}>
+      {saveStatus === "error" && saveError ? (
+        <div style={{ marginTop: 10, color: "crimson" }}>{saveError}</div>
+      ) : null}
+
+      <div className={styles.footerRow}>
         <button
-          className={styles.primaryButton}
           type="button"
           onClick={async () => {
             await onGenerate();
             router.push("./review");
           }}
+          className={styles.primaryButton}
         >
           סיום
         </button>
+
         <button
+          type="button"
+          onClick={onSaveDraftAndExit}
           className={styles.secondaryButton}
-          // disabled={saveStatus === "saving"}
-          onClick={async () => {
-            const id = await saveNow();
-            if (id) router.push(`/${locale}/forms/child-registration-request`);
-          }}
+          disabled={saveStatus === "saving"}
         >
           שמור כטיוטה
-        </button>{" "}
+        </button>
       </div>
     </main>
   );

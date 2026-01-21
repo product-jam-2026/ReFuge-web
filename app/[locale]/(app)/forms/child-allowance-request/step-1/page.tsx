@@ -1,31 +1,45 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams, useParams } from "next/navigation";
-
+import { useParams, useRouter } from "next/navigation";
 import { useWizard } from "../WizardProvider";
 import styles from "./page.module.css";
 
 export default function Step1() {
   const router = useRouter();
-  const { draft, update, setExtras, saveNow } = useWizard();
-    const params = useParams();
-    const locale = params.locale as string;
+  const params = useParams();
+  const locale = params.locale as string;
+
   
 
+  // assuming WizardProvider exposes these (like your other examples)
+  const { draft, update, extras, setExtras, saveNow, saveStatus } = useWizard();
+
+
+    // ✅ store which step we are on (so drafts resume correctly)
+    useEffect(() => {
+      setExtras((p: any) => ({ ...p, currentStep: 3 }));
+    }, [setExtras]);
+  
   const kids = draft?.intake?.step6?.children ?? [];
-  const sp = useSearchParams();
-  const instanceId = sp.get("instanceId");
-  const nextUrl = instanceId ? `./step-2?instanceId=${instanceId}` : "./step-2";
 
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  // restore selection from extras (if exists), otherwise default = select all
+  const restored = Array.isArray((extras as any)?.step1SelectedChildren)
+    ? new Set<number>((extras as any).step1SelectedChildren)
+    : null;
 
+  const [selected, setSelected] = useState<Set<number>>(restored ?? new Set());
+
+  // mark current step for draft resume
   useEffect(() => {
-    setExtras((p) => ({ ...p, currentStep: 1 }));
+    setExtras((p: any) => ({ ...p, currentStep: 1 }));
   }, [setExtras]);
 
+  // when kids list changes and we don't have restored selection, select all by default
   useEffect(() => {
+    if (restored) return;
     setSelected(new Set(kids.map((_, i) => i)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kids.length]);
 
   const options = useMemo(() => {
@@ -37,11 +51,20 @@ export default function Step1() {
     });
   }, [kids]);
 
+  function persistSelection(next: Set<number>) {
+    setExtras((p: any) => ({
+      ...p,
+      step1SelectedChildren: Array.from(next),
+    }));
+  }
+
   function toggle(i: number) {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(i)) next.delete(i);
       else next.add(i);
+
+      persistSelection(next);
       return next;
     });
   }
@@ -52,14 +75,23 @@ export default function Step1() {
     router.push("./step-2");
   }
 
+  async function onSaveAndExit() {
+    const id = await saveNow?.();
+    if (id) {
+      router.push(`/${locale}/forms/child-allowance-request`);
+    }
+  }
+
   const disableNext = options.length > 0 && selected.size === 0;
+
+  if (!draft) {
+    return <main className={styles.page}>Loading…</main>;
+  }
 
   return (
     <main className={styles.page}>
       <div className={styles.header}>
-        <div className={styles.headerText}>
-          בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי
-        </div>
+        <div className={styles.headerText}>תביעה לקצבת ילדים</div>
       </div>
 
       <h2 className={styles.title}>בחר עבור מי מילדך הינך ממלא את הטופס</h2>
@@ -71,7 +103,6 @@ export default function Step1() {
           </div>
         ) : (
           <fieldset className={styles.fieldset}>
-
             <div className={styles.optionsList}>
               {options.map(({ i, label }) => {
                 const isSelected = selected.has(i);
@@ -80,7 +111,9 @@ export default function Step1() {
                   <button
                     key={i}
                     type="button"
-                    className={`${styles.optionBtn} ${isSelected ? styles.optionBtnActive : ""}`}
+                    className={`${styles.optionBtn} ${
+                      isSelected ? styles.optionBtnActive : ""
+                    }`}
                     onClick={() => toggle(i)}
                     aria-pressed={isSelected}
                     title={isSelected ? "נבחר" : "לא נבחר"}
@@ -90,32 +123,28 @@ export default function Step1() {
                 );
               })}
             </div>
-
           </fieldset>
         )}
 
-        <div className={styles.footer}>
+        <div className={styles.footerRow}>
           <button
             type="button"
-            // onClick={onNext}
-            onClick={() => router.push(nextUrl)}
+            onClick={onNext}
             className={styles.primaryButton}
             disabled={disableNext}
             title={disableNext ? "בחר לפחות ילד אחד" : undefined}
           >
             המשך
           </button>
+
           <button
+            type="button"
+            onClick={onSaveAndExit}
             className={styles.secondaryButton}
-            // disabled={saveStatus === "saving"}
-            onClick={async () => {
-              const id = await saveNow();
-              if (id)
-                router.push(`/${locale}/forms/child-registration-request`);
-            }}
+            disabled={saveStatus === "saving"}
           >
             שמור כטיוטה
-          </button>{" "}
+          </button>
         </div>
       </div>
     </main>

@@ -63,6 +63,7 @@ type FormInstanceRow = {
   status: string | null;
   updated_at: string;
   created_at: string;
+  extras: { currentStep?: number } | null; // jsonb
 };
 
 function fmt(ts: string) {
@@ -158,7 +159,7 @@ export default function ChildRegistrationHomePage() {
 
       const { data, error } = await supabase
         .from("form_instances")
-        .select("id, form_slug, title, status, updated_at, created_at")
+        .select("id, form_slug, title, status, updated_at, created_at, extras")
         .eq("user_id", userRes.user.id)
         .eq("form_slug", "child-registration-request")
         .order("updated_at", { ascending: false });
@@ -173,156 +174,6 @@ export default function ChildRegistrationHomePage() {
       setLoading(false);
     })();
   }, []);
-
-  //   return (
-  //     <main
-  //       style={{ maxWidth: 820, margin: "0 auto", padding: 24, direction: "rtl" }}
-  //     >
-  //       <hr style={{ margin: "24px 0" }} />
-
-  //       <h2 style={{ fontSize: 20, fontWeight: 800 }}>מסמכים שהופקו (PDF)</h2>
-
-  //       {pdfLoading ? (
-  //         <p style={{ marginTop: 12 }}>טוען…</p>
-  //       ) : pdfErr ? (
-  //         <p style={{ marginTop: 12, color: "crimson" }}>{pdfErr}</p>
-  //       ) : pdfRows.length === 0 ? (
-  //         <p style={{ marginTop: 12 }}>אין PDFים עדיין.</p>
-  //       ) : (
-  //         <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-  //           <div style={tileGrid}>
-  //             {pdfRows.map((p) => {
-  //               // const title =
-  //               //   (p.form_instances?.[0]?.title ?? "").trim() ||
-  //               //   fileNameFromPath(p.path);
-
-  //               // const title =
-  //               //   (p.form_instance?.title ?? "").trim() ||
-  //               //   fileNameFromPath(p.path);
-  //               const title =
-  //                 (p.pdf_title ?? "").trim() || fileNameFromPath(p.path);
-  //               return (
-  //                 <button
-  //                   key={p.id}
-  //                   type="button"
-  //                   style={tile}
-  //                   onClick={async () => {
-  //                     try {
-  //                       await downloadPdfFromStorage(supabase, p.bucket, p.path);
-  //                     } catch (e: any) {
-  //                       alert(e?.message ?? "Download failed");
-  //                     }
-  //                   }}
-  //                   aria-label={`הורד PDF: ${title}`}
-  //                   title={title}
-  //                 >
-  //                   {title}
-  //                 </button>
-  //               );
-  //             })}
-  //           </div>
-  //         </div>
-  //       )}
-
-  //       <h1 style={{ fontSize: 22, fontWeight: 800 }}>
-  //         טיוטות — בקשה לרישום ילד
-  //       </h1>
-
-  //       <div
-  //         style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}
-  //       >
-  //         <button
-  //           type="button"
-  //           onClick={() => router.push("child-registration-request/step-1")}
-  //           style={btnPrimary}
-  //         >
-  //           + טופס חדש
-  //         </button>
-
-  //         <button
-  //           type="button"
-  //           onClick={() => window.location.reload()}
-  //           style={btnSecondary}
-  //         >
-  //           רענן
-  //         </button>
-  //       </div>
-
-  //       {loading ? (
-  //         <p style={{ marginTop: 16 }}>טוען…</p>
-  //       ) : err ? (
-  //         <p style={{ marginTop: 16, color: "crimson" }}>{err}</p>
-  //       ) : rows.length === 0 ? (
-  //         <p style={{ marginTop: 16 }}>אין טיוטות עדיין.</p>
-  //       ) : (
-  //         <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
-  //           <div style={tileGrid}>
-  //             {rows.map((r) => {
-  //               const title = (r.title ?? "").trim() || "טיוטה ללא שם";
-
-  //               return (
-  //                 <button
-  //                   key={r.id}
-  //                   type="button"
-  //                   style={tile}
-  //                   onClick={() => {
-  //                     // choose what clicking a draft should do:
-  //                     router.push(
-  //                       `child-registration-request/step-3?instanceId=${r.id}`,
-  //                     );
-  //                   }}
-  //                   aria-label={`המשך עריכה: ${title}`}
-  //                   title={title}
-  //                 >
-  //                   {title}
-  //                 </button>
-  //               );
-  //             })}
-  //           </div>
-  //         </div>
-  //       )}
-  //     </main>
-  //   );
-  // }
-
-  // const card: React.CSSProperties = {
-  //   border: "1px solid #ddd",
-  //   borderRadius: 12,
-  //   padding: 12,
-  // };
-
-  // const btnPrimary: React.CSSProperties = {
-  //   padding: "10px 12px",
-  //   borderRadius: 12,
-  //   border: "none",
-  //   cursor: "pointer",
-  // };
-
-  // const btnSecondary: React.CSSProperties = {
-  //   padding: "10px 12px",
-  //   borderRadius: 12,
-  //   border: "1px solid #ccc",
-  //   background: "transparent",
-  //   cursor: "pointer",
-  // };
-
-  // const tile: React.CSSProperties = {
-  //   width: "100%",
-  //   textAlign: "right",
-  //   border: "1px solid #ddd",
-  //   borderRadius: 12,
-  //   padding: 14,
-  //   background: "#fff",
-  //   cursor: "pointer",
-  //   fontWeight: 800,
-  //   fontSize: 16,
-  // };
-
-  // const tileGrid: React.CSSProperties = {
-  //   display: "grid",
-  //   gap: 10,
-  //   marginTop: 12,
-  // };
 
   return (
     <main className={styles.page}>
@@ -424,8 +275,9 @@ export default function ChildRegistrationHomePage() {
                 type="button"
                 className={styles.draftTile}
                 onClick={() => {
+                  const step = (r.extras as any)?.currentStep ?? 1;
                   router.push(
-                    `child-registration-request/step-3?instanceId=${r.id}`,
+                    `/${locale}/forms/child-registration-request/step-${step}?instanceId=${r.id}`,
                   );
                 }}
                 aria-label={`המשך עריכה: ${title}`}

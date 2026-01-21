@@ -90,35 +90,35 @@ export default function Review() {
 
   const locale = params.locale as string;
 
-  async function onGenerate() {
-    const fields = intakeToPdfFields(draft as any, {
-      formDate: extras.formDate,
-      poBox: extras.poBox,
-      applicantSignature: extras.applicantSignatureDataUrl,
-    });
+  // async function onGenerate() {
+  //   const fields = intakeToPdfFields(draft as any, {
+  //     formDate: extras.formDate,
+  //     poBox: extras.poBox,
+  //     applicantSignature: extras.applicantSignatureDataUrl,
+  //   });
 
-    const [tplRes, fontRes] = await Promise.all([
-      fetch("/forms/child-registration-request.pdf"),
-      fetch("/fonts/SimplerPro-Regular.otf"),
-    ]);
+  //   const [tplRes, fontRes] = await Promise.all([
+  //     fetch("/forms/child-registration-request.pdf"),
+  //     fetch("/fonts/SimplerPro-Regular.otf"),
+  //   ]);
 
-    const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
-    const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
+  //   const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
+  //   const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
 
-    const outBytes = await fillFieldsToNewPdfBytesClient(
-      templateBytes,
-      fields,
-      fieldMap,
-      { fontBytes, autoDetectRtl: true, defaultRtlAlignRight: true },
-    );
+  //   const outBytes = await fillFieldsToNewPdfBytesClient(
+  //     templateBytes,
+  //     fields,
+  //     fieldMap,
+  //     { fontBytes, autoDetectRtl: true, defaultRtlAlignRight: true },
+  //   );
 
-    const s1 = (draft as any).intake.step1;
-    const fileName = `child_registration_${safePart(
-      s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
-    )}_${new Date().toISOString().slice(0, 10)}.pdf`;
+  //   const s1 = (draft as any).intake.step1;
+  //   const fileName = `child_registration_${safePart(
+  //     s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
+  //   )}_${new Date().toISOString().slice(0, 10)}.pdf`;
 
-    await uploadPdf(outBytes, fileName);
-  }
+  //   await uploadPdf(outBytes, fileName);
+  // }
 
   return (
     <main className={styles.page}>
