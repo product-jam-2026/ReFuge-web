@@ -52,7 +52,7 @@ export default async function Step3Page({
     regApartment: reg.apartment || "",
     regZip: reg.zip || "",
     
-    housingType: step3.housingType || "rented", 
+    housingType: step3.housingType || "", 
     mailingDifferent: step3.mailingDifferent || false,
     
     mailingAddress: {
