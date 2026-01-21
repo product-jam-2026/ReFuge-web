@@ -9,9 +9,23 @@ import styles from "./page.module.css";
 export default function Step1() {
   const router = useRouter();
   const { draft, update, setExtras, saveNow } = useWizard();
-    const params = useParams();
-    const locale = params.locale as string;
-  
+  const params = useParams();
+  const locale = params.locale as string;
+  const isArabic = locale === "ar";
+  const titleText = isArabic
+    ? "طلب تسجيل طفل وُلد في إسرائيل لوالد مقيم في إسرائيل"
+    : "בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי";
+  const subtitleText = isArabic
+    ? "اختر أي طفل/أطفال تقوم بتعبئة النموذج لهم"
+    : "בחר עבור מי מילדך הינך ממלא את הטופס";
+  const noKidsText = isArabic
+    ? "لا يوجد لديك أطفال في النظام حاليًا. الرجاء العودة إلى استبيان التسجيل، إضافة الأطفال ثم تعبئة النموذج."
+    : "אין לך ילדים כעת במערכת. אנא חזור לשאלון הפתיחה, הוסף ילדים ואז מלא את הטופס.";
+  const selectedTitle = isArabic ? "تم الاختيار" : "נבחר";
+  const notSelectedTitle = isArabic ? "غير محدد" : "לא נבחר";
+  const nextLabel = isArabic ? "متابعة" : "המשך";
+  const chooseOneLabel = isArabic ? "اختر طفلًا واحدًا على الأقل" : "בחר לפחות ילד אחד";
+  const saveDraftLabel = isArabic ? "حفظ كمسودة" : "שמור כטיוטה";
 
   const kids = draft?.intake?.step6?.children ?? [];
   const sp = useSearchParams();
@@ -25,17 +39,18 @@ export default function Step1() {
   }, [setExtras]);
 
   useEffect(() => {
-    setSelected(new Set(kids.map((_, i) => i)));
+    setSelected(new Set());
   }, [kids.length]);
 
   const options = useMemo(() => {
     return kids.map((c, i) => {
       const first = (c.firstName ?? "").trim();
       const last = (c.lastName ?? "").trim();
-      const label = `${first} ${last}`.trim() || `Child #${i + 1}`;
+      const fallback = isArabic ? `طفل رقم ${i + 1}` : `ילד/ה #${i + 1}`;
+      const label = `${first} ${last}`.trim() || fallback;
       return { i, label };
     });
-  }, [kids]);
+  }, [kids, isArabic]);
 
   function toggle(i: number) {
     setSelected((prev) => {
@@ -48,8 +63,8 @@ export default function Step1() {
 
   function onNext() {
     const filtered = kids.filter((_, i) => selected.has(i));
-    update("intake.step6.children", filtered);
-    router.push("./step-2");
+    update("intake.step6.selectedChildren", filtered);
+    router.push(nextUrl);
   }
 
   const disableNext = options.length > 0 && selected.size === 0;
@@ -58,16 +73,16 @@ export default function Step1() {
     <main className={styles.page}>
       <div className={styles.header}>
         <div className={styles.headerText}>
-          בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי
+          {titleText}
         </div>
       </div>
 
-      <h2 className={styles.title}>בחר עבור מי מילדך הינך ממלא את הטופס</h2>
+      <h2 className={styles.title}>{subtitleText}</h2>
 
       <div className={styles.container}>
         {options.length === 0 ? (
           <div className={styles.emptyText}>
-            לא נמצאו ילדים ב- intake.step6.children
+            {noKidsText}
           </div>
         ) : (
           <fieldset className={styles.fieldset}>
@@ -83,7 +98,7 @@ export default function Step1() {
                     className={`${styles.optionBtn} ${isSelected ? styles.optionBtnActive : ""}`}
                     onClick={() => toggle(i)}
                     aria-pressed={isSelected}
-                    title={isSelected ? "נבחר" : "לא נבחר"}
+                    title={isSelected ? selectedTitle : notSelectedTitle}
                   >
                     {label}
                   </button>
@@ -97,13 +112,12 @@ export default function Step1() {
         <div className={styles.footer}>
           <button
             type="button"
-            // onClick={onNext}
-            onClick={() => router.push(nextUrl)}
+            onClick={onNext}
             className={styles.primaryButton}
             disabled={disableNext}
-            title={disableNext ? "בחר לפחות ילד אחד" : undefined}
+            title={disableNext ? chooseOneLabel : undefined}
           >
-            המשך
+            {nextLabel}
           </button>
           <button
             className={styles.secondaryButton}
@@ -114,7 +128,7 @@ export default function Step1() {
                 router.push(`/${locale}/forms/child-registration-request`);
             }}
           >
-            שמור כטיוטה
+            {saveDraftLabel}
           </button>{" "}
         </div>
       </div>

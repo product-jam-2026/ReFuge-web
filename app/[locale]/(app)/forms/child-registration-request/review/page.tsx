@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useWizard } from "../WizardProvider";
 import { fieldMap } from "../fieldMap";
@@ -89,6 +90,25 @@ export default function Review() {
   const params = useParams();
 
   const locale = params.locale as string;
+  const isArabic = locale === "ar";
+  const downloadLabel = isArabic ? "تنزيل PDF" : "הורדה כ-PDF";
+  const homeLabel = isArabic ? "العودة إلى الشاشة الرئيسية" : "חזרה למסך הבית";
+  const kickerText = isArabic ? "طلب تسجيل طفل" : "שאלון לרישום ילד";
+  const titleText = isArabic
+    ? "تم ملء نموذجك بنجاح! وهو موجود في منطقة قاعدة النماذج"
+    : "הטופס שלך מולא בהצלחה! ונמצא באיזור מאגר הטפסים";
+
+  useEffect(() => {
+    const shell = document.querySelector(".appShell");
+    const frame = document.querySelector(".appFrame");
+    if (shell) shell.classList.add(styles.fullBleedShell);
+    if (frame) frame.classList.add(styles.fullBleedFrame);
+
+    return () => {
+      if (shell) shell.classList.remove(styles.fullBleedShell);
+      if (frame) frame.classList.remove(styles.fullBleedFrame);
+    };
+  }, []);
 
   async function onGenerate() {
     const fields = intakeToPdfFields(draft as any, {
@@ -122,12 +142,22 @@ export default function Review() {
 
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}>
-        تم ملء نموذجك بنجاح! وهو موجود في منطقة قاعدة النماذج
-      </h1>
-      <h1 className={styles.title}>
-        הטופס שלך מולא בהצלחה! ונמצא באיזור מאגר הטפסים
-      </h1>
+      <style>{`:root{ --langFabBg: #cfe5ff; }`}</style>
+      <p className={styles.kicker}>
+        <span>{kickerText}</span>
+      </p>
+
+      <img
+        className={styles.heroImage}
+        src="/images/docs.svg"
+        alt=""
+      />
+
+      <div className={styles.titleBlock}>
+        <p className={isArabic ? styles.titleAr : styles.titleHe}>
+          {titleText}
+        </p>
+      </div>
 
       {/* <pre className={styles.jsonBox}>
         {JSON.stringify({ draft, extras }, null, 2)}
@@ -144,7 +174,7 @@ export default function Review() {
           onClick={downloadLatestPdfForCurrentUser}
           className={styles.secondaryButton}
         >
-          הפק PDF
+          {downloadLabel}
         </button>
 
         <button
@@ -152,7 +182,7 @@ export default function Review() {
           onClick={() => router.push(`/${locale}/home/`)}
           className={styles.primaryButton}
         >
-         חזרה למסך הבית
+          {homeLabel}
         </button>
       </div>
     </main>

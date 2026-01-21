@@ -135,6 +135,17 @@ export type IntakeRecord = {
         residenceCountry: string;
         arrivalToIsraelDate: string;
       }>;
+      selectedChildren?: Array<{
+        gender: string;
+        lastName: string;
+        birthDate: string;
+        entryDate: string;
+        firstName: string;
+        israeliId: string;
+        nationality: string;
+        residenceCountry: string;
+        arrivalToIsraelDate: string;
+      }>;
     };
 
     step7: {
@@ -199,6 +210,47 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
   const [saveError, setSaveError] = useState<string | undefined>(undefined);
   
 
+  function normalizeTitle(value: unknown) {
+    if (typeof value !== "string") return "";
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (trimmed.includes("[object Object]")) return "";
+    return trimmed;
+  }
+
+  async function getAutoTitle(
+    supabase: ReturnType<typeof createClient>,
+    userId: string
+  ) {
+    const baseTitle = "בקשה לרישום ילד";
+    const { data, error } = await supabase
+      .from("form_instances")
+      .select("title")
+      .eq("user_id", userId)
+      .eq("form_slug", "child-registration-request");
+
+    if (error) throw error;
+
+    let maxNum = 0;
+    const titleRegex = new RegExp(`^${baseTitle}\\s+(\\d+)$`);
+
+    (data ?? []).forEach((row: any) => {
+      const title = typeof row?.title === "string" ? row.title.trim() : "";
+      if (!title) return;
+      if (title === baseTitle) {
+        maxNum = Math.max(maxNum, 1);
+        return;
+      }
+      const match = title.match(titleRegex);
+      if (match) {
+        const n = Number(match[1]);
+        if (!Number.isNaN(n)) maxNum = Math.max(maxNum, n);
+      }
+    });
+
+    return `${baseTitle} ${maxNum + 1}`;
+  }
+
   async function saveNow() {
     if (!draft) return null;
 
@@ -212,13 +264,12 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
       const user = userRes.user;
       if (!user) throw new Error("Not logged in");
 
-      const title =
-        extras.formTitle?.trim() ||
-        `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
-        "Untitled";
+      const rawTitle = normalizeTitle(extras.formTitle);
+      const title = rawTitle || (await getAutoTitle(supabase, user.id));
 
       // decide what you actually want to persist
-      const { applicantSignatureDataUrl, ...extrasToSave } = extras;
+      const { applicantSignatureDataUrl, ...extrasRest } = extras;
+      const extrasToSave = { ...extrasRest, formTitle: rawTitle };
 
       if (!liveInstanceId) {
         const { data, error } = await supabase

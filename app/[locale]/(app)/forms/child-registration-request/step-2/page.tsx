@@ -16,6 +16,13 @@ export default function Step2() {
   const instanceId = sp.get("instanceId");
   const params = useParams();
   const locale = params.locale as string;
+  const isArabic = locale === "ar";
+  const mainText = isArabic ? "نموذجك جاهز" : "הטופס שלך מוכן";
+  const subText = isArabic
+    ? "يرجى التأكد من أن جميع البيانات صحيحة قبل الموافقة، يمكنك في أي وقت التحديث وإجراء التغييرات"
+    : "אנא וודא כי כל הפרטים נכונים לפני שאתה מאשר, תוכל בכל רגע לעדכן ולבצע שינויים";
+  const nextLabel = isArabic ? "متابعة" : "המשך";
+  const saveDraftLabel = isArabic ? "حفظ كمسودة" : "שמור כטיוטה";
 
   const nextUrl = instanceId ? `./step-3?instanceId=${instanceId}` : "./step-3";
 
@@ -35,18 +42,10 @@ export default function Step2() {
       </div>
       <div className={styles.textContainer}>
         <div className={styles.mainTextContainer}>
-          <div className={styles.mainText}>نموذجك جاهز</div>
-          <div className={styles.mainText}>הטופס שלך מוכן</div>
+          <div className={styles.mainText}>{mainText}</div>
         </div>
         <div className={styles.subTextContainer}>
-          <div className={styles.subText}>
-            يرجى التأكد من أن جميع البيانات صحيحة قبل الموافقة،يمكنك في أي وقت
-            التحديث وإجراء التغييرات
-          </div>
-          <div className={styles.subText}>
-            אנא וודא כי כל הפרטים נכונים לפני שאתה מאשר, תוכל בכל רגע לעדכן
-            ולבצע שינויים
-          </div>
+          <div className={styles.subText}>{subText}</div>
         </div>
       </div>
 
@@ -57,7 +56,7 @@ export default function Step2() {
           // onClick={() => router.push("./step-3")}
           onClick={() => router.push(nextUrl)}
         >
-          המשך
+          {nextLabel}
         </button>
         <button
           className={styles.secondaryButton}
@@ -67,7 +66,7 @@ export default function Step2() {
             if (id) router.push(`/${locale}/forms/child-registration-request`);
           }}
         >
-          שמור כטיוטה
+          {saveDraftLabel}
         </button>{" "}
       </div>
     </main>

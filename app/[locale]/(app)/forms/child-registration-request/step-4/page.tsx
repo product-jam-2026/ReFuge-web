@@ -43,6 +43,8 @@ export default function Step4() {
   const router = useRouter();
   const params = useParams();
   const locale = params.locale as string;
+  const isArabic = locale === "ar";
+  const t = (ar: string, he: string) => (isArabic ? ar : he);
   const { draft, extras, setExtras, instanceId, saveNow, saveStatus } =
     useWizard();
 
@@ -207,12 +209,46 @@ export default function Step4() {
     if (!user) throw new Error("Not logged in");
     if (!draft) throw new Error("No draft to save");
 
-    const title =
-      (extras as any).formTitle?.trim() ||
-      `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
-      "Untitled";
+    const baseTitle = "בקשה לרישום ילד";
+    const rawTitle =
+      typeof (extras as any).formTitle === "string"
+        ? (extras as any).formTitle.trim()
+        : "";
+    const normalizedTitle =
+      rawTitle && !rawTitle.includes("[object Object]") ? rawTitle : "";
+    let title = normalizedTitle;
 
-    const { applicantSignatureDataUrl, ...extrasToSave } = extras;
+    if (!title) {
+      const { data, error } = await supabase
+        .from("form_instances")
+        .select("title")
+        .eq("user_id", user.id)
+        .eq("form_slug", "child-registration-request");
+
+      if (error) throw error;
+
+      let maxNum = 0;
+      const titleRegex = new RegExp(`^${baseTitle}\\s+(\\d+)$`);
+
+      (data ?? []).forEach((row: any) => {
+        const rowTitle = typeof row?.title === "string" ? row.title.trim() : "";
+        if (!rowTitle) return;
+        if (rowTitle === baseTitle) {
+          maxNum = Math.max(maxNum, 1);
+          return;
+        }
+        const match = rowTitle.match(titleRegex);
+        if (match) {
+          const n = Number(match[1]);
+          if (!Number.isNaN(n)) maxNum = Math.max(maxNum, n);
+        }
+      });
+
+      title = `${baseTitle} ${maxNum + 1}`;
+    }
+
+    const { applicantSignatureDataUrl, ...extrasRest } = extras;
+    const extrasToSave = { ...extrasRest, formTitle: normalizedTitle };
 
     if (!existingInstanceId) {
       const { data, error } = await supabase
@@ -247,10 +283,16 @@ export default function Step4() {
       return;
     }
 
+    const rawTitle =
+      typeof (extras as any).formTitle === "string"
+        ? (extras as any).formTitle.trim()
+        : "";
+    const normalizedTitle =
+      rawTitle && !rawTitle.includes("[object Object]") ? rawTitle : "";
     const pdfTitle =
-      (extras as any).formTitle?.trim() ||
+      normalizedTitle ||
       `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
-      "Untitled";
+      baseTitle;
 
     const fields = intakeToPdfFields(draft as any, {
       formDate: extras.formDate,
@@ -281,16 +323,15 @@ export default function Step4() {
     <main className={styles.page}>
       <div className={styles.header}>
         <div className={styles.headerText}>
-          لتسجيل مولود ولد في اسرائيل لوالد/ة مواطن اسرائيلي
-        </div>
-
-        <div className={styles.headerText}>
-          בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי
+          {t(
+            "لتسجيل مولود ولد في اسرائيل لوالد/ة مواطن اسرائيلي",
+            "בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי"
+          )}
         </div>
       </div>
 
       {/* <SectionTitle>כללי</SectionTitle> */}
-      <Field label="تاريخ   תאריך  ">
+      <Field label={t("تاريخ", "תאריך")}>
         <input
           type="date"
           value={(extras as any).formDate}
@@ -301,18 +342,22 @@ export default function Step4() {
         />
       </Field>
 
-      <Field label="اسم النموذج   שם הטופס">
+      <Field label={t("اسم النموذج", "שם הטופס")}>
         <input
-          value={(extras as any).formTitle}
+          value={
+            typeof (extras as any).formTitle === "string"
+              ? (extras as any).formTitle
+              : ""
+          }
           onChange={(e) =>
             setExtras((p: any) => ({ ...p, formTitle: e.target.value }))
           }
           className={styles.input}
-          placeholder="שם לזיהוי ברשימות"
+          placeholder={t("اسم للتعريف في القوائم", "שם לזיהוי ברשימות")}
         />
       </Field>
 
-      <SectionTitle>חתימה (כתב יד)</SectionTitle>
+      <SectionTitle>{t("توقيع (بخط اليد)", "חתימה (כתב יד)")}</SectionTitle>
 
       <div className={styles.signatureWrap}>
         <div className={styles.canvasFrame}>
@@ -343,9 +388,9 @@ export default function Step4() {
           userSelect: "none",
         }}
         aria-disabled={!(extras as any)?.applicantSignatureDataUrl}
-        title="מחק חתימה"
+        title={t("مسح التوقيع", "מחק חתימה")}
       >
-        איפוס חתימה
+        {t("إعادة ضبط التوقيع", "איפוס חתימה")}
       </span>
       <div className={styles.footer}>
         <button
@@ -356,7 +401,7 @@ export default function Step4() {
             router.push("./review");
           }}
         >
-          סיום
+          {t("إنهاء", "סיום")}
         </button>
         <button
           className={styles.secondaryButton}
@@ -366,7 +411,7 @@ export default function Step4() {
             if (id) router.push(`/${locale}/forms/child-registration-request`);
           }}
         >
-          שמור כטיוטה
+          {t("حفظ كمسودة", "שמור כטיוטה")}
         </button>{" "}
       </div>
     </main>

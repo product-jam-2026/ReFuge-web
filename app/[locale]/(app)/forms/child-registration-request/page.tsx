@@ -88,6 +88,20 @@ export default function ChildRegistrationHomePage() {
 
   const params = useParams();
   const locale = params.locale as string;
+  const isArabic = locale === "ar";
+  const titleText = isArabic
+    ? "طلب تسجيل طفل وُلد في إسرائيل لوالد مقيم في إسرائيل"
+    : "בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי";
+  const subText = isArabic
+    ? "تنظيم تسجيل الطفل في سجل السكان الإسرائيلي - الحصول على مكانة للطفل في إسرائيل. لاحقا سيتم إرسال ملحق لهوية الوالدين."
+    : "הסדרת רישום הילד במרשם האוכלוסין הישראלי - קבלת מעמד בישראל לילד. בהמשך ישלח להורים ספח לתעודת זהות";
+  const newFormLabel = isArabic ? "ملء نموذج جديد" : "מילוי טופס חדש";
+  const myFormsLabel = isArabic ? "نماذجي" : "הטפסים שלי";
+  const draftsLabel = isArabic ? "مسودات" : "טיוטות";
+  const untitledBase = isArabic ? "طلب تسجيل طفل" : "בקשה לרישום ילד";
+  const downloadAria = isArabic ? "تنزيل PDF" : "הורד PDF";
+  const continueAria = isArabic ? "متابعة التعديل" : "המשך עריכה";
+  const notLoggedInLabel = isArabic ? "غير مسجل الدخول" : "Not logged in";
 
   // final pdf loading logic
   useEffect(() => {
@@ -102,7 +116,7 @@ export default function ChildRegistrationHomePage() {
         return;
       }
       if (!userRes.user) {
-        setPdfErr("Not logged in");
+        setPdfErr(notLoggedInLabel);
         setPdfLoading(false);
         return;
       }
@@ -152,7 +166,7 @@ export default function ChildRegistrationHomePage() {
         return;
       }
       if (!userRes.user) {
-        setErr("Not logged in");
+        setErr(notLoggedInLabel);
         setLoading(false);
         return;
       }
@@ -191,14 +205,10 @@ export default function ChildRegistrationHomePage() {
           />{" "}
         </div>
 
-        <div className={styles.bigTitles}>
-          בקשה לרישום ילד שנולד בישראל להורה תושב ישראלי
-        </div>
-        <img className={styles.readButton} src="/images/readButton.svg"></img>
+        <div className={styles.bigTitles}>{titleText}</div>
       </div>
       <div className={styles.subTextSection}>
-        הסדרת רישום הילד במרשם האוכלוסין הישראלי - קבלת מעמד בישראל לילד. בהמשך
-        ישלח להורים ספח לתעודת זהות{" "}
+        {subText}
       </div>
 
       <div className={styles.buttonRow}>
@@ -208,12 +218,12 @@ export default function ChildRegistrationHomePage() {
           onClick={() => router.push("child-registration-request/step-1")}
           className={styles.btnPrimary}
         >
-          <div>מילוי טופס חדש</div>
+          <div>{newFormLabel}</div>
           <img src="/images/forwardArrow.png"></img>
         </button>
       </div>
 
-      <h2 className={styles.sectionTitle}>הטפסים שלי</h2>
+      <h2 className={styles.sectionTitle}>{myFormsLabel}</h2>
       <div className={styles.dividerContainer}>
         <hr className={styles.divider} />
       </div>
@@ -226,9 +236,13 @@ export default function ChildRegistrationHomePage() {
         <p className={styles.statusText}></p>
       ) : (
         <div className={styles.tileGrid}>
-          {pdfRows.map((p) => {
+          {pdfRows.map((p, idx) => {
+            const rawTitle =
+              typeof p.pdf_title === "string" ? p.pdf_title.trim() : "";
             const title =
-              (p.pdf_title ?? "").trim() || fileNameFromPath(p.path);
+              (!rawTitle || rawTitle.includes("[object Object]"))
+                ? `${untitledBase} ${idx + 1}`
+                : rawTitle;
 
             return (
               <button
@@ -242,7 +256,7 @@ export default function ChildRegistrationHomePage() {
                     alert(e?.message ?? "Download failed");
                   }
                 }}
-                aria-label={`הורד PDF: ${title}`}
+                aria-label={`${downloadAria}: ${title}`}
                 title={title}
               >
                 <div>{title}</div>
@@ -253,7 +267,7 @@ export default function ChildRegistrationHomePage() {
         </div>
       )}
 
-      <h2 className={styles.sectionTitle}>טיוטות</h2>
+      <h2 className={styles.sectionTitle}>{draftsLabel}</h2>
       <div className={styles.dividerContainer}>
         <hr className={styles.divider} />
       </div>
@@ -266,8 +280,13 @@ export default function ChildRegistrationHomePage() {
         <p className={styles.statusTextLarge}></p>
       ) : (
         <div className={styles.tileGrid}>
-          {rows.map((r) => {
-            const title = (r.title ?? "").trim() || "טיוטה ללא שם";
+          {rows.map((r, idx) => {
+            const rawTitle =
+              typeof r.title === "string" ? r.title.trim() : "";
+            const title =
+              (!rawTitle || rawTitle.includes("[object Object]"))
+                ? `${untitledBase} ${idx + 1}`
+                : rawTitle;
 
             return (
               <button
@@ -280,7 +299,7 @@ export default function ChildRegistrationHomePage() {
                     `/${locale}/forms/child-registration-request/step-${step}?instanceId=${r.id}`,
                   );
                 }}
-                aria-label={`המשך עריכה: ${title}`}
+                aria-label={`${continueAria}: ${title}`}
                 title={title}
               >
                 <div>{title}</div>

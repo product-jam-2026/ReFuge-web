@@ -222,6 +222,17 @@ export type IntakeRecord = {
         residenceCountry: string;
         arrivalToIsraelDate: string;
       }>;
+      selectedChildren?: Array<{
+        gender: string;
+        lastName: string;
+        birthDate: string;
+        entryDate: string;
+        firstName: string;
+        israeliId: string;
+        nationality: string;
+        residenceCountry: string;
+        arrivalToIsraelDate: string;
+      }>;
     };
 
     step7: {
@@ -248,17 +259,34 @@ export function intakeToPdfFields(
   draft: IntakeRecord,
   extras?: PdfExtras
 ): Record<string, string> {
+  const normalizeCountryForPdf = (value: string) => {
+    const hebrew = value.replace(/[^\u0590-\u05FF\s]/g, "").trim();
+    if (hebrew) return hebrew;
+    const arabic = value.replace(/[^\u0600-\u06FF\s]/g, "").trim();
+    if (arabic) return arabic;
+    return value.trim();
+  };
+
   const s1 = draft.intake.step1;
   const s2 = draft.intake.step2;
   const s3 = draft.intake.step3;
   const s5 = draft.intake.step5;
 
-  const kidsAll = draft.intake.step6.children ?? [];
+  const regAddress = s3?.registeredAddress;
+  const regStreetHe = regAddress?.street?.he || "";
+  const regStreetAr = regAddress?.street?.ar || "";
+  const regStreet = regStreetHe || regStreetAr;
+  const regHouse = regAddress?.houseNumber || "";
+  const regCity = regAddress?.city || "";
+  const formattedAddress = [regStreet, regHouse].filter(Boolean).join(" ") + (regCity ? `, ${regCity}` : "");
+
+  const kidsAll =
+    draft.intake.step6.selectedChildren ?? draft.intake.step6.children ?? [];
   const kids = kidsAll.filter(
     (c) =>
       (c.firstName ?? "").trim() ||
       (c.birthDate ?? "").trim() ||
-      (c.nationality ?? "").trim()
+      (c.residenceCountry ?? c.nationality ?? "").trim()
   );
 
   const fields: Record<string, string> = {
@@ -270,7 +298,7 @@ export function intakeToPdfFields(
     "israeliApplicant.firstName": s1.firstName.he ?? "",
     "israeliApplicant.lastName": s1.lastName.he ?? "",
     "israeliApplicant.idNumber": s1.israeliId ?? "",
-    "israeliApplicant.address": s2.residenceAddress.he ?? "",
+    "israeliApplicant.address": formattedAddress || (s2.residenceAddress.he ?? ""),
     "israeliApplicant.phoneMobile": s1.phone ?? "",
     "israeliApplicant.poBox": extras?.poBox ?? "",
 
@@ -284,10 +312,11 @@ export function intakeToPdfFields(
   // children.child1/2/3.*
   for (let i = 0; i < Math.min(3, kids.length); i++) {
     const idx = i + 1;
+    const placeRaw =
+      kids[i]!.residenceCountry ?? kids[i]!.nationality ?? "";
     fields[`children.child${idx}.firstName`] = kids[i]!.firstName ?? "";
     fields[`children.child${idx}.dateOfBirth`] = kids[i]!.birthDate ?? "";
-    // DB doesn't have placeOfBirth; we map nationality -> placeOfBirth (per your comment)
-    fields[`children.child${idx}.placeOfBirth`] = kids[i]!.nationality ?? "";
+    fields[`children.child${idx}.placeOfBirth`] = normalizeCountryForPdf(placeRaw);
   }
 
   // marital status checkbox: only set the selected one
