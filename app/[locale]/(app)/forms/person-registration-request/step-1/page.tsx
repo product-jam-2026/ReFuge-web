@@ -129,7 +129,6 @@
 //   );
 // }
 
-
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -142,15 +141,8 @@ export default function Step1() {
   const params = useParams();
   const locale = params.locale as string;
 
-  const {
-    draft,
-    update,
-    extras,
-    setExtras,
-    saveNow,
-    saveStatus,
-    instanceId,
-  } = useWizard() as any; // remove "as any" if your types already include these
+  const { draft, update, extras, setExtras, saveNow, saveStatus, instanceId } =
+    useWizard() as any; // remove "as any" if your types already include these
 
   const kids = draft?.intake?.step6?.children ?? [];
 
@@ -162,17 +154,20 @@ export default function Step1() {
   }, [setExtras]);
 
   useEffect(() => {
-    setSelected(new Set(kids.map((_, i) => i)));
+    setSelected(new Set(kids.map((_: unknown, i: number) => i)));
   }, [kids.length]);
 
+  type Kid = { firstName?: unknown; lastName?: unknown };
+
   const options = useMemo(() => {
-    return kids.map((c, i) => {
-      const first = (c.firstName ?? "").trim();
-      const last = (c.lastName ?? "").trim();
+    return kids.map((c: Kid, i: number) => {
+      const first = (typeof c.firstName === "string" ? c.firstName : "").trim();
+      const last = (typeof c.lastName === "string" ? c.lastName : "").trim();
       const label = `${first} ${last}`.trim() || `Child #${i + 1}`;
       return { i, label };
     });
   }, [kids]);
+
 
   function toggle(i: number) {
     setSelected((prev) => {
@@ -186,7 +181,7 @@ export default function Step1() {
   const disableNext = options.length > 0 && selected.size === 0;
 
   async function onNext() {
-    const filtered = kids.filter((_, i) => selected.has(i));
+    const filtered = kids.filter((_: unknown, i: number) => selected.has(i));
     update("intake.step6.children", filtered);
 
     // next step for draft resume
@@ -222,9 +217,8 @@ export default function Step1() {
           </div>
         ) : (
           <fieldset className={styles.fieldset}>
-
             <div className={styles.optionsList}>
-              {options.map(({ i, label }) => {
+             {options.map(({ i, label }: { i: number; label: string }) => {
                 const isSelected = selected.has(i);
 
                 return (
@@ -241,7 +235,6 @@ export default function Step1() {
                 );
               })}
             </div>
-
           </fieldset>
         )}
 
@@ -269,4 +262,3 @@ export default function Step1() {
     </main>
   );
 }
-

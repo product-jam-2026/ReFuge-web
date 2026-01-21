@@ -11,7 +11,140 @@ import { useRouter, useSearchParams } from "next/navigation";
 import demo from "@/public/demo/intake.empty.json";
 import { createClient } from "@/lib/supabase/client"; // <-- your browser supabase client
 
-export type IntakeRecord = typeof demo;
+// export type IntakeRecord = typeof demo;
+
+
+
+export type IntakeRecord = {
+  intake: {
+    step1: {
+      email: string;
+      phone: string;
+      gender: string;
+
+      lastName: { ar: string; he: string };
+      firstName: { ar: string; he: string };
+      oldLastName: { ar: string; he: string };
+      oldFirstName: { ar: string; he: string };
+
+      birthDate: string;
+      israeliId: string;
+      nationality: string;
+
+      passportNumber: string;
+      passportIssueDate: string;
+      passportExpiryDate: string;
+      passportIssueCountry: string;
+    };
+
+    step2: {
+      visaType: string;
+      entryDate: string;
+      visaEndDate: string;
+
+      residenceCity: { ar: string; he: string };
+      residenceAddress: { ar: string; he: string };
+      residenceCountry: string;
+
+      visaStartDate: string;
+    };
+
+    step3: {
+      occupation: {
+        assets: string[];
+        workAddress: { ar: string; he: string };
+        employerName: { ar: string; he: string };
+        notWorkingSub: string;
+        workStartDate: string;
+        occupationText: string;
+      };
+
+      statusDate: string;
+      housingType: string;
+      maritalStatus: string;
+
+      mailingAddress: {
+        zip: string;
+        city: string;
+        entry: string;
+        street: string;
+        apartment: string;
+        houseNumber: string;
+      };
+
+      employmentStatus: string;
+      mailingDifferent: boolean;
+
+      registeredAddress: {
+        zip: string;
+        city: string;
+        entry: string;
+        street: { ar: string; he: string };
+        apartment: string;
+        houseNumber: string;
+      };
+    };
+
+    step4: {
+      bank: {
+        branch: string;
+        bankName: string;
+        accountNumber: string;
+      };
+      healthFund: string;
+      nationalInsurance: {
+        hasFile: string;
+        fileNumber: string;
+        allowanceType: string;
+        getsAllowance: string;
+        allowanceFileNumber: string;
+      };
+    };
+
+    step5: {
+      spouse: {
+        email: string;
+        phone: string;
+        gender: string;
+
+        lastName: { ar: string; he: string };
+        firstName: { ar: string; he: string };
+        oldLastName: { ar: string; he: string };
+        oldFirstName: { ar: string; he: string };
+
+        birthDate: string;
+        israeliId: string;
+        nationality: string;
+
+        passportNumber: string;
+        passportIssueDate: string;
+        passportExpiryDate: string;
+        passportIssueCountry: string;
+      };
+    };
+
+    step6: {
+      children: Array<{
+        gender: string;
+        lastName: string;
+        birthDate: string;
+        entryDate: string;
+        firstName: string;
+        israeliId: string;
+        nationality: string;
+        residenceCountry: string;
+        arrivalToIsraelDate: string;
+      }>;
+    };
+
+    step7: {
+      documents: Record<string, unknown>;
+    };
+
+    currentStep: number;
+  };
+};
+
 
 export type ExtrasState = {
   formDate: string;

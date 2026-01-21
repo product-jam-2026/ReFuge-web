@@ -755,9 +755,9 @@ export default function ChildAllowanceStep3() {
       <Field label="الاسم الشخصي    שם פרטי">
         <input
           className={styles.input}
-          value={draft.intake.step5.person.firstName}
+          value={draft.intake.step5.spouse.firstName.he}
           onChange={(e) =>
-            update("intake.step5.person.firstName", e.target.value)
+            update("intake.step5.spouse.firstName.he", e.target.value)
           }
         />
       </Field>
@@ -765,16 +765,16 @@ export default function ChildAllowanceStep3() {
       <Field label="اسم العائلة   שם משפחה">
         <input
           className={styles.input}
-          value={draft.intake.step5.person.lastName}
-          onChange={(e) => update("intake.step5.person.lastName", e.target.value)}
+          value={draft.intake.step5.spouse.lastName.he}
+          onChange={(e) => update("intake.step5.spouse.lastName.he", e.target.value)}
         />
       </Field>
 
       <Field label="رقم بطاقة الهوية الإسرائيلية    מספר תעודת זהות">
         <input
           className={styles.input}
-          value={draft.intake.step5.person.israeliId}
-          onChange={(e) => update("intake.step5.person.israeliId", e.target.value)}
+          value={draft.intake.step5.spouse.israeliId}
+          onChange={(e) => update("intake.step5.spouse.israeliId", e.target.value)}
           dir="ltr"
         />
       </Field>
@@ -783,8 +783,8 @@ export default function ChildAllowanceStep3() {
         <input
           className={styles.input}
           type="date"
-          value={draft.intake.step5.person.birthDate}
-          onChange={(e) => update("intake.step5.person.birthDate", e.target.value)}
+          value={draft.intake.step5.spouse.birthDate}
+          onChange={(e) => update("intake.step5.spouse.birthDate", e.target.value)}
         />
       </Field>
 
@@ -806,9 +806,9 @@ export default function ChildAllowanceStep3() {
       <Field label="شارع   רחוב">
         <input
           className={styles.input}
-          value={draft.intake.step3.registeredAddress.street}
+          value={draft.intake.step3.registeredAddress.street.he}
           onChange={(e) =>
-            update("intake.step3.registeredAddress.street", e.target.value)
+            update("intake.step3.registeredAddress.street.he", e.target.value)
           }
         />
       </Field>
@@ -875,8 +875,8 @@ export default function ChildAllowanceStep3() {
       <Field label="هاتف   טלפון">
         <input
           className={styles.input}
-          value={draft.intake.step5.phone}
-          onChange={(e) => update("intake.step5.phone", e.target.value)}
+          value={draft.intake.step5.spouse.phone}
+          onChange={(e) => update("intake.step5.spouse.phone", e.target.value)}
           inputMode="tel"
           dir="ltr"
         />
@@ -909,16 +909,16 @@ export default function ChildAllowanceStep3() {
       <Field label="الاسم الشخصي    שם פרטי">
         <input
           className={styles.input}
-          value={draft.intake.step1.firstName}
-          onChange={(e) => update("intake.step1.firstName", e.target.value)}
+          value={draft.intake.step1.firstName.he}
+          onChange={(e) => update("intake.step1.firstName.he", e.target.value)}
         />
       </Field>
 
       <Field label="اسم العائلة   שם משפחה">
         <input
           className={styles.input}
-          value={draft.intake.step1.lastName}
-          onChange={(e) => update("intake.step1.lastName", e.target.value)}
+          value={draft.intake.step1.lastName.he}
+          onChange={(e) => update("intake.step1.lastName.he", e.target.value)}
         />
       </Field>
 

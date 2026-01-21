@@ -1,99 +1,162 @@
 {
   "intake": {
     "step1": {
-      "lastName": "",
-      "firstName": "",
-      "oldLastName": "",
-      "oldFirstName": "",
+      "email": "",
+      "phone": "",
       "gender": "",
+      "lastName": {
+        "ar": "",
+        "he": ""
+      },
       "birthDate": "",
-      "nationality": "",
+      "firstName": {
+        "ar": "",
+        "he": ""
+      },
       "israeliId": "",
+      "nationality": "",
+      "oldLastName": {
+        "ar": "",
+        "he": ""
+      },
+      "oldFirstName": {
+        "ar": "",
+        "he": ""
+      },
       "passportNumber": "",
       "passportIssueDate": "",
       "passportExpiryDate": "",
-      "passportIssueCountry": "",
-      "phone": "",
-      "email": ""
+      "passportIssueCountry": ""
     },
     "step2": {
-      "residenceCountry": "",
-      "residenceCity": "",
-      "residenceAddress": "",
       "visaType": "",
-      "visaStartDate": "",
+      "entryDate": "",
       "visaEndDate": "",
-      "entryDate": ""
+      "residenceCity": {
+        "ar": "",
+        "he": ""
+      },
+      "visaStartDate": "",
+      "residenceAddress": {
+        "ar": "",
+        "he": ""
+      },
+      "residenceCountry": ""
     },
     "step3": {
-      "maritalStatus": "",
-      "statusDate": "",
-      "registeredAddress": {
-        "city": "",
-        "street": "",
-        "houseNumber": "",
-        "entry": "",
-        "apartment": "",
-        "zip": ""
+      "occupation": {
+        "assets": [""],
+        "workAddress": {
+          "ar": "",
+          "he": ""
+        },
+        "employerName": {
+          "ar": "",
+          "he": ""
+        },
+        "notWorkingSub": "",
+        "workStartDate": "",
+        "occupationText": ""
       },
-      "mailingDifferent": false,
+      "statusDate": "",
+      "housingType": "",
+      "maritalStatus": "",
       "mailingAddress": {
+        "zip": "",
         "city": "",
-        "street": "",
-        "houseNumber": "",
         "entry": "",
+        "street": "",
         "apartment": "",
-        "zip": ""
+        "houseNumber": ""
       },
       "employmentStatus": "",
-      "notWorkingReason": "",
-      "occupation": ""
+      "mailingDifferent": false,
+      "registeredAddress": {
+        "zip": "",
+        "city": "",
+        "entry": "",
+        "street": {
+          "ar": "",
+          "he": ""
+        },
+        "apartment": "",
+        "houseNumber": ""
+      }
     },
     "step4": {
-      "healthFund": "",
       "bank": {
-        "bankName": "",
         "branch": "",
+        "bankName": "",
         "accountNumber": ""
       },
+      "healthFund": "",
       "nationalInsurance": {
         "hasFile": "",
         "fileNumber": "",
-        "getsAllowance": "",
         "allowanceType": "",
+        "getsAllowance": "",
         "allowanceFileNumber": ""
       }
     },
     "step5": {
-      "person": {
-        "lastName": "",
-        "firstName": "",
-        "oldLastName": "",
-        "oldFirstName": "",
+      "spouse": {
+        "email": "",
+        "phone": "",
         "gender": "",
+        "lastName": {
+          "ar": "",
+          "he": ""
+        },
         "birthDate": "",
-        "nationality": "",
+        "firstName": {
+          "ar": "",
+          "he": ""
+        },
         "israeliId": "",
-        "passportNumber": ""
-      },
-      "maritalStatus": "",
-      "statusDate": "",
-      "phone": "",
-      "email": ""
+        "nationality": "",
+        "oldLastName": {
+          "ar": "",
+          "he": ""
+        },
+        "oldFirstName": {
+          "ar": "",
+          "he": ""
+        },
+        "passportNumber": "",
+        "passportIssueDate": "",
+        "passportExpiryDate": "",
+        "passportIssueCountry": ""
+      }
     },
     "step6": {
       "children": [
         {
-          "lastName": "",
-          "firstName": "",
           "gender": "",
+          "lastName": "",
           "birthDate": "",
-          "nationality": "",
+          "entryDate": "",
+          "firstName": "",
           "israeliId": "",
+          "nationality": "",
           "residenceCountry": "",
-          "entryDate": ""
+          "arrivalToIsraelDate": ""
+        },
+        {
+          "gender": "",
+          "lastName": "",
+          "birthDate": "",
+          "entryDate": "",
+          "firstName": "",
+          "israeliId": "",
+          "nationality": "",
+          "residenceCountry": "",
+          "arrivalToIsraelDate": ""
         }
       ]
-    }
+    },
+    "step7": {
+      "documents": {}
+    },
+    "currentStep": 0
   }
 }

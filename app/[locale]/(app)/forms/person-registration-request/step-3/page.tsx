@@ -1664,9 +1664,11 @@ export default function PersonRegistrationPage() {
       },
     );
 
+    if (!draft) return;
+
     const s1 = draft.intake.step1;
     const fileName = `person_registration_${safePart(
-      s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
+      s1.israeliId || s1.passportNumber || s1.lastName.he || "unknown",
     )}_${new Date().toISOString().slice(0, 10)}.pdf`;
 
     downloadPdf(fileName, outBytes);
@@ -1708,15 +1710,15 @@ export default function PersonRegistrationPage() {
         </SectionTitle>
         <Field label="الاسم الشخصي    שם פרטי" required>
           <input
-            value={draft.intake.step1.firstName}
-            onChange={(e) => update("intake.step1.firstName", e.target.value)}
+            value={draft.intake.step1.firstName.he}
+            onChange={(e) => update("intake.step1.firstName.he", e.target.value)}
             className={styles.input}
           />
         </Field>
         <Field label="اسم العائلة   שם משפחה" required>
           <input
-            value={draft.intake.step1.lastName}
-            onChange={(e) => update("intake.step1.lastName", e.target.value)}
+            value={draft.intake.step1.lastName.he}
+            onChange={(e) => update("intake.step1.lastName.he", e.target.value)}
             className={styles.input}
           />
         </Field>
@@ -1755,17 +1757,17 @@ export default function PersonRegistrationPage() {
         <SectionTitle>שמות קודמים</SectionTitle>
         <Field label="שם פרטי קודם (עברית)">
           <input
-            value={draft.intake.step1.oldFirstName}
+            value={draft.intake.step1.oldFirstName.he}
             onChange={(e) =>
-              update("intake.step1.oldFirstName", e.target.value)
+              update("intake.step1.oldFirstName.he", e.target.value)
             }
             className={styles.input}
           />
         </Field>
         <Field label="שם משפחה קודם (עברית)">
           <input
-            value={draft.intake.step1.oldLastName}
-            onChange={(e) => update("intake.step1.oldLastName", e.target.value)}
+            value={draft.intake.step1.oldLastName.he}
+            onChange={(e) => update("intake.step1.oldLastName.he", e.target.value)}
             className={styles.input}
           />
         </Field>
@@ -1932,9 +1934,9 @@ export default function PersonRegistrationPage() {
         <SectionTitle> عنوان כתובת</SectionTitle>
         <Field label="شارع רחוב">
           <input
-            value={draft.intake.step3.registeredAddress.street}
+            value={draft.intake.step3.registeredAddress.street.he}
             onChange={(e) =>
-              update("intake.step3.registeredAddress.street", e.target.value)
+              update("intake.step3.registeredAddress.street.he", e.target.value)
             }
             className={styles.input}
           />
@@ -2153,27 +2155,27 @@ export default function PersonRegistrationPage() {
         <Field label="Partner first name (DB: intake.step5.person.firstName)">
           <input
             className={styles.input}
-            value={draft.intake.step5.person.firstName}
+            value={draft.intake.step5.spouse.firstName.he}
             onChange={(e) =>
-              update("intake.step5.person.firstName", e.target.value)
+              update("intake.step5.spouse.firstName.he", e.target.value)
             }
           />
         </Field>
         <Field label="Partner last name (DB: intake.step5.person.lastName)">
           <input
             className={styles.input}
-            value={draft.intake.step5.person.lastName}
+            value={draft.intake.step5.spouse.lastName.he}
             onChange={(e) =>
-              update("intake.step5.person.lastName", e.target.value)
+              update("intake.step5.spouse.lastName.he", e.target.value)
             }
           />
         </Field>
         <Field label="Partner Israeli ID (DB: intake.step5.person.israeliId)">
           <input
             className={styles.input}
-            value={draft.intake.step5.person.israeliId}
+            value={draft.intake.step5.spouse.israeliId}
             onChange={(e) =>
-              update("intake.step5.person.israeliId", e.target.value)
+              update("intake.step5.spouse.israeliId", e.target.value)
             }
             dir="ltr"
           />
@@ -2181,7 +2183,7 @@ export default function PersonRegistrationPage() {
         <Field label="Partner passport number (DB: intake.step5.person.passportNumber)">
           <input
             className={styles.input}
-            value={draft.intake.step5.person.passportNumber}
+            value={draft.intake.step5.spouse.passportNumber}
             onChange={(e) =>
               update("intake.step5.person.passportNumber", e.target.value)
             }
@@ -2192,7 +2194,7 @@ export default function PersonRegistrationPage() {
           <input
             className={styles.input}
             type="date"
-            value={draft.intake.step5.person.birthDate}
+            value={draft.intake.step5.spouse.birthDate}
             onChange={(e) =>
               update("intake.step5.person.birthDate", e.target.value)
             }

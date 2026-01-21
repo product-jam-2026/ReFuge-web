@@ -56,17 +56,17 @@ export default function Step3() {
     return <main className={styles.page}>Loading…</main>;
   }
 
-  const step5: any = draft.intake.step5 ?? {};
-const person = step5.person ?? step5.spouse ?? {};
-const personFirstName =
-  typeof person.firstName === "string"
-    ? person.firstName
-    : (person.firstName?.he ?? "");
+//   const step5: any = draft.intake.step5 ?? {};
+// const person = step5.person ?? step5.spouse ?? {};
+// const personFirstName =
+//   typeof person.firstName === "string"
+//     ? person.firstName
+//     : (person.firstName?.he ?? "");
 
-const personLastName =
-  typeof person.lastName === "string"
-    ? person.lastName
-    : (person.lastName?.he ?? "");
+// const personLastName =
+//   typeof person.lastName === "string"
+//     ? person.lastName
+//     : (person.lastName?.he ?? "");
 
   const nextUrl = instanceId ? `./step-4?instanceId=${instanceId}` : "./step-4";
   const kids = draft.intake.step6.children ?? [];
@@ -96,16 +96,16 @@ const personLastName =
       <Field label="الاسم الشخصي    שם פרטי">
         <input
           className={styles.input}
-          value={draft.intake.step1.firstName}
-          onChange={(e) => update("intake.step1.firstName", e.target.value)}
+          value={draft.intake.step1.firstName.he}
+          onChange={(e) => update("intake.step1.firstName.he", e.target.value)}
         />
       </Field>
 
       <Field label="اسم العائلة   שם משפחה">
         <input
           className={styles.input}
-          value={draft.intake.step1.lastName}
-          onChange={(e) => update("intake.step1.lastName", e.target.value)}
+          value={draft.intake.step1.lastName.he}
+          onChange={(e) => update("intake.step1.lastName.he", e.target.value)}
         />
       </Field>
 
@@ -120,9 +120,9 @@ const personLastName =
       <Field label="الاسم الشخصي    כתובת מגורים ">
         <input
           className={styles.input}
-          value={draft.intake.step2.residenceAddress}
+          value={draft.intake.step2.residenceAddress.he}
           onChange={(e) =>
-            update("intake.step2.residenceAddress", e.target.value)
+            update("intake.step2.residenceAddress.he", e.target.value)
           }
         />
       </Field>
@@ -176,9 +176,9 @@ const personLastName =
       <Field label="الاسم الشخصي    שם פרטי">
         <input
           className={styles.input}
-          value={draft.intake.step5.person.firstName}
+          value={draft.intake.step5.spouse.firstName.he}
           onChange={(e) =>
-            update("intake.step5.person.firstName", e.target.value)
+            update("intake.step5.spouse.lastName.he", e.target.value)
           }
         />
       </Field>
@@ -186,9 +186,9 @@ const personLastName =
       <Field label="اسم العائلة   שם משפחה   ">
         <input
           className={styles.input}
-          value={draft.intake.step5.person.lastName}
+          value={draft.intake.step5.spouse.lastName.he}
           onChange={(e) =>
-            update("intake.step5.person.lastName", e.target.value)
+            update("intake.step5.spouse.lastName.he", e.target.value)
           }
         />
       </Field>
@@ -196,9 +196,9 @@ const personLastName =
       <Field label="رقم الهوية   מספר זהות ">
         <input
           className={styles.input}
-          value={draft.intake.step5.person.passportNumber}
+          value={draft.intake.step5.spouse.passportNumber}
           onChange={(e) =>
-            update("intake.step5.person.passportNumber", e.target.value)
+            update("intake.step5.spouse.passportNumber", e.target.value)
           }
         />
       </Field>

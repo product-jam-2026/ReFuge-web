@@ -12,94 +12,130 @@ export type PdfExtras = {
 export type IntakeRecord = {
   intake: {
     step1: {
-      lastName: string;
-      firstName: string;
-      oldLastName: string;
-      oldFirstName: string;
+      email: string;
+      phone: string;
       gender: string;
+
+      lastName: { ar: string; he: string };
+      firstName: { ar: string; he: string };
+      oldLastName: { ar: string; he: string };
+      oldFirstName: { ar: string; he: string };
+
       birthDate: string;
-      nationality: string;
       israeliId: string;
+      nationality: string;
+
       passportNumber: string;
       passportIssueDate: string;
       passportExpiryDate: string;
       passportIssueCountry: string;
-      phone: string;
-      email: string;
     };
+
     step2: {
-      residenceCountry: string;
-      residenceCity: string;
-      residenceAddress: string;
       visaType: string;
-      visaStartDate: string;
-      visaEndDate: string;
       entryDate: string;
+      visaEndDate: string;
+
+      residenceCity: { ar: string; he: string };
+      residenceAddress: { ar: string; he: string };
+      residenceCountry: string;
+
+      visaStartDate: string;
     };
+
     step3: {
-      maritalStatus: string;
+      occupation: {
+        assets: string[];
+        workAddress: { ar: string; he: string };
+        employerName: { ar: string; he: string };
+        notWorkingSub: string;
+        workStartDate: string;
+        occupationText: string;
+      };
+
       statusDate: string;
-      registeredAddress: {
-        city: string;
-        street: string;
-        houseNumber: string;
-        entry: string;
-        apartment: string;
-        zip: string;
-      };
-      mailingDifferent: boolean;
+      housingType: string;
+      maritalStatus: string;
+
       mailingAddress: {
-        city: string;
-        street: string;
-        houseNumber: string;
-        entry: string;
-        apartment: string;
         zip: string;
+        city: string;
+        entry: string;
+        street: string;
+        apartment: string;
+        houseNumber: string;
       };
+
       employmentStatus: string;
-      notWorkingReason: string;
-      occupation: string;
+      mailingDifferent: boolean;
+
+      registeredAddress: {
+        zip: string;
+        city: string;
+        entry: string;
+        street: { ar: string; he: string };
+        apartment: string;
+        houseNumber: string;
+      };
     };
+
     step4: {
+      bank: {
+        branch: string;
+        bankName: string;
+        accountNumber: string;
+      };
       healthFund: string;
-      bank: { bankName: string; branch: string; accountNumber: string };
       nationalInsurance: {
         hasFile: string;
         fileNumber: string;
-        getsAllowance: string;
         allowanceType: string;
+        getsAllowance: string;
         allowanceFileNumber: string;
       };
     };
+
     step5: {
-      person: {
-        lastName: string;
-        firstName: string;
-        oldLastName: string;
-        oldFirstName: string;
+      spouse: {
+        email: string;
+        phone: string;
         gender: string;
+
+        lastName: { ar: string; he: string };
+        firstName: { ar: string; he: string };
+        oldLastName: { ar: string; he: string };
+        oldFirstName: { ar: string; he: string };
+
         birthDate: string;
-        nationality: string;
         israeliId: string;
+        nationality: string;
+
         passportNumber: string;
+        passportIssueDate: string;
+        passportExpiryDate: string;
+        passportIssueCountry: string;
       };
-      maritalStatus: string;
-      statusDate: string;
-      phone: string;
-      email: string;
     };
+
     step6: {
       children: Array<{
-        lastName: string;
-        firstName: string;
         gender: string;
+        lastName: string;
         birthDate: string;
-        nationality: string;
-        israeliId: string;
-        residenceCountry: string;
         entryDate: string;
+        firstName: string;
+        israeliId: string;
+        nationality: string;
+        residenceCountry: string;
+        arrivalToIsraelDate: string;
       }>;
     };
+
+    step7: {
+      documents: Record<string, unknown>;
+    };
+
+    currentStep: number;
   };
 };
 
@@ -500,14 +536,14 @@ export function intakeToPdfFields(
 
 
     // ===== Page 0 =====
-    firstNameHebrew: s1.firstName ?? "",
+    firstNameHebrew: s1.firstName.he ?? "",
     firstNameEnglish: extras?.firstNameEnglish ?? "",
-    lastNameHebrew: s1.lastName ?? "",
+    lastNameHebrew: s1.lastName.he ?? "",
     lastNameEnglish: extras?.lastNameEnglish ?? "",
 
-    prevLastNameHebrew: s1.oldLastName ?? "",
+    prevLastNameHebrew: s1.oldLastName.he ?? "",
     prevLastNameEnglish: extras?.prevLastNameEnglish ?? "",
-    prevFirstNameHebrew: s1.oldFirstName ?? "",
+    prevFirstNameHebrew: s1.oldFirstName.he ?? "",
 
     birthDate: s1.birthDate ?? "",
     birthCountry: extras?.birthCountry ?? "",
@@ -523,7 +559,7 @@ export function intakeToPdfFields(
     visaEndDate: s2.visaEndDate ?? "",
     visaDateOfArrival: s2.entryDate ?? "",
 
-    "address.street": addr.street ?? "",
+    "address.street": addr.street.he ?? "",
     "address.homeNumber": addr.houseNumber ?? "",
     "address.entrance": addr.entry ?? "",
     "address.apartmentNumber": addr.apartment ?? "",
@@ -550,12 +586,12 @@ export function intakeToPdfFields(
       (extras?.numberChildrenUnder18 ?? "") ||
       String(draft.intake.step6.children?.length ?? 0),
 
-    partnerLastNameHebrew: s5.person.lastName ?? "",
+    partnerLastNameHebrew: s5.spouse.lastName.he ?? "",
     partnerLastNameEnglish: extras?.partner?.lastNameEnglish ?? "",
-    partnerFirstNameHebrew: s5.person.firstName ?? "",
+    partnerFirstNameHebrew: s5.spouse.firstName.he ?? "",
     partnerFirstNameEnglish: extras?.partner?.firstNameEnglish ?? "",
-    partnerIdNumber: s5.person.israeliId ?? "",
-    partnerPassportNumber: s5.person.passportNumber ?? "",
+    partnerIdNumber: s5.spouse.israeliId ?? "",
+    partnerPassportNumber: s5.spouse.passportNumber ?? "",
 
     // ===== Page 1 =====
     purposeOfStay: (extras?.purposeOfStay ?? "") || s2.visaType || "",
