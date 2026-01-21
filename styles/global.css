@@ -163,6 +163,7 @@ a {
 
   /* חשוב: לא לייצר overflow “משונה” */
   overflow: clip;
+  position: relative;
 }
 
 /* content area inside frame */
@@ -321,7 +322,7 @@ button:focus {
    Floating language button
    ========================= */
 .langFab{
-  position: fixed;
+  position: absolute;
   top: var(--langFabTop, var(--page-header-top, 85px));
   left: 20px;
   right: auto;  z-index: 9999;

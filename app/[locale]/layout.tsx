@@ -52,11 +52,10 @@ export default async function RootLayout({
 
       <body className={`${simplerPro.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
-          <LangSwitcher />
-
           {/* ✅ wrapper אחיד לכל המסכים */}
           <div className="appShell">
             <div className="appFrame">
+              <LangSwitcher />
               <main className="page">{children}</main>
             </div>
           </div>
