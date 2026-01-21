@@ -35,10 +35,10 @@ export default function Step1() {
     setExtras((p: any) => ({ ...p, currentStep: 1 }));
   }, [setExtras]);
 
-  // when kids list changes and we don't have restored selection, select all by default
+  // when kids list changes and we don't have restored selection, keep none selected by default
   useEffect(() => {
     if (restored) return;
-    setSelected(new Set(kids.map((_, i) => i)));
+    setSelected(new Set());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kids.length]);
 

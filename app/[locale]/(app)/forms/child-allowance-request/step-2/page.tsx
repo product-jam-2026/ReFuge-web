@@ -10,29 +10,19 @@ export default function Step2() {
   const params = useParams();
   const locale = params.locale as string;
 
-  const { setExtras, saveNow, saveStatus } = useWizard();
+  const { setExtras } = useWizard();
 
   // ✅ mark this step for resume
   useEffect(() => {
     setExtras((p: any) => ({ ...p, currentStep: 2 }));
   }, [setExtras]);
 
-  async function onSaveAndExit() {
-    const id = await saveNow?.();
-    if (id) router.push(`/${locale}/forms/child-allowance-request`);
-  }
-
   return (
     <main className={styles.page}>
       <div className={styles.imageContainer}>
         <img
-          className={styles.imageRight}
-          src="/images/child-registration-step2-right.svg"
-          alt=""
-        />
-        <img
-          className={styles.imageLeft}
-          src="/images/child-registration-step2-left.svg"
+          className={styles.heroImage}
+          src="/images/kitsbaot-forms.svg"
           alt=""
         />
       </div>
@@ -61,16 +51,7 @@ export default function Step2() {
           className={styles.primaryButton}
           onClick={() => router.push("./step-3")}
         >
-          המשך
-        </button>
-
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={onSaveAndExit}
-          disabled={saveStatus === "saving"}
-        >
-          שמור כטיוטה
+          התחל
         </button>
       </div>
     </main>

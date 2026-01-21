@@ -25,12 +25,13 @@ function isPublicPath(pathname: string) {
 
   // דפי auth שפתוחים גם בלי התחברות
   // (התאימי אם אצלך הנתיבים נקראים אחרת)
-  const publicRoutes = [
+ const publicRoutes = [
     /^\/(he|ar)\/?$/i,
     /^\/(he|ar)\/login\/?$/i,
     /^\/(he|ar)\/signup\/?$/i,
     /^\/(he|ar)\/signup\/.*$/i,
-    /^\/(he|ar)\/auth\/callback\/?$/i,
+    // 👇 הנה התיקון: מחקתי את המילה auth מהנתיב הזה
+    /^\/(he|ar)\/callback\/?$/i, 
   ];
 
   return publicRoutes.some((re) => re.test(pathname));

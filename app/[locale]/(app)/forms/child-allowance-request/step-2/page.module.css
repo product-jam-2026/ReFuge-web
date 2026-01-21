@@ -1,15 +1,29 @@
 .page {
-  max-width: 820px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100vw;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   direction: rtl;
+  min-height: 100vh;
+  background: #cfe2ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
 }
 
 .footerRow {
   display: flex;
   gap: 16px;
-  margin-top: 12px;
+  margin-top: auto;
   flex-direction: column;
+  width: 100%;
+  align-items: center;
+  padding: 0 20px 65px;
 }
 
 .primaryButton {
@@ -20,7 +34,8 @@
   cursor: pointer;
 
   display: flex;
-  width: 353px;
+  width: 100%;
+  max-width: 353px;
   height: 56px;
   padding: 0 16px;
   justify-content: center;
@@ -41,42 +56,44 @@
 }
 
 .imageContainer {
-  margin-top: 40px;
+  margin-top: 16px;
   display: flex;
-  flex-direction: row;
-  /* justify-content: center; */
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0 20px;
 }
 
-.imageLeft {
-  margin-right: 0;
-  margin-left: -100px;
-}
-
-.imageRight {
-  margin-right: 0;
-  margin-left: -30px;
+.heroImage {
+  width: 56vw;
+  max-width: 220px;
+  min-width: 160px;
+  height: auto;
 }
 
 .textContainer {
   display: flex;
   flex-direction: column;
-  gap: 27px;
-  margin-top: 20px;
-  margin-bottom: 100px;
+  gap: 18px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+  width: 100%;
+  max-width: 360px;
+  padding: 0 20px;
 }
 
 .mainTextContainer {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .subTextContainer {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 4px;
 }
 
 
@@ -87,10 +104,10 @@
 
   /* splash big */
   font-family: SimplerPro;
-  font-size: 36px;
+  font-size: 24px;
   font-style: normal;
   font-weight: 700;
-  line-height: 52px; /* 144.444% */
+  line-height: 32px;
 }
 
 .subText {
@@ -99,10 +116,10 @@
 
   /* text */
   font-family: SimplerPro;
-  font-size: 16px;
+  font-size: 14px;
   font-style: normal;
   font-weight: 400;
-  line-height: 21px; /* 131.25% */
+  line-height: 20px;
   letter-spacing: -0.32px;
 }
 
@@ -125,7 +142,8 @@
   cursor: pointer;
 
   display: flex;
-  width: 353px;
+  width: 100%;
+  max-width: 353px;
   height: 56px;
   padding: 0 16px;
   justify-content: center;

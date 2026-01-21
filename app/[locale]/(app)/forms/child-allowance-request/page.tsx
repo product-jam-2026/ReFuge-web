@@ -151,7 +151,6 @@ export default function ChildAllowanceHomePage() {
 
         {/* TODO: Replace titles with your child-allowance copy */}
         <div className={styles.bigTitles}>תביעה לקצבת ילדים</div>
-        <img className={styles.readButton} src="/images/readButton.svg" />
       </div>
 
       {/* TODO: Replace description copy */}
