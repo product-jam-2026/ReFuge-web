@@ -38,9 +38,14 @@ export default function Step3() {
   const instanceId = sp.get("instanceId");
     const params = useParams();
     const locale = params.locale as string;
+
+
+    
   
 
   const { draft, extras, setExtras, update, saveNow } = useWizard();
+
+  
 
       useEffect(() => {
       setExtras((p) => ({ ...p, currentStep: 3 }));
@@ -50,6 +55,18 @@ export default function Step3() {
   if (!draft) {
     return <main className={styles.page}>Loading…</main>;
   }
+
+  const step5: any = draft.intake.step5 ?? {};
+const person = step5.person ?? step5.spouse ?? {};
+const personFirstName =
+  typeof person.firstName === "string"
+    ? person.firstName
+    : (person.firstName?.he ?? "");
+
+const personLastName =
+  typeof person.lastName === "string"
+    ? person.lastName
+    : (person.lastName?.he ?? "");
 
   const nextUrl = instanceId ? `./step-4?instanceId=${instanceId}` : "./step-4";
   const kids = draft.intake.step6.children ?? [];

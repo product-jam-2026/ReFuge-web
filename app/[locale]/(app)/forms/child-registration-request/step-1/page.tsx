@@ -71,20 +71,6 @@ export default function Step1() {
           </div>
         ) : (
           <fieldset className={styles.fieldset}>
-            {/* <legend className={styles.legend}>בחר ילדים להמשך התהליך</legend> */}
-
-            {/* <div className={styles.optionsList}>
-              {options.map(({ i, label }) => (
-                <label key={i} className={styles.optionRow}>
-                  <input
-                    type="checkbox"
-                    checked={selected.has(i)}
-                    onChange={() => toggle(i)}
-                  />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div> */}
 
             <div className={styles.optionsList}>
               {options.map(({ i, label }) => {
@@ -105,22 +91,6 @@ export default function Step1() {
               })}
             </div>
 
-            {/* <div className={styles.actionsRow}>
-              <button
-                type="button"
-                onClick={() => setSelected(new Set(kids.map((_, i) => i)))}
-                className={styles.secondaryButton}
-              >
-                בחר הכל
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelected(new Set())}
-                className={styles.secondaryButton}
-              >
-                נקה בחירה
-              </button>
-            </div> */}
           </fieldset>
         )}
 

@@ -123,57 +123,6 @@ export function WizardProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // useEffect(() => {
-  //   let cancelled = false;
-
-  //   async function hydrate() {
-  //     setIsHydrated(false);
-
-  //     // 1) If no instanceId -> start new from demo
-  //     if (!instanceId) {
-  //       if (cancelled) return;
-  //       setDraft(structuredClone(demo) as any);
-  //       setExtras(initialExtras);
-  //       setIsHydrated(true);
-  //       return;
-  //     }
-
-  //     // 2) Load from DB
-  //     const supabase = createClient();
-
-  //     const { data: row, error } = await supabase
-  //       .from("form_instances")
-  //       .select("draft, extras")
-  //       .eq("id", instanceId)
-  //       .single();
-
-  //     if (cancelled) return;
-
-  //     if (error || !row?.draft) {
-  //       // fallback (or you can show an error UI)
-  //       console.error("Failed to load instance", error);
-  //       setDraft(structuredClone(demo) as any);
-  //       setExtras(initialExtras);
-  //       setIsHydrated(true);
-  //       return;
-  //     }
-
-  //     setDraft(row.draft as IntakeRecord);
-
-  //     // merge extras with defaults (so missing keys won't crash)
-  //     setExtras({
-  //       ...initialExtras,
-  //       ...(row.extras ?? {}),
-  //     });
-
-  //     setIsHydrated(true);
-  //   }
-
-  //   hydrate();
-  //   return () => {
-  //     cancelled = true;
-  //   };
-  // }, [instanceId]);
 
   useEffect(() => {
     let cancelled = false;

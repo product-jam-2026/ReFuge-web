@@ -1249,14 +1249,256 @@
 //   );
 // }
 
+// "use client";
+
+// import React, { useMemo } from "react";
+// import { useRouter } from "next/navigation";
+
+// import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
+// import { createClient } from "@/lib/supabase/client";
+
+// import { fieldMap } from "../fieldMap";
+// import { intakeToPdfFields } from "../intakeToPdfFields";
+// import styles from "./page.module.css";
+// import { useWizard } from "../WizardProvider";
+
+// function SectionTitle({ children }: { children: React.ReactNode }) {
+//   return <h2 className={styles.sectionTitle}>{children}</h2>;
+// }
+
+// function Field({
+//   label,
+//   required,
+//   children,
+// }: {
+//   label: string;
+//   required?: boolean;
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <label className={styles.field}>
+//       <span className={styles.fieldLabel}>
+//         {label}{" "}
+//         {required ? <span className={styles.requiredStar}>*</span> : null}
+//       </span>
+//       {children}
+//     </label>
+//   );
+// }
+
+// function safePart(title: string) {
+//   return (
+//     (title ?? "")
+//       .toString()
+//       .trim()
+//       .replace(/[^a-zA-Z0-9_-]+/g, "_")
+//       .slice(0, 60) || "Untitled"
+//   );
+// }
+
+// function downloadPdf(filename: string, pdfBytes: Uint8Array) {
+//   const bytes = new Uint8Array(pdfBytes);
+//   const blob = new Blob([bytes.buffer], { type: "application/pdf" });
+//   const url = URL.createObjectURL(blob);
+//   const a = document.createElement("a");
+//   a.href = url;
+//   a.download = filename;
+//   document.body.appendChild(a);
+//   a.click();
+//   a.remove();
+//   URL.revokeObjectURL(url);
+// }
+
+// function emptyChildExtras() {
+//   return { firstEntryDate: "", fileJoinDate: "" };
+// }
+
+// function emptyTripRow() {
+//   return { from: "", to: "", purpose: "" };
+// }
+
+// function ensureTripRow(
+//   extras: any,
+//   setExtras: (updater: (p: any) => any) => void,
+//   index: number,
+// ) {
+//   setExtras((p: any) => {
+//     const next = structuredClone(p);
+//     if (!Array.isArray(next.abroadTrips)) next.abroadTrips = [];
+//     while (next.abroadTrips.length <= index)
+//       next.abroadTrips.push(emptyTripRow());
+//     return next;
+//   });
+// }
+
+// function updateTripField(
+//   setExtras: (updater: (p: any) => any) => void,
+//   index: number,
+//   key: "from" | "to" | "purpose",
+//   value: string,
+// ) {
+//   setExtras((p: any) => {
+//     const next = structuredClone(p);
+//     if (!Array.isArray(next.abroadTrips)) next.abroadTrips = [];
+//     while (next.abroadTrips.length <= index)
+//       next.abroadTrips.push(emptyTripRow());
+//     next.abroadTrips[index][key] = value;
+//     return next;
+//   });
+// }
+
+// export default function PersonRegistrationPage() {
+//   const router = useRouter();
+
+//   const {
+//     draft,
+//     extras,
+//     setExtras,
+//     update,
+//     updateChild,
+//     instanceId,
+//     isHydrated,
+//   } = useWizard();
+
+//   const payload = useMemo(() => {
+//     if (!draft) return null;
+
+//     const kids = (draft.intake.step6.children ?? []).filter(
+//       (c) =>
+//         (c.firstName ?? "").trim() ||
+//         (c.lastName ?? "").trim() ||
+//         (c.israeliId ?? "").trim() ||
+//         (c.birthDate ?? "").trim(),
+//     );
+
+//     const cleaned = structuredClone(draft);
+//     cleaned.intake.step6.children = kids;
+//     return cleaned;
+//   }, [draft]);
+
+//   if (!isHydrated || !draft || !payload || !extras) {
+//     return <main className={styles.page}>Loading…</main>;
+//   }
+
+//   async function saveDraft(existingInstanceId?: string) {
+//     const supabase = createClient();
+
+//     const { data: userRes, error: userErr } = await supabase.auth.getUser();
+//     if (userErr) throw userErr;
+
+//     const user = userRes.user;
+//     if (!user) throw new Error("Not logged in");
+
+//     if (!draft) return;
+
+//     const title =
+//       `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
+//       draft.intake?.step1?.israeliId ||
+//       "Untitled";
+
+//     if (!existingInstanceId) {
+//       const { data, error } = await supabase
+//         .from("form_instances")
+//         .insert({
+//           user_id: user.id,
+//           form_slug: "person-registration-request",
+//           title,
+//           draft: payload,
+//           extras,
+//         })
+//         .select("id")
+//         .single();
+
+//       if (error) throw error;
+//       return data.id as string;
+//     } else {
+//       const { error } = await supabase
+//         .from("form_instances")
+//         .update({
+//           title,
+//           draft: payload,
+//           extras,
+//         })
+//         .eq("id", existingInstanceId)
+//         .eq("user_id", user.id);
+
+//       if (error) throw error;
+//       return existingInstanceId;
+//     }
+//   }
+
+//   async function onDownloadPdf(e: React.FormEvent) {
+//     e.preventDefault();
+
+//     const savedId = await saveDraft(instanceId ?? undefined);
+
+//     const fields = intakeToPdfFields(draft as any, extras as any);
+
+//     const [tplRes, fontRes] = await Promise.all([
+//       fetch("/forms/person-registration.pdf"),
+//       fetch("/fonts/SimplerPro-Regular.otf"),
+//     ]);
+
+//     if (!tplRes.ok) {
+//       throw new Error(
+//         `Failed to load template PDF: ${tplRes.status} ${tplRes.statusText} url=${tplRes.url}`,
+//       );
+//     }
+//     if (!fontRes.ok) {
+//       throw new Error(
+//         `Failed to load font: ${fontRes.status} ${fontRes.statusText} url=${fontRes.url}`,
+//       );
+//     }
+
+//     const templateBytes = new Uint8Array(await tplRes.arrayBuffer());
+//     const fontBytes = new Uint8Array(await fontRes.arrayBuffer());
+
+//     const outBytes = await fillFieldsToNewPdfBytesClient(
+//       templateBytes,
+//       fields,
+//       fieldMap,
+//       {
+//         fontBytes,
+//         autoDetectRtl: true,
+//         defaultRtlAlignRight: true,
+//       },
+//     );
+
+//     if (!draft) return;
+
+//     const s1 = draft.intake.step1;
+//     const fileName = `person_registration_${safePart(
+//       s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
+//     )}_${new Date().toISOString().slice(0, 10)}.pdf`;
+
+//     downloadPdf(fileName, outBytes);
+
+//     // If you want:
+//     // router.push(savedId ? `./step-4?instanceId=${encodeURIComponent(savedId)}` : "./step-4");
+//     void savedId;
+//   }
+
+//   const kids = draft.intake.step6.children ?? [];
+//   const nextUrl = instanceId
+//     ? `./step-4?instanceId=${encodeURIComponent(instanceId)}`
+//     : "./step-4";
+
+//   const trips = (extras as any).abroadTrips ?? [];
+//   const trip0 = trips[0] ?? emptyTripRow();
+//   const trip1 = trips[1] ?? emptyTripRow();
+//   const trip2 = trips[2] ?? emptyTripRow();
+
+
+
+
+
+
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import { fillFieldsToNewPdfBytesClient } from "@/lib/pdf/fillPdfClient";
-import { createClient } from "@/lib/supabase/client";
-
 import { fieldMap } from "../fieldMap";
 import { intakeToPdfFields } from "../intakeToPdfFields";
 import styles from "./page.module.css";
@@ -1317,20 +1559,6 @@ function emptyTripRow() {
   return { from: "", to: "", purpose: "" };
 }
 
-function ensureTripRow(
-  extras: any,
-  setExtras: (updater: (p: any) => any) => void,
-  index: number,
-) {
-  setExtras((p: any) => {
-    const next = structuredClone(p);
-    if (!Array.isArray(next.abroadTrips)) next.abroadTrips = [];
-    while (next.abroadTrips.length <= index)
-      next.abroadTrips.push(emptyTripRow());
-    return next;
-  });
-}
-
 function updateTripField(
   setExtras: (updater: (p: any) => any) => void,
   index: number,
@@ -1358,7 +1586,18 @@ export default function PersonRegistrationPage() {
     updateChild,
     instanceId,
     isHydrated,
+
+    // ✅ from WizardProvider.tsx-style
+    saveNow,
+    saveStatus,
+    saveError,
   } = useWizard();
+
+  // ✅ mark this step as current (this page navigates to step-4, so set currentStep=3 here)
+  useEffect(() => {
+    if (!isHydrated) return;
+    setExtras((p: any) => (p.currentStep === 3 ? p : { ...p, currentStep: 3 }));
+  }, [isHydrated, setExtras]);
 
   const payload = useMemo(() => {
     if (!draft) return null;
@@ -1380,57 +1619,18 @@ export default function PersonRegistrationPage() {
     return <main className={styles.page}>Loading…</main>;
   }
 
-  async function saveDraft(existingInstanceId?: string) {
-    const supabase = createClient();
-
-    const { data: userRes, error: userErr } = await supabase.auth.getUser();
-    if (userErr) throw userErr;
-
-    const user = userRes.user;
-    if (!user) throw new Error("Not logged in");
-
-    if (!draft) return;
-
-    const title =
-      `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
-      draft.intake?.step1?.israeliId ||
-      "Untitled";
-
-    if (!existingInstanceId) {
-      const { data, error } = await supabase
-        .from("form_instances")
-        .insert({
-          user_id: user.id,
-          form_slug: "person-registration-request",
-          title,
-          draft: payload,
-          extras,
-        })
-        .select("id")
-        .single();
-
-      if (error) throw error;
-      return data.id as string;
-    } else {
-      const { error } = await supabase
-        .from("form_instances")
-        .update({
-          title,
-          draft: payload,
-          extras,
-        })
-        .eq("id", existingInstanceId)
-        .eq("user_id", user.id);
-
-      if (error) throw error;
-      return existingInstanceId;
-    }
+  async function onSaveDraft() {
+    // keep current step = 3
+    setExtras((p: any) => ({ ...p, currentStep: 3 }));
+    await saveNow();
   }
 
   async function onDownloadPdf(e: React.FormEvent) {
     e.preventDefault();
 
-    const savedId = await saveDraft(instanceId ?? undefined);
+    // ✅ save first (so instanceId exists & draft/extras persist)
+    setExtras((p: any) => ({ ...p, currentStep: 3 }));
+    await saveNow();
 
     const fields = intakeToPdfFields(draft as any, extras as any);
 
@@ -1464,24 +1664,31 @@ export default function PersonRegistrationPage() {
       },
     );
 
-    if (!draft) return;
-
     const s1 = draft.intake.step1;
     const fileName = `person_registration_${safePart(
       s1.israeliId || s1.passportNumber || s1.lastName || "unknown",
     )}_${new Date().toISOString().slice(0, 10)}.pdf`;
 
     downloadPdf(fileName, outBytes);
+  }
 
-    // If you want:
-    // router.push(savedId ? `./step-4?instanceId=${encodeURIComponent(savedId)}` : "./step-4");
-    void savedId;
+
+    
+  async function goNext() {
+    // ✅ set next step + save before navigation
+    setExtras((p: any) => ({ ...p, currentStep: 4 }));
+    const savedId = await saveNow();
+
+    const nextUrl = savedId
+      ? `./step-4?instanceId=${encodeURIComponent(savedId)}`
+      : instanceId
+        ? `./step-4?instanceId=${encodeURIComponent(instanceId)}`
+        : "./step-4";
+
+    router.push(nextUrl);
   }
 
   const kids = draft.intake.step6.children ?? [];
-  const nextUrl = instanceId
-    ? `./step-4?instanceId=${encodeURIComponent(instanceId)}`
-    : "./step-4";
 
   const trips = (extras as any).abroadTrips ?? [];
   const trip0 = trips[0] ?? emptyTripRow();
@@ -2314,16 +2521,22 @@ export default function PersonRegistrationPage() {
         <div className={styles.footerRow}>
           <button
             type="button"
+            onClick={goNext}
             className={styles.primaryButton}
-            onClick={() => router.push(nextUrl)}
+            // disabled={disableNext || saveStatus === "saving"}
+            // title={disableNext ? "בחר לפחות ילד אחד" : undefined}
           >
-            לחתימה ואישור
+            המשך
           </button>
 
-          {/* Optional: enable PDF download button */}
-          {/* <button type="submit" className={styles.primaryButton}>
-            הורד PDF
-          </button> */}
+          <button
+            type="button"
+            className={styles.secondaryButton}
+            onClick={onSaveDraft}
+            disabled={saveStatus === "saving" || !draft}
+          >
+            שמור כטיוטה
+          </button>
         </div>
       </form>
     </main>
