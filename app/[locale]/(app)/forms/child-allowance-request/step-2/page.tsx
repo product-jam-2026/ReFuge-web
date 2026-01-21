@@ -25,7 +25,7 @@ export default function Step2() {
   return (
     <main className={styles.page}>
       <div className={styles.imageContainer}>
-        <img
+        {/* <img
           className={styles.imageRight}
           src="/images/child-registration-step2-right.svg"
           alt=""
@@ -34,8 +34,12 @@ export default function Step2() {
           className={styles.imageLeft}
           src="/images/child-registration-step2-left.svg"
           alt=""
-        />
+        /> */}
+
+        <img src="/images/Kitsbaot.svg"></img>
+
       </div>
+
 
       <div className={styles.textContainer}>
         <div className={styles.mainTextContainer}>

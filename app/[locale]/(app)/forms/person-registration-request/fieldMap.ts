@@ -563,52 +563,364 @@ export const fieldMap: FieldMap = {
     clearBackground: false,
   },
   // gender
-"israeliApplicant.gender.male": { pageIndex: 0, x: 88, y: 623, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.gender.female": { pageIndex: 0, x: 88, y: 611, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.gender.other": { pageIndex: 0, x: 0, y: 0, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
+  "israeliApplicant.gender.male": {
+    pageIndex: 0,
+    x: 88,
+    y: 623,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.gender.female": {
+    pageIndex: 0,
+    x: 88,
+    y: 611,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.gender.other": {
+    pageIndex: 0,
+    x: 0,
+    y: 0,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
-// visa type
-"israeliApplicant.visaType.A1": { pageIndex: 0, x: 182, y: 461, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.visaType.A2": { pageIndex: 0, x: 182, y: 451, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.visaType.A3": { pageIndex: 0, x: 182, y: 441, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.visaType.A4": { pageIndex: 0, x: 266, y: 461, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.visaType.A5": { pageIndex: 0, x: 266, y: 451, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.visaType.B1": { pageIndex: 0, x: 266, y: 441, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.visaType.B2": { pageIndex: 0, x: 351, y: 461, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.visaType.B3": { pageIndex: 0, x: 351, y: 451, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.visaType.B4": { pageIndex: 0, x: 351, y: 441, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
+  // visa type
+  "israeliApplicant.visaType.A1": {
+    pageIndex: 0,
+    x: 182,
+    y: 461,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.visaType.A2": {
+    pageIndex: 0,
+    x: 182,
+    y: 451,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.visaType.A3": {
+    pageIndex: 0,
+    x: 182,
+    y: 441,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.visaType.A4": {
+    pageIndex: 0,
+    x: 266,
+    y: 461,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.visaType.A5": {
+    pageIndex: 0,
+    x: 266,
+    y: 451,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.visaType.B1": {
+    pageIndex: 0,
+    x: 266,
+    y: 441,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.visaType.B2": {
+    pageIndex: 0,
+    x: 351,
+    y: 461,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.visaType.B3": {
+    pageIndex: 0,
+    x: 351,
+    y: 451,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.visaType.B4": {
+    pageIndex: 0,
+    x: 351,
+    y: 441,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
+  // marital status
+  "israeliApplicant.maritalStatus.single": {
+    pageIndex: 0,
+    x: 490,
+    y: 106,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.maritalStatus.married": {
+    pageIndex: 0,
+    x: 0,
+    y: 92,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.maritalStatus.widow": {
+    pageIndex: 0,
+    x: 0,
+    y: 80,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.maritalStatus.divorced": {
+    pageIndex: 0,
+    x: 0,
+    y: 68,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.maritalStatus.other": {
+    pageIndex: 0,
+    x: 0,
+    y: 55,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
+  // NI has file
+  "israeliApplicant.nationalInsurance.hasFile.yes": {
+    pageIndex: 1,
+    x: 520,
+    y: 408,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.nationalInsurance.hasFile.no": {
+    pageIndex: 1,
+    x: 520,
+    y: 369,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
-// marital status
-"israeliApplicant.maritalStatus.single": { pageIndex: 0, x: 490, y: 106, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.maritalStatus.married": { pageIndex: 0, x: 0, y: 92, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.maritalStatus.widow" : { pageIndex: 0, x: 0, y: 80, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.maritalStatus.divorced": { pageIndex: 0, x: 0, y: 68, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.maritalStatus.other": { pageIndex: 0, x: 0, y: 55, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
+  // gets allowance
+  "israeliApplicant.nationalInsurance.getsAllowance.yes": {
+    pageIndex: 1,
+    x: 520,
+    y: 183,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.nationalInsurance.getsAllowance.no": {
+    pageIndex: 1,
+    x: 520,
+    y: 195,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
-// NI has file
-"israeliApplicant.nationalInsurance.hasFile.yes": { pageIndex: 1, x: 520, y: 408, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.nationalInsurance.hasFile.no": { pageIndex: 1, x: 520, y: 369, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
+  // allowance type
+  "israeliApplicant.nationalInsurance.allowanceType.childAllowance": {
+    pageIndex: 0,
+    x: 0,
+    y: 0,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
-// gets allowance
-"israeliApplicant.nationalInsurance.getsAllowance.yes": { pageIndex: 1, x: 520, y: 183, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.nationalInsurance.getsAllowance.no": { pageIndex: 1, x: 520, y: 195, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
+  // NI paid as
+  "israeliApplicant.niPaidAs.employed": {
+    pageIndex: 1,
+    x: 520,
+    y: 541,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.niPaidAs.selfEmployed": {
+    pageIndex: 1,
+    x: 520,
+    y: 511,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.niPaidAs.unemployedWithIncome": {
+    pageIndex: 1,
+    x: 520,
+    y: 480,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.niPaidAs.unemployedNoIncome": {
+    pageIndex: 1,
+    x: 520,
+    y: 450,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
-// allowance type
-"israeliApplicant.nationalInsurance.allowanceType.childAllowance": { pageIndex: 0, x: 0, y: 0, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
+  // payments status
+  "israeliApplicant.niPaymentsStatus.paid": {
+    pageIndex: 1,
+    x: 520,
+    y: 410,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.niPaymentsStatus.notPaid": {
+    pageIndex: 0,
+    x: 520,
+    y: 370,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
-// NI paid as
-"israeliApplicant.niPaidAs.employed": { pageIndex: 1, x: 520, y: 541, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.niPaidAs.selfEmployed": { pageIndex: 1, x: 520, y: 511, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.niPaidAs.unemployedWithIncome": { pageIndex: 1, x: 520 , y: 480, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.niPaidAs.unemployedNoIncome": { pageIndex: 1, x: 520, y: 450, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
+  // Health fund (Kupat Holim) checkboxes
+  "israeliApplicant.healthFund.leumit": {
+    pageIndex: 1,
+    x: 319, // left column checkbox X  (adjust)
+    y: 582, // top row checkbox Y      (adjust)
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.healthFund.clalit": {
+    pageIndex: 1,
+    x: 411, // right column checkbox X (adjust)
+    y: 582, // top row checkbox Y      (adjust)
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.healthFund.maccabi": {
+    pageIndex: 1,
+    x: 319, // left column checkbox X  (adjust)
+    y: 568, // bottom row checkbox Y   (adjust)
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+  "israeliApplicant.healthFund.meuhedet": {
+    pageIndex: 1,
+    x: 412, // right column checkbox X (adjust)
+    y: 568, // bottom row checkbox Y   (adjust)
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
+  // Assets in Israel
+  "israeliApplicant.assetsInIsrael.apartment": {
+    pageIndex: 1,
+    x: 518, // right-most checkbox (Apartment)
+    y: 714,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
-// payments status
-"israeliApplicant.niPaymentsStatus.paid": { pageIndex: 1, x: 520, y: 410, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
-"israeliApplicant.niPaymentsStatus.notPaid": { pageIndex: 0, x: 520, y: 370, kind: "checkbox", boxSize: 5, strokeWidth: 1.2 },
+  "israeliApplicant.assetsInIsrael.business": {
+    pageIndex: 1,
+    x: 424, // next checkbox (Business)
+    y: 714,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
 
+  "israeliApplicant.assetsInIsrael.otherProperty": {
+    pageIndex: 1,
+    x: 345, // next checkbox (Other property)
+    y: 714,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+
+  // Text that goes on the underline next to "Other property"
+  "israeliApplicant.assetsInIsrael.otherPropertyDetails": {
+    pageIndex: 1,
+    x: 244, // start of the underline (adjust)
+    y: 702, // baseline of text (adjust)
+    kind: "text",
+    width: 170, // match underline length
+    fontSize: 10,
+    align: "left",
+  },
+
+  "israeliApplicant.assetsInIsrael.ownershipCertificateAttached": {
+    pageIndex: 1,
+    x: 201, // left-most checkbox (Ownership certificate attached)
+    y: 714,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+
+  // 2. Residence in Israel
+  "israeliApplicant.residenceInIsrael.rentalApartment": {
+    pageIndex: 1,
+    x: 520, // checkbox next to "I am living in Israel in rental apartment"
+    y: 660,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+
+  "israeliApplicant.residenceInIsrael.other": {
+    pageIndex: 1,
+    x: 370, // checkbox next to "Other"
+    y: 660,
+    kind: "checkbox",
+    boxSize: 5,
+    strokeWidth: 1.2,
+  },
+
+  // text written on the underline near "Other"
+  "israeliApplicant.residenceInIsrael.otherDetails": {
+    pageIndex: 1,
+    x: 142, // start of underline
+    y: 669, // text baseline
+    kind: "text",
+    width: 180,
+    fontSize: 10,
+    // align: "left",
+  },
+
+  "extras.declaration.name": {
+    pageIndex: 1,
+    x: 291, // <-- set the correct x
+    y: 49, // <-- set the correct y
+    kind: "text",
+    fontSize: 8, // adjust
+  },
 
   applicantSignature: {
     pageIndex: 1,
@@ -629,4 +941,3 @@ export const fieldMap: FieldMap = {
     clearBackground: false,
   },
 };
-

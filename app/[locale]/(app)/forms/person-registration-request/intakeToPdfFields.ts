@@ -401,6 +401,239 @@ export function deriveExtrasFromIntake(
 //   extras?: Partial<ExtrasState>,
 // ): Record<string, string> {
 
+// export function intakeToPdfFields(
+//   draft: IntakeRecord,
+//   extras?: Partial<ExtrasState>,
+// ): Record<string, string> {
+//   const s1 = draft.intake.step1;
+//   const s2 = draft.intake.step2;
+//   const s3 = draft.intake.step3;
+//   const s4 = draft.intake.step4;
+//   const s5 = draft.intake.step5;
+
+//   const addr = s3.registeredAddress;
+
+//   const t1 = tripAt(extras, 0);
+//   const t2 = tripAt(extras, 1);
+//   const t3 = tripAt(extras, 2);
+
+
+//     // --- Checkbox helpers ---
+//   const cb = (on: boolean) => (on ? "1" : ""); // adjust if your renderer expects "true"/"X"
+
+//   const norm = (v: string | undefined | null) => (v ?? "").trim();
+//   const normLower = (v: string | undefined | null) => norm(v).toLowerCase();
+
+//   // gender normalization (support a few common variants)
+//   const genderRaw = normLower(s1.gender);
+//   const gender =
+//     genderRaw === "male" || genderRaw === "m" || genderRaw === "זכר"
+//       ? "male"
+//       : genderRaw === "female" || genderRaw === "f" || genderRaw === "נקבה"
+//         ? "female"
+//         : genderRaw
+//             ? "other"
+//             : "";
+
+//   // visa type normalization (A/1 -> A1, "A1" -> A1, etc.)
+//   const visa = norm(s2.visaType).toUpperCase().replace(/[^A-Z0-9]/g, ""); // "A/1" -> "A1"
+
+//   // marital status normalization (prefer extras if you use it in UI)
+//   const msRaw = normLower((extras as any)?.maritalStatus ?? s3.maritalStatus);
+//   const maritalStatus =
+//     msRaw === "single"
+//       ? "single"
+//       : msRaw === "married"
+//         ? "married"
+//         : msRaw === "widowed" || msRaw === "widow"
+//           ? "widow"
+//           : msRaw === "divorced"
+//             ? "divorced"
+//             : msRaw === "other"
+//               ? "other"
+//               : "";
+
+//   // NI yes/no
+//   const hasFile = normLower(s4.nationalInsurance.hasFile); // "yes" / "no"
+//   const getsAllowance = normLower(s4.nationalInsurance.getsAllowance); // "yes" / "no"
+
+//   // allowance type
+//   const allowanceType = normLower(s4.nationalInsurance.allowanceType); // e.g. "childAllowance"
+
+//   // Occupation / NI paid-as: prefer extras.occupationStatus (covers 4 options)
+//   const occ = normLower((extras as any)?.occupationStatus ?? s3.employmentStatus);
+
+//   const niPaidAs =
+//     occ === "employee" || occ === "employed"
+//       ? "employed"
+//       : occ === "selfemployed" || occ === "self_employed" || occ === "self-employed" || occ === "selfemployed"
+//         ? "selfEmployed"
+//         : occ === "unemployedwithincome" || occ === "unemployed_with_income" || occ === "unemployed-with-income"
+//           ? "unemployedWithIncome"
+//           : occ === "unemployednoincome" || occ === "unemployed_no_income" || occ === "unemployed-without-income"
+//             ? "unemployedNoIncome"
+//             : "";
+
+//   // NI payments status: from extras
+//   const payStatusRaw = normLower((extras as any)?.niPaymentsStatus);
+//   const niPaymentsStatus =
+//     payStatusRaw === "paid" ? "paid" : payStatusRaw === "notpaid" || payStatusRaw === "not_paid" ? "notPaid" : "";
+
+
+
+//   return {
+
+//         // ===============================
+//     // ✅ Checkbox fields (fieldMap.ts keys)
+//     // ===============================
+
+//     // gender
+//     "israeliApplicant.gender.male": cb(gender === "male"),
+//     "israeliApplicant.gender.female": cb(gender === "female"),
+//     "israeliApplicant.gender.other": cb(gender === "other"),
+
+//     // visa type
+//     "israeliApplicant.visaType.A1": cb(visa === "A1"),
+//     "israeliApplicant.visaType.A2": cb(visa === "A2"),
+//     "israeliApplicant.visaType.A3": cb(visa === "A3"),
+//     "israeliApplicant.visaType.A4": cb(visa === "A4"),
+//     "israeliApplicant.visaType.A5": cb(visa === "A5"),
+//     "israeliApplicant.visaType.B1": cb(visa === "B1"),
+//     "israeliApplicant.visaType.B2": cb(visa === "B2"),
+//     "israeliApplicant.visaType.B3": cb(visa === "B3"),
+//     "israeliApplicant.visaType.B4": cb(visa === "B4"),
+
+//     // marital status
+//     "israeliApplicant.maritalStatus.single": cb(maritalStatus === "single"),
+//     "israeliApplicant.maritalStatus.married": cb(maritalStatus === "married"),
+//     "israeliApplicant.maritalStatus.widow": cb(maritalStatus === "widow"),
+//     "israeliApplicant.maritalStatus.divorced": cb(maritalStatus === "divorced"),
+//     "israeliApplicant.maritalStatus.other": cb(maritalStatus === "other"),
+
+//     // NI has file
+//     "israeliApplicant.nationalInsurance.hasFile.yes": cb(hasFile === "yes"),
+//     "israeliApplicant.nationalInsurance.hasFile.no": cb(hasFile === "no"),
+
+//     // gets allowance
+//     "israeliApplicant.nationalInsurance.getsAllowance.yes": cb(getsAllowance === "yes"),
+//     "israeliApplicant.nationalInsurance.getsAllowance.no": cb(getsAllowance === "no"),
+
+//     // allowance type
+//     "israeliApplicant.nationalInsurance.allowanceType.childAllowance": cb(
+//       allowanceType === "childallowance" || allowanceType === "child_allowance" || allowanceType.includes("child")
+//     ),
+
+//     // NI paid as
+//     "israeliApplicant.niPaidAs.employed": cb(niPaidAs === "employed"),
+//     "israeliApplicant.niPaidAs.selfEmployed": cb(niPaidAs === "selfEmployed"),
+//     "israeliApplicant.niPaidAs.unemployedWithIncome": cb(niPaidAs === "unemployedWithIncome"),
+//     "israeliApplicant.niPaidAs.unemployedNoIncome": cb(niPaidAs === "unemployedNoIncome"),
+
+//     // payments status
+//     "israeliApplicant.niPaymentsStatus.paid": cb(niPaymentsStatus === "paid"),
+//     "israeliApplicant.niPaymentsStatus.notPaid": cb(niPaymentsStatus === "notPaid"),
+
+
+
+//     // ===== Page 0 =====
+//     firstNameHebrew: s1.firstName.he ?? "",
+//     firstNameEnglish: extras?.firstNameEnglish ?? "",
+//     lastNameHebrew: s1.lastName.he ?? "",
+//     lastNameEnglish: extras?.lastNameEnglish ?? "",
+
+//     prevLastNameHebrew: s1.oldLastName.he ?? "",
+//     prevLastNameEnglish: extras?.prevLastNameEnglish ?? "",
+//     prevFirstNameHebrew: s1.oldFirstName.he ?? "",
+
+//     birthDate: s1.birthDate ?? "",
+//     birthCountry: extras?.birthCountry ?? "",
+//     birthCity: extras?.birthCity ?? "",
+//     citizenship: s1.nationality ?? "",
+
+//     passportNumber: s1.passportNumber ?? "",
+//     passportIssuanceCountry: s1.passportIssueCountry ?? "",
+//     passportIssueDate: s1.passportIssueDate ?? "",
+//     passportExpiryDate: s1.passportExpiryDate ?? "",
+
+//     visaStartDate: s2.visaStartDate ?? "",
+//     visaEndDate: s2.visaEndDate ?? "",
+//     visaDateOfArrival: s2.entryDate ?? "",
+
+//     "address.street": addr.street.he ?? "",
+//     "address.homeNumber": addr.houseNumber ?? "",
+//     "address.entrance": addr.entry ?? "",
+//     "address.apartmentNumber": addr.apartment ?? "",
+//     "address.city": addr.city ?? "",
+//     "address.zipcode": addr.zip ?? "",
+//     "address.phoneNumber": (extras?.addressPhoneNumber ?? "") || s1.phone || "",
+
+//     fatherLastNameHebrew: extras?.father?.lastNameHebrew ?? "",
+//     fatherLastNameEnglish: extras?.father?.lastNameEnglish ?? "",
+//     fatherFirstNameHebrew: extras?.father?.firstNameHebrew ?? "",
+//     fatherFirstNameEnglish: extras?.father?.firstNameEnglish ?? "",
+//     fatherIdNumber: extras?.father?.idNumber ?? "",
+//     fatherPassportNumber: extras?.father?.passportNumber ?? "",
+
+//     motherLastNameHebrew: extras?.mother?.lastNameHebrew ?? "",
+//     motherLastNameEnglish: extras?.mother?.lastNameEnglish ?? "",
+//     motherFirstNameHebrew: extras?.mother?.firstNameHebrew ?? "",
+//     motherFirstNameEnglish: extras?.mother?.firstNameEnglish ?? "",
+//     motherIdNumber: extras?.mother?.idNumber ?? "",
+//     motherPassportNumber: extras?.mother?.passportNumber ?? "",
+
+//     maritalStatusLastUpdateDate: s3.statusDate ?? "",
+//     numberChildrenUnder18:
+//       (extras?.numberChildrenUnder18 ?? "") ||
+//       String(draft.intake.step6.children?.length ?? 0),
+
+//     partnerLastNameHebrew: s5.spouse.lastName.he ?? "",
+//     partnerLastNameEnglish: extras?.partner?.lastNameEnglish ?? "",
+//     partnerFirstNameHebrew: s5.spouse.firstName.he ?? "",
+//     partnerFirstNameEnglish: extras?.partner?.firstNameEnglish ?? "",
+//     partnerIdNumber: s5.spouse.israeliId ?? "",
+//     partnerPassportNumber: s5.spouse.passportNumber ?? "",
+
+//     // ===== Page 1 =====
+//     purposeOfStay: (extras?.purposeOfStay ?? "") || s2.visaType || "",
+//     bankName: s4.bank.bankName ?? "",
+//     bankBranch: s4.bank.branch ?? "",
+//     bankAccountNumber: s4.bank.accountNumber ?? "",
+
+//     employerName: extras?.employerName ?? "",
+//     employerAddress: extras?.employerAddress ?? "",
+//     selfEmploymentStartDate: extras?.selfEmploymentStartDate ?? "",
+//     unemployedWithIncomeStartDate: extras?.unemployedWithIncomeStartDate ?? "",
+//     selfEmployedYearlyIncome: extras?.selfEmployedYearlyIncome ?? "",
+//     unemployedYearlyIncome: extras?.unemployedYearlyIncome ?? "",
+
+//     nationalInsuranceFileNumber: s4.nationalInsurance.fileNumber ?? "",
+
+//     tripAbroad1StartDate: t1.startDate,
+//     tripAbroad1EndDate: t1.endDate,
+//     tripAbroad1Purpose: t1.purpose,
+
+//     tripAbroad2StartDate: t2.startDate,
+//     tripAbroad2EndDate: t2.endDate,
+//     tripAbroad2Purpose: t2.purpose,
+
+//     tripAbroad3StartDate: t3.startDate,
+//     tripAbroad3EndDate: t3.endDate,
+//     tripAbroad3Purpose: t3.purpose,
+
+//     NationInsuranceTypeOfAllowance: s4.nationalInsurance.allowanceType ?? "",
+//     NationInsuranceFileNumber: s4.nationalInsurance.allowanceFileNumber ?? "",
+
+//     // ✅ Step4 fields (keys MUST match your fieldMap.ts)
+//     formDate: extras?.formDate ?? "",
+//     poBox: extras?.poBox ?? "",
+
+//     // If your PDF engine expects the signature as a field value (dataURL)
+//     // applicantSignature: (extras as any)?.applicantSignature ?? "",
+//     applicantSignature: extras?.applicantSignatureDataUrl ?? ""
+//   };
+// }
+
+
 export function intakeToPdfFields(
   draft: IntakeRecord,
   extras?: Partial<ExtrasState>,
@@ -409,7 +642,7 @@ export function intakeToPdfFields(
   const s2 = draft.intake.step2;
   const s3 = draft.intake.step3;
   const s4 = draft.intake.step4;
-  const s5 = draft.intake.step5;
+  const spouse = draft.intake.step5?.spouse; // ✅ may be undefined
 
   const addr = s3.registeredAddress;
 
@@ -417,14 +650,12 @@ export function intakeToPdfFields(
   const t2 = tripAt(extras, 1);
   const t3 = tripAt(extras, 2);
 
+  // --- helpers ---
+  const cb = (on: boolean) => (on ? "1" : "");
+  const norm = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const normLower = (v: unknown) => norm(v).toLowerCase();
 
-    // --- Checkbox helpers ---
-  const cb = (on: boolean) => (on ? "1" : ""); // adjust if your renderer expects "true"/"X"
-
-  const norm = (v: string | undefined | null) => (v ?? "").trim();
-  const normLower = (v: string | undefined | null) => norm(v).toLowerCase();
-
-  // gender normalization (support a few common variants)
+  // gender
   const genderRaw = normLower(s1.gender);
   const gender =
     genderRaw === "male" || genderRaw === "m" || genderRaw === "זכר"
@@ -432,13 +663,13 @@ export function intakeToPdfFields(
       : genderRaw === "female" || genderRaw === "f" || genderRaw === "נקבה"
         ? "female"
         : genderRaw
-            ? "other"
-            : "";
+          ? "other"
+          : "";
 
-  // visa type normalization (A/1 -> A1, "A1" -> A1, etc.)
-  const visa = norm(s2.visaType).toUpperCase().replace(/[^A-Z0-9]/g, ""); // "A/1" -> "A1"
+  // visa type (A/1 -> A1)
+  const visa = norm(s2.visaType).toUpperCase().replace(/[^A-Z0-9]/g, "");
 
-  // marital status normalization (prefer extras if you use it in UI)
+  // marital status (prefer extras)
   const msRaw = normLower((extras as any)?.maritalStatus ?? s3.maritalStatus);
   const maritalStatus =
     msRaw === "single"
@@ -454,37 +685,114 @@ export function intakeToPdfFields(
               : "";
 
   // NI yes/no
-  const hasFile = normLower(s4.nationalInsurance.hasFile); // "yes" / "no"
-  const getsAllowance = normLower(s4.nationalInsurance.getsAllowance); // "yes" / "no"
+  const hasFile = normLower(s4.nationalInsurance.hasFile);
+  const getsAllowance = normLower(s4.nationalInsurance.getsAllowance);
 
-  // allowance type
-  const allowanceType = normLower(s4.nationalInsurance.allowanceType); // e.g. "childAllowance"
+  // allowance type (checkbox on PDF)
+  const allowanceType = normLower(s4.nationalInsurance.allowanceType);
 
-  // Occupation / NI paid-as: prefer extras.occupationStatus (covers 4 options)
-  const occ = normLower((extras as any)?.occupationStatus ?? s3.employmentStatus);
+  // -------- NEW: occupation status -> NI paid as checkboxes (4) --------
+  // prefer extras.occupationStatus (your UI uses: employee | selfEmployed | unemployedWithIncome | unemployedNoIncome)
+  const occRaw = normLower((extras as any)?.occupationStatus ?? s3.employmentStatus);
 
-  const niPaidAs =
-    occ === "employee" || occ === "employed"
+  const occ =
+    occRaw === "employee" || occRaw === "employed"
       ? "employed"
-      : occ === "selfemployed" || occ === "self_employed" || occ === "self-employed" || occ === "selfemployed"
+      : occRaw === "selfemployed" ||
+          occRaw === "self-employed" ||
+          occRaw === "self_employed" ||
+          occRaw === "selfemployed"
         ? "selfEmployed"
-        : occ === "unemployedwithincome" || occ === "unemployed_with_income" || occ === "unemployed-with-income"
+        : occRaw === "unemployedwithincome" ||
+            occRaw === "unemployed_with_income" ||
+            occRaw === "unemployed-with-income"
           ? "unemployedWithIncome"
-          : occ === "unemployednoincome" || occ === "unemployed_no_income" || occ === "unemployed-without-income"
+          : occRaw === "unemployednoincome" ||
+              occRaw === "unemployed_no_income" ||
+              occRaw === "unemployed-without-income"
             ? "unemployedNoIncome"
             : "";
 
-  // NI payments status: from extras
+  // -------- NEW: NI payments status checkboxes (2) --------
   const payStatusRaw = normLower((extras as any)?.niPaymentsStatus);
   const niPaymentsStatus =
-    payStatusRaw === "paid" ? "paid" : payStatusRaw === "notpaid" || payStatusRaw === "not_paid" ? "notPaid" : "";
+    payStatusRaw === "paid"
+      ? "paid"
+      : payStatusRaw === "notpaid" || payStatusRaw === "not_paid"
+        ? "notPaid"
+        : "";
 
+  // -------- NEW: Health fund checkboxes (4) --------
+  const hfRaw = normLower((extras as any)?.healthFund ?? s4.healthFund);
+  const healthFund =
+    hfRaw === "clalit"
+      ? "clalit"
+      : hfRaw === "meuhedet"
+        ? "meuhedet"
+        : hfRaw === "leumit"
+          ? "leumit"
+          : hfRaw === "maccabi"
+            ? "maccabi"
+            : "";
 
+  // -------- NEW: Assets in Israel (checkboxes + details) --------
+  const assets = (extras as any)?.assets ?? {};
+  const assetsOtherText = norm(assets.otherText);
+
+  // -------- NEW: Residence in Israel (checkboxes + details) --------
+  const residence = (extras as any)?.residence ?? {};
+  const residenceOtherText = norm(residence.otherText);
+
+  // -------- NEW: Declaration name --------
+  const declarationName = norm((extras as any)?.declaration?.name);
 
   return {
+    // ===============================
+    // ✅ NEW checkbox fields (keys match fieldMap.ts)
+    // ===============================
 
-        // ===============================
-    // ✅ Checkbox fields (fieldMap.ts keys)
+    // allowance type
+    "israeliApplicant.nationalInsurance.allowanceType.childAllowance": cb(
+      allowanceType === "childallowance" ||
+        allowanceType === "child_allowance" ||
+        allowanceType.includes("child"),
+    ),
+
+    // NI paid as
+    "israeliApplicant.niPaidAs.employed": cb(occ === "employed"),
+    "israeliApplicant.niPaidAs.selfEmployed": cb(occ === "selfEmployed"),
+    "israeliApplicant.niPaidAs.unemployedWithIncome": cb(occ === "unemployedWithIncome"),
+    "israeliApplicant.niPaidAs.unemployedNoIncome": cb(occ === "unemployedNoIncome"),
+
+    // payments status
+    "israeliApplicant.niPaymentsStatus.paid": cb(niPaymentsStatus === "paid"),
+    "israeliApplicant.niPaymentsStatus.notPaid": cb(niPaymentsStatus === "notPaid"),
+
+    // health fund
+    "israeliApplicant.healthFund.leumit": cb(healthFund === "leumit"),
+    "israeliApplicant.healthFund.clalit": cb(healthFund === "clalit"),
+    "israeliApplicant.healthFund.maccabi": cb(healthFund === "maccabi"),
+    "israeliApplicant.healthFund.meuhedet": cb(healthFund === "meuhedet"),
+
+    // assets in Israel
+    "israeliApplicant.assetsInIsrael.apartment": cb(!!assets.apartment),
+    "israeliApplicant.assetsInIsrael.business": cb(!!assets.business),
+    "israeliApplicant.assetsInIsrael.otherProperty": cb(!!assets.other),
+    "israeliApplicant.assetsInIsrael.otherPropertyDetails": assetsOtherText,
+    "israeliApplicant.assetsInIsrael.ownershipCertificateAttached": cb(
+      !!assets.ownershipCertificateAttached,
+    ),
+
+    // residence in Israel
+    "israeliApplicant.residenceInIsrael.rentalApartment": cb(!!residence.rentalApartment),
+    "israeliApplicant.residenceInIsrael.other": cb(!!residence.other),
+    "israeliApplicant.residenceInIsrael.otherDetails": residenceOtherText,
+
+    // declaration
+    "extras.declaration.name": declarationName,
+
+    // ===============================
+    // ✅ Existing checkboxes you already had
     // ===============================
 
     // gender
@@ -518,24 +826,11 @@ export function intakeToPdfFields(
     "israeliApplicant.nationalInsurance.getsAllowance.yes": cb(getsAllowance === "yes"),
     "israeliApplicant.nationalInsurance.getsAllowance.no": cb(getsAllowance === "no"),
 
-    // allowance type
-    "israeliApplicant.nationalInsurance.allowanceType.childAllowance": cb(
-      allowanceType === "childallowance" || allowanceType === "child_allowance" || allowanceType.includes("child")
-    ),
+    // ===============================
+    // ✅ Your existing text fields (unchanged)
+    // ===============================
 
-    // NI paid as
-    "israeliApplicant.niPaidAs.employed": cb(niPaidAs === "employed"),
-    "israeliApplicant.niPaidAs.selfEmployed": cb(niPaidAs === "selfEmployed"),
-    "israeliApplicant.niPaidAs.unemployedWithIncome": cb(niPaidAs === "unemployedWithIncome"),
-    "israeliApplicant.niPaidAs.unemployedNoIncome": cb(niPaidAs === "unemployedNoIncome"),
-
-    // payments status
-    "israeliApplicant.niPaymentsStatus.paid": cb(niPaymentsStatus === "paid"),
-    "israeliApplicant.niPaymentsStatus.notPaid": cb(niPaymentsStatus === "notPaid"),
-
-
-
-    // ===== Page 0 =====
+    // ----- Page 0 -----
     firstNameHebrew: s1.firstName.he ?? "",
     firstNameEnglish: extras?.firstNameEnglish ?? "",
     lastNameHebrew: s1.lastName.he ?? "",
@@ -586,14 +881,15 @@ export function intakeToPdfFields(
       (extras?.numberChildrenUnder18 ?? "") ||
       String(draft.intake.step6.children?.length ?? 0),
 
-    partnerLastNameHebrew: s5.spouse.lastName.he ?? "",
+    // ✅ spouse might be missing
+    partnerLastNameHebrew: spouse?.lastName?.he ?? "",
     partnerLastNameEnglish: extras?.partner?.lastNameEnglish ?? "",
-    partnerFirstNameHebrew: s5.spouse.firstName.he ?? "",
+    partnerFirstNameHebrew: spouse?.firstName?.he ?? "",
     partnerFirstNameEnglish: extras?.partner?.firstNameEnglish ?? "",
-    partnerIdNumber: s5.spouse.israeliId ?? "",
-    partnerPassportNumber: s5.spouse.passportNumber ?? "",
+    partnerIdNumber: spouse?.israeliId ?? "",
+    partnerPassportNumber: spouse?.passportNumber ?? "",
 
-    // ===== Page 1 =====
+    // ----- Page 1 -----
     purposeOfStay: (extras?.purposeOfStay ?? "") || s2.visaType || "",
     bankName: s4.bank.bankName ?? "",
     bankBranch: s4.bank.branch ?? "",
@@ -623,12 +919,9 @@ export function intakeToPdfFields(
     NationInsuranceTypeOfAllowance: s4.nationalInsurance.allowanceType ?? "",
     NationInsuranceFileNumber: s4.nationalInsurance.allowanceFileNumber ?? "",
 
-    // ✅ Step4 fields (keys MUST match your fieldMap.ts)
     formDate: extras?.formDate ?? "",
     poBox: extras?.poBox ?? "",
 
-    // If your PDF engine expects the signature as a field value (dataURL)
-    // applicantSignature: (extras as any)?.applicantSignature ?? "",
-    applicantSignature: extras?.applicantSignatureDataUrl ?? ""
+    applicantSignature: extras?.applicantSignatureDataUrl ?? "",
   };
 }
