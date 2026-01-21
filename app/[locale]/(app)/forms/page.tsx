@@ -26,7 +26,6 @@ export default function FormsPage() {
           onClick={() => router.push(`/${locale}/home/`)}
         />
         <div className={styles.bigTitles}>מאגר טפסים</div>
-        <img className={styles.readButton} src="/images/readButton.svg" alt="" />
       </div>
       <div className={styles.subTextSection}>
         מכאן ניתן לגשת לאיזור של כל אחד מהטפסים הקיימים במאגר. בכל איזור קיימים
