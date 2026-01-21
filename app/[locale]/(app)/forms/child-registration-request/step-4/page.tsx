@@ -283,6 +283,7 @@ export default function Step4() {
       return;
     }
 
+    const baseTitle = "בקשה לרישום ילד";
     const rawTitle =
       typeof (extras as any).formTitle === "string"
         ? (extras as any).formTitle.trim()
