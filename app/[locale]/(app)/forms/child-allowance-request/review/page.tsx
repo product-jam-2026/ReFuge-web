@@ -120,17 +120,21 @@ export default function Review() {
   }
 
   return (
+    // <main className={styles.pageContainer}>
+    // <div className={styles.page}>
     <main className={styles.page}>
-      <h1 className={styles.title}>
-        تم ملء نموذجك بنجاح! وهو موجود في منطقة قاعدة النماذج
-      </h1>
-      <h1 className={styles.title}>
-        הטופס שלך מולא בהצלחה! ונמצא באיזור מאגר הטפסים
-      </h1>
+      <div className={styles.imageContainer}>
+        <img className="reviewImage" src="/images/pink-envelope.svg"></img>
+      </div>
 
-      {/* <pre className={styles.jsonBox}>
-        {JSON.stringify({ draft, extras }, null, 2)}
-      </pre> */}
+      <div className={styles.textContainer}>
+        <h1 className={styles.title}>
+          تم ملء نموذجك بنجاح! وهو موجود في منطقة قاعدة النماذج
+        </h1>
+        <h1 className={styles.title}>
+          הטופס שלך מולא בהצלחה! ונמצא באיזור מאגר הטפסים
+        </h1>
+      </div>
 
       <div className={styles.buttonList}>
         {/* <button type="button" onClick={() => router.back()} className={styles.btn}>
@@ -143,7 +147,7 @@ export default function Review() {
           onClick={downloadLatestPdfForCurrentUser}
           className={styles.secondaryButton}
         >
-          הפק PDF
+          הורדה כ-PDF
         </button>
 
         <button
@@ -151,9 +155,10 @@ export default function Review() {
           onClick={() => router.push(`/${locale}/home/`)}
           className={styles.primaryButton}
         >
-         חזרה למסך הבית
+          חזרה למסך הבית
         </button>
       </div>
+      {/* </div> */}
     </main>
   );
 }

@@ -266,6 +266,16 @@ export default function Step5() {
     await uploadPdf(outBytes, savedInstanceId, pdfTitle);
   }
 
+  function clearSignature() {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    setExtras((p: any) => ({ ...p, applicantSignatureDataUrl: "" }));
+  }
+
   async function onSaveDraftAndExit() {
     setSaveStatus("saving");
     setSaveError(null);
@@ -328,26 +338,45 @@ export default function Step5() {
         <div style={{ marginTop: 10, color: "crimson" }}>{saveError}</div>
       ) : null}
 
-      <div className={styles.footerRow}>
+      <span
+        className={styles.deleteSignature}
+        role="button"
+        tabIndex={0}
+        onClick={clearSignature}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") clearSignature();
+        }}
+        style={{
+          cursor: (extras as any)?.applicantSignatureDataUrl
+            ? "pointer"
+            : "default",
+          // textDecoration: "underline",
+          // opacity: (extras as any)?.applicantSignatureDataUrl ? 1 : 0.5,
+          userSelect: "none",
+        }}
+        aria-disabled={!(extras as any)?.applicantSignatureDataUrl}
+        title="מחק חתימה"
+      >
+        איפוס חתימה
+      </span>
+      <div className={styles.footer}>
         <button
+          className={styles.primaryButton}
           type="button"
           onClick={async () => {
             await onGenerate();
             router.push("./review");
           }}
-          className={styles.primaryButton}
         >
           סיום
         </button>
-
         <button
-          type="button"
-          onClick={onSaveDraftAndExit}
           className={styles.secondaryButton}
           disabled={saveStatus === "saving"}
+          onClick={async () => onSaveDraftAndExit}
         >
           שמור כטיוטה
-        </button>
+        </button>{" "}
       </div>
     </main>
   );
