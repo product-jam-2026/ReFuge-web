@@ -25,7 +25,7 @@
 }
 
 .illustration {
-  height: 180px; 
+  height: 300px; 
   width: auto;
   margin-bottom: 20px;
   object-fit: contain;
@@ -52,17 +52,17 @@
   font-weight: 700;
   color: #011429;
   line-height: 1.2;
-  margin: 0;
+  
+  /* 👇 שינוי: במקום margin: 0 */
+  margin-top: auto; 
+  margin-bottom: 0;
   
   display: flex;
   gap: 10px;
   flex-direction: row-reverse;
   justify-content: flex-start;
-  
-  /* מאזן את הכותרת */
   text-wrap: balance; 
 }
-
 .subtitle {
   font-family: var(--font-simpler), sans-serif;
   font-size: 18px;
@@ -96,6 +96,7 @@
 
   /* מונע מילה בודדת בשורה - פתרון מעולה לפסקאות */
   text-wrap: pretty;
+  margin-bottom: 50px;
 }
 
 .startButton {
@@ -119,11 +120,9 @@
   /* === השינוי הקריטי === */
   
   /* 1. דוחף את הכפתור לתחתית הקונטיינר */
-  margin-top: auto; 
-  
+  margin-top: 0;  
   /* 2. המרווח המדויק מהעיצוב (65px) + הגנה לאייפון */
-  margin-bottom: calc(65px + env(safe-area-inset-bottom));
-  
+  margin-bottom: calc(65px + env(safe-area-inset-bottom));  
   /* 3. מרווח ביטחון קטן מלמעלה, למקרה שהמסך ממש נמוך */
   padding-top: 0; 
   
