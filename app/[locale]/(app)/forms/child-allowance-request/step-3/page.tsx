@@ -2202,135 +2202,81 @@ function PhoneField({
 }: {
   label: string;
   value: string;
-
   onChange: (val: string) => void;
-
 }) {
   const [prefix, setPrefix] = useState(MOBILE_PREFIXES[0].value);
   const [body, setBody] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
-  const fullValue = useMemo(() => {
-    const cleanBody = body.replace(/^0+/, "");
-    return `${prefix}${cleanBody}`;
-  }, [prefix, body]);
-
   useEffect(() => {
     if (!value) return;
-    if (value == fullValue) return;
     const match = MOBILE_PREFIXES.find((p) => value.startsWith(p.value));
     const nextPrefix = match ? match.value : MOBILE_PREFIXES[0].value;
     const nextBody = match ? value.slice(match.value.length) : value;
     setPrefix(nextPrefix);
     setBody(nextBody);
-  }, [value, fullValue]);
+  }, [value]);
 
-  useEffect(() => {
-    if (value == fullValue) return;
-    onChange(fullValue);
-  }, [fullValue, value, onChange]);
-
+  const emit = (nextPrefix: string, nextBody: string) => {
+    const cleanBody = nextBody.replace(/^0+/, "");
+    onChange(`${nextPrefix}${cleanBody}`);
+  };
 
   return (
-
     <div className={styles.field}>
-
       <span className={styles.fieldLabel}>{label}</span>
-
       <div className={styles.phoneRow}>
-
         <div className={styles.prefixWrapper}>
-
           <button
-
             type="button"
-
             className={styles.prefixBtn}
-
             onClick={() => setIsOpen(!isOpen)}
-
             onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-
           >
-
             {prefix}
-
             <svg
-
               className={styles.arrowIcon}
-
               viewBox="0 0 24 24"
-
               fill="none"
-
               stroke="currentColor"
-
               strokeWidth="2"
-
             >
-
               <polyline points="6 9 12 15 18 9" />
-
             </svg>
-
           </button>
-
           {isOpen && (
-
             <ul className={styles.comboboxMenu} style={{ width: 200 }}>
-
               {MOBILE_PREFIXES.map((p) => (
-
                 <li
-
                   key={p.value}
-
                   className={styles.comboboxItem}
-
                   onMouseDown={() => {
-
                     setPrefix(p.value);
-
+                    emit(p.value, body);
                     setIsOpen(false);
-
                   }}
-
                 >
-
                   <span style={{ direction: "ltr" }}>{p.label}</span>
-
                 </li>
-
               ))}
-
             </ul>
-
           )}
-
         </div>
-
         <div className={styles.phoneBodyWrapper}>
-
           <input
-
             type="tel"
-
             className={styles.phoneBodyInput}
-
             value={body}
-
-            onChange={(e) => setBody(e.target.value.replace(/\\D/g, ""))}
-
+            onChange={(e) => {
+              const nextBody = e.target.value.replace(/\D/g, "");
+              setBody(nextBody);
+              emit(prefix, nextBody);
+            }}
             placeholder="0500000000"
-
           />
-
         </div>
-
       </div>
-
     </div>
-
   );
 }
 
@@ -3423,7 +3369,6 @@ export default function ChildAllowanceStep3() {
           onClick={goNext}
 
 
-          disabled={saveStatus === "saving"}
 
 
         >
@@ -3450,7 +3395,6 @@ export default function ChildAllowanceStep3() {
           onClick={saveDraftAndExit}
 
 
-          disabled={saveStatus === "saving"}
 
 
         >
@@ -3472,4 +3416,3 @@ export default function ChildAllowanceStep3() {
 
 
 }
-
