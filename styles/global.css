@@ -118,6 +118,28 @@ body {
   text-wrap: pretty;
 }
 
+body.fullBleedBlue {
+  background: #cfe2ff;
+}
+
+body.fullBleedBlue .appShell {
+  padding: 0;
+}
+
+body.fullBleedBlue .appFrame {
+  background: #cfe2ff;
+  border-radius: 0;
+}
+
+body.fullBleedBlue main.page {
+  padding: 0;
+  background: #cfe2ff;
+}
+
+body.fullBleedBlue .langFab {
+  display: none;
+}
+
 /* 3) Global typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-family-heading);

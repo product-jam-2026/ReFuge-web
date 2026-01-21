@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useParams } from "next/navigation";
+import { useEffect } from "react";
 import { useWizard } from "../WizardProvider";
 import { fieldMap } from "../fieldMap";
 import { intakeToPdfFields } from "../intakeToPdfFields";
@@ -88,6 +89,13 @@ export default function Review() {
   const params = useParams();
 
   const locale = params.locale as string;
+
+  useEffect(() => {
+    document.body.classList.add("fullBleedBlue");
+    return () => {
+      document.body.classList.remove("fullBleedBlue");
+    };
+  }, []);
 
   async function onGenerate() {
     const fields = intakeToPdfFields(draft as any, {
