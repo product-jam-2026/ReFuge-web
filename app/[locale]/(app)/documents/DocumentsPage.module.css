@@ -1,0 +1,148 @@
+.page {
+  --c-blue: #011429;
+  --c-orange: #EE8548;
+  --c-gray-border: #E5E7EB;
+  --c-text: #0B1B2B;
+  --c-bg: #FFFFFF;
+
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 24px;
+  font-family: var(--font-simpler), sans-serif;
+  direction: rtl;
+}
+
+.pageHeader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: right;
+  min-height: 44px;
+  margin-top: var(--page-header-top, 85px);
+  margin-bottom: 50px;
+  padding-right: 52px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: clamp(20px, 5.6vw, 28px);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.pageSubtitle {
+  margin: 0 18px 20px;
+  color: rgba(20, 30, 50, 0.65);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.pageBackBtn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(20, 30, 50, 0.9);
+  text-decoration: none;
+}
+
+.pageBackBtn:hover {
+  background: rgba(20, 30, 50, 0.06);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0;
+  padding-bottom: calc(var(--screen-bottom-padding) + env(safe-area-inset-bottom));
+}
+
+.labelStack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.labelSub {
+  font-size: 13px;
+  color: #6B7280;
+  opacity: 0.8;
+}
+
+.docActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.docBtn {
+  border: 1px solid rgba(20, 30, 50, 0.35);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff;
+  color: #111;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.uploadForm {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.deleteForm {
+  display: contents;
+}
+
+.actionSlot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.plusLeft {
+  margin-inline-start: auto;
+}
+
+.docName {
+  flex: 1;
+  min-width: 0;
+  display: block;
+}
+
+.pinIcon {
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.empty {
+  text-align: center;
+  color: #7b8794;
+  padding: 22px 0;
+  font-weight: 600;
+}
+
+.errorText {
+  color: #EE8548;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 4px 6px 0;
+}

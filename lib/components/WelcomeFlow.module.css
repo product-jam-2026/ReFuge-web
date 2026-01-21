@@ -35,34 +35,27 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* שינינו מ-space-between ל-flex-start כדי לשלוט במיקום ידנית */
   justify-content: flex-start; 
   z-index: 30;
   background: #C0DEFF;
   padding-bottom: 20px;
 }
 
-/* הלוגו מקבל מיקום קבוע מלמעלה */
 .logoImage { 
   width: 81px; 
   height: 76px; 
   object-fit: contain; 
-  margin-top: 140px; /* מרווח קבוע מהחלק העליון */
+  margin-top: 140px; 
   flex-shrink: 0;
 }
 
-/* הקבוצה התחתונה (ידיים + טקסט) תתפוס את המרכז של מה שנשאר */
 .bottomGroup { 
   display: flex; 
   flex-direction: column; 
   align-items: center; 
   width: 100%; 
-  
-  /* זה הטריק למרכז אותם בחלל הריק שבין הלוגו לתחתית */
   margin-top: auto; 
   margin-bottom: auto;
-  
-  /* הזזתי קצת למעלה ויזואלית כדי שלא יהיה "ממורכז" אבל נמוך מדי */
   transform: translateY(-20px);
 }
 
@@ -70,18 +63,18 @@
   width: 100%; 
   height: auto; 
   object-fit: cover; 
-  margin-bottom: 0; /* הורדנו רווח מיותר */
+  margin-bottom: 0; 
   display: block;
 }
 
 .splashTextContainer {
   position: relative;
   width: 100%;
-  height: 80px; /* הגדלתי קצת את הגובה השמור לטקסט */
+  height: 80px; 
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* הטקסט ייצמד לחלק העליון של הקופסה שלו */
-  margin-top: 10px; /* מקרב את הטקסט לידיים */
+  align-items: flex-start; 
+  margin-top: 10px; 
 }
 
 .splashTitle {
@@ -102,7 +95,7 @@
 .absoluteText { position: absolute; top: 0; left: 0; width: 100%; }
 
 
-/* --- מסך 2: Onboarding --- */
+/* --- מסך 2: Onboarding (מעודכן) --- */
 .onboardingScreen {
   position: absolute;
   inset: 0;
@@ -111,44 +104,91 @@
   align-items: center;
   background: #C0DEFF;
   z-index: 20;
-  overflow-y: auto; 
+  overflow: hidden;
   
-  padding-top: 65px;
+  padding-top: calc(20px + env(safe-area-inset-top)); 
   padding-left: 24px;
   padding-right: 24px;
-  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
   
-  gap: 24px; /* רווחים קצת יותר גדולים בין האלמנטים */
+  justify-content: space-between;
   text-align: right;
 }
 
-.topLogos { width: 155px; height: auto; flex-shrink: 0; }
-.envelopeImage { width: 100%; max-width: 260px; height: auto; filter: drop-shadow(0px 10px 20px rgba(0,0,0,0.1)); flex-shrink: 0; }
+.logosContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px; 
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+/* עדכון גדלים ללוגואים */
+.hiasLogo {
+  width: auto;
+  height: 18px; /* קטן במיוחד, כמו בתמונה */
+  object-fit: contain;
+}
+
+.refugeLogo {
+  width: auto;
+  height: 36px; /* מעט גדול יותר כדי ליצור איזון ויזואלי */
+  object-fit: contain;
+}
+
+.envelopeContainer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0; 
+  padding: 10px 0;
+}
+
+.envelopeImage { 
+  width: 100%; 
+  max-width: 300px; 
+  height: auto; 
+  max-height: 100%; 
+  object-fit: contain;
+}
 
 .textContainer { 
   display: flex; 
   flex-direction: column; 
-  gap: 16px; /* רווח בין הכותרות לטקסט */
   width: 100%; 
   align-items: flex-start; 
+  margin-bottom: 20px; 
+  flex-shrink: 0; 
 }
 
-/* ביטלתי את ה-balance שהיה כאן קודם וגרם לדחיסה */
-/* והגדלתי את הפונטים */
+.titlesGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px; 
+}
+
+.bodyGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .obTitle { 
-  font-size: 24px; /* הוגדל מ-20 */
+  font-size: 22px; 
   font-weight: 800; 
   color: #0B1B2B; 
-  line-height: 1.3; 
+  line-height: 1.2; 
   margin: 0; 
   width: 100%;
-  /* מבטל כיווץ מיותר */
   text-wrap: pretty; 
 }
 
 .obBody { 
-  font-size: 17px; /* הוגדל מ-15 */
+  font-size: 16px; 
   font-weight: 500; 
   color: #0B1B2B; 
   opacity: 0.9; 
@@ -173,7 +213,6 @@
   justify-content: center; 
   gap: 10px; 
   padding: 0 16px; 
-  margin-top: auto; 
   flex-shrink: 0; 
   transition: transform 0.1s; 
   -webkit-tap-highlight-color: transparent; 
@@ -181,7 +220,7 @@
 .startButton:active { transform: scale(0.98); }
 
 
-/* --- מסך 3: Login (ללא שינוי) --- */
+/* --- מסך 3: Login --- */
 .loginScreen {
   position: absolute;
   inset: 0;
@@ -249,11 +288,12 @@
 .userInfo { display: flex; flex-direction: column; align-items: flex-start; flex: 1; }
 .userName { font-size: 14px; font-weight: 500; color: #3c4043; }
 .userEmail { font-size: 12px; color: #5f6368; }
+
 .termsText {
   margin-top: 20px;
   font-size: 11px;
   color: #9ca3af;
   line-height: 1.4;
-  text-align: center;
+  text-align: right; 
   padding: 0 20px;
 }

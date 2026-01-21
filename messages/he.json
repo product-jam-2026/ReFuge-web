@@ -10,7 +10,7 @@
     },
     "subtitle": "מכאן ניתן לגשת לכל האיזורים באפליקציה\nמה תרצה לעשות כעת?",
     "cards": {
-      "profile": { "title": "איזור אישי", "desc": "צפייה במידע ומסמכים, עריכת שאלון כניסה" },
+      "profile": { "title": "איזור אישי", "desc": "צפייה במסמכים, שאלון כניסה" },
       "forms": {
         "title": "מאגר הטפסים",
         "desc": "מילוי טופס חדש, צפייה בטפסים קיימים והשלמת טיוטות"
@@ -24,7 +24,7 @@
   },
   "subtitle": "מכאן ניתן לגשת לכל האיזורים באפליקציה\nמה תרצה לעשות כעת?",
   "cards": {
-    "profile": { "title": "איזור אישי", "desc": "צפייה במידע ומסמכים, עריכת שאלון כניסה" },
+    "profile": { "title": "איזור אישי", "desc": "צפייה במסמכים, שאלון כניסה" },
     "forms": { "title": "מאגר הטפסים", "desc": "מילוי טופס חדש, צפייה בטפסים קיימים והשלמת טיוטות" },
     "rights": { "title": "מאגר זכויות", "desc": "שאלות ותשובות בנושא זכויות" },
     "myForms": { "title": "הטפסים שלי", "desc": "צפייה בטפסים מלאים" }
@@ -99,7 +99,7 @@
       "gender": "מין",
       "birthDate": "תאריך לידה",
       "nationality": "אזרחות",
-      "israeliId": "מספר תעודת זהות ישראלית",
+      "israeliId": "מספר תעודת זהות",
       "passportNumber": "מספר דרכון",
       "passportIssueDate": "תאריך הוצאת דרכון",
       "passportExpiryDate": "תאריך פקיעת דרכון",
@@ -368,7 +368,7 @@
       "childGender": "מין",
       "childBirthDate": "תאריך לידה",
       "childNationality": "אזרחות",
-      "childIsraeliId": "מספר תעודת זהות ישראלית",
+      "childIsraeliId": "מספר תעודת זהות",
       "childResidenceCountry": "ארץ לידה",
       "childBirthCity": "עיר לידה",
       "childResidenceCity": "עיר",
@@ -426,8 +426,37 @@
     },
 
     "actions": {
-      "savedForms": "מסמכים שהעלאתי",
+      "savedForms": "מסמכים שהעליתי",
       "editIntake": "עריכת שאלון כניסה"
+    }
+  },
+  "DocumentsPage": {
+    "title": "מסמכים שהעליתי",
+    "subtitle": "כאן אפשר לצפות ולהוריד את המסמכים שהעלית",
+    "notLoggedIn": "על מנת לצפות במסמכים יש להתחבר למערכת",
+    "goToLogin": "להתחברות",
+    "empty": "לא הועלו מסמכים",
+    "emptyField": "לחץ להעלאה",
+    "fileTooLarge": "הקובץ גדול מדי ולא ניתן להעלות אותו (מקסימום 4MB)",
+    "fields": {
+      "passportCopy": "צילום דרכון",
+      "familyStatusDoc": "תיעוד מצב משפחתי",
+      "secondParentStatusDoc": "תיעוד מצב משפחתי של ההורה השני",
+      "rentalContract": "חוזה שכירות",
+      "propertyOwnership": "אישור בעלות רכוש",
+      "childPassportPhoto": "תמונת פספורט ילד.ה",
+      "childLabelFallback": "ילד.ה",
+      "otherDocs": "מסמכים נוספים"
+    },
+    "sections": {
+      "children": "דרכונים/תמונות של הילדים"
+    },
+    "actions": {
+      "view": "צפייה",
+      "download": "הורדה",
+      "delete": "מחיקה",
+      "uploading": "מעלה את הקובץ",
+      "deleting": "מוחק את הקובץ"
     }
   }
 }

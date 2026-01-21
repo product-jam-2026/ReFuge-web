@@ -60,7 +60,7 @@ function CountrySelect({ name, labelAr, labelHe }: { name: string, labelAr: stri
         <input 
           type="text" 
           className={styles.inputBase} 
-          placeholder="اختر دولة / בחר מדינה" 
+          placeholder="اختر دولة בחר מדינה" 
           value={query} 
           onChange={e => { setQuery(e.target.value); setIsOpen(true); }} 
           onFocus={() => setIsOpen(true)} 
@@ -97,16 +97,20 @@ type Props = {
   locale: string;
   saved: boolean;
   existingChildren: any[];
+  // הוספת הפעולה לשמירת טיוטה
+  saveDraftAction: (formData: FormData) => Promise<any>;
 };
 
-export default function Step6FormClient({ locale, saved }: Props) {
+export default function Step6FormClient({ locale, saved, saveDraftAction }: Props) {
   const [screen, setScreen] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
   
   // מפתח לריענון הטופס - כשזה משתנה, הטופס נמחק ומתאפס
   const [formKey, setFormKey] = useState(0); 
   const [formGender, setFormGender] = useState(""); // לאיפוס כפתורי רדיו
   const formRef = useRef<HTMLFormElement>(null);
+  const draftTimerRef = useRef<number | null>(null);
   
   const [allChildrenTranslated, setAllChildrenTranslated] = useState<any[]>([]);
   const [showSavedMsg, setShowSavedMsg] = useState(false);
@@ -155,7 +159,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
       const res = await submitStep6Child(locale, "finish_step", formData);
       
       if (res?.updatedChildren) {
-         const translated = await translateStep6Data(res.updatedChildren);
+         const translated = await translateStep6Data(res.updatedChildren, locale);
          setAllChildrenTranslated(translated);
          setScreen(4); // מעבר למסך סיכום
       }
@@ -171,6 +175,25 @@ export default function Step6FormClient({ locale, saved }: Props) {
      await proceedToStep7(locale);
   };
 
+  const handleSaveDraft = async () => {
+    if (!formRef.current) return;
+    const start = Date.now();
+    setShowDraftSaved(true);
+    try {
+      const formData = new FormData(formRef.current);
+      await saveDraftAction(formData);
+    } catch (error) {
+      console.error("Draft save error:", error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (draftTimerRef.current) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => setShowDraftSaved(false), remaining);
+    }
+  };
+
   return (
     <div className={styles.pageContainer} dir="rtl">
       
@@ -178,8 +201,17 @@ export default function Step6FormClient({ locale, saved }: Props) {
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים...</p>
-             <p style={{fontSize: 14, color: '#666'}}>جاري المعالجة...</p>
+             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+             <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
+          </div>
+        </div>
+      )}
+      {showDraftSaved && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>تم حفظ البيانات، ويمكن تعديلها في المنطقة الشخصية في أي وقت</p>
+            <p style={{fontSize: 14, color: '#666'}}>הנתונים נשמרו, ניתן לערוך אותם תמיד באזור האישי</p>
           </div>
         </div>
       )}
@@ -189,7 +221,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
         <div className={styles.stepSplashContainer}>
           <Image src={INTRO_IMAGE} alt="Baby" width={280} height={200} className={styles.stepSplashImage} priority />
           <div className={styles.stepSplashContent}>
-            <div className={styles.stepNumberTitle}><span>المرحلة 6</span><span>שלב 6</span></div>
+            <div className={styles.stepNumberTitle}><span>المرحلة</span><span>שלב 6</span></div>
             <div className={styles.stepMainTitle}><span>أولاد</span><span>ילדים</span></div>
             <div className={styles.stepDescription}>
                 <p dir="rtl">بهالمرحلة لازم تعبي معلومات عن الأولاد تحت جيل 18<br/>الوقت المتوقع للتعبئة: 2 دقيقة</p>
@@ -203,18 +235,14 @@ export default function Step6FormClient({ locale, saved }: Props) {
 
       {/* Form Screens (1-3) */}
       {screen > 0 && screen < 4 && (
-        <form 
-          key={formKey} // זה הטריק שמאפס את הטופס!
-          ref={formRef} 
-          className={styles.scrollableContent} 
-          onSubmit={(e) => e.preventDefault()}
-        >
+        <>
+          {/* Top Bar (Outside Form) */}
           <div className={styles.topBar}>
             <div className={styles.topRow} style={{justifyContent: 'flex-start'}}>
                <button type="button" className={styles.backBtn} onClick={goBack}>
                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                </button>
-               <div className={styles.stepMeta} style={{marginRight: 10}}><span>المرحلة 6 من 7</span><span> | </span><span>שלב 6 מתוך 7</span></div>
+               <div className={styles.stepMeta} style={{marginRight: 10}}><span>المرحلة 6 من 7</span> <span>שלב 6 מתוך 7</span></div>
             </div>
             <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
             <div className={styles.titleBlock}>
@@ -222,71 +250,95 @@ export default function Step6FormClient({ locale, saved }: Props) {
             </div>
             {showSavedMsg && (
                 <div style={{
-                    background: '#dcfce7', color: '#166534', padding: '12px', 
-                    borderRadius: '8px', textAlign: 'center', fontSize: '15px', marginBottom: '15px', fontWeight: 'bold'
+                    background: '#C0DEFF', 
+                    color: '#011429', // צבע הכתב שביקשת
+                    padding: '12px', 
+                    borderRadius: '8px', 
+                    textAlign: 'center', 
+                    fontSize: '15px', 
+                    marginBottom: '15px', 
+                    fontWeight: 'bold',
+                    // --- תוספות לשבירת שורות ---
+                    display: 'flex',
+                    flexDirection: 'column', // זה מה ששם אותם אחד מעל השני
+                    alignItems: 'center',
+                    gap: '4px' // רווח קטן בין השורות
                 }}>
                     <BiInline ar="تم حفظ الطفل بنجاح" he="הילד נשמר בהצלחה! ניתן להזין ילד נוסף" />
                 </div>
             )}
           </div>
 
-          {/* Screen 1: General A */}
-          <div style={{ display: screen === 1 ? 'block' : 'none' }}>
-            <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input name="childLastName" className={styles.inputBase} /></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div><input name="childFirstName" className={styles.inputBase} /></div>
-            
-            <div className={styles.fieldGroup}>
-                <div className={styles.label}><BiInline ar="النوع" he="מין" /></div>
-                <div className={styles.selectionRow}>
-                    <label className={styles.selectionLabel}>
-                        <input type="radio" name="childGender" value="male" onChange={() => setFormGender('male')} checked={formGender === 'male'} />
-                        <span className={styles.selectionSpan}><BiInline ar="ذكر" he="זכר" /></span>
-                    </label>
-                    <label className={styles.selectionLabel}>
-                        <input type="radio" name="childGender" value="female" onChange={() => setFormGender('female')} checked={formGender === 'female'} />
-                        <span className={styles.selectionSpan}><BiInline ar="أنثى" he="נקבה" /></span>
-                    </label>
-                </div>
+          <form 
+            key={formKey} 
+            ref={formRef} 
+            className={styles.scrollableContent} 
+            onSubmit={(e) => e.preventDefault()}
+          >
+            {/* Screen 1: General A */}
+            <div style={{ display: screen === 1 ? 'block' : 'none', paddingTop: '40px' }}>
+              <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
+              <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div><input name="childFirstName" className={styles.inputBase} /></div>
+              <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input name="childLastName" className={styles.inputBase} /></div>
+              
+              <div className={styles.fieldGroup}>
+                  <div className={styles.label}><BiInline ar="النوع" he="מין" /></div>
+                  <div className={styles.selectionRow}>
+                      <label className={styles.selectionLabel}>
+                          <input type="radio" name="childGender" value="male" onChange={() => setFormGender('male')} checked={formGender === 'male'} />
+                          <span className={styles.selectionSpan}><BiInline ar="ذكر" he="זכר" /></span>
+                      </label>
+                      <label className={styles.selectionLabel}>
+                          <input type="radio" name="childGender" value="female" onChange={() => setFormGender('female')} checked={formGender === 'female'} />
+                          <span className={styles.selectionSpan}><BiInline ar="أنثى" he="נקבה" /></span>
+                      </label>
+                  </div>
+              </div>
+
+              <div className={styles.fixedFooter}>
+                  <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
+                  <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
+              </div>
             </div>
 
-            <div className={styles.fixedFooter}>
-                <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
+            {/* Screen 2: General B */}
+            <div style={{ display: screen === 2 ? 'block' : 'none', paddingTop: '40px' }}>
+              <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
+              <DateField labelAr="تاريخ الميلاد" labelHe="תאריך לידה" name="childBirthDate" />
+              <CountrySelect name="childNationality" labelAr="الجنسية" labelHe="אזרחות" />
+              <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div><input name="childIsraeliId" className={styles.inputBase} inputMode="numeric" /></div>
+              
+              <div className={styles.fixedFooter}>
+                  <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
+                  <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
+              </div>
             </div>
-          </div>
 
-          {/* Screen 2: General B */}
-          <div style={{ display: screen === 2 ? 'block' : 'none' }}>
-            <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
-            <DateField labelAr="تاريخ الميلاد" labelHe="תאריך לידה" name="childBirthDate" />
-            <CountrySelect name="childNationality" labelAr="الجنسية" labelHe="אזרחות" />
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم بطاقة الهوية الإسرائيلية" he="מספר תעודת זהות ישראלית" /></div><input name="childIsraeliId" className={styles.inputBase} inputMode="numeric" /></div>
-            
-            <div className={styles.fixedFooter}>
-                <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
+            {/* Screen 3: Migration & Actions */}
+            <div style={{ display: screen === 3 ? 'block' : 'none', paddingTop: '40px' }}>
+              <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="الهجرة" he="הגירה" /></div></div>
+              <CountrySelect name="childResidenceCountry" labelAr="بلد الميلاد" labelHe="ארץ לידה" />
+              <DateField labelAr="تاريخ الهجرة إلى البلاد" labelHe="תאריך עלייה לארץ" name="childEntryDate" />
+              <DateField labelAr="تاريخ الدخول إلى البلاد" labelHe="תאריך כניסה לארץ" name="childArrivalToIsraelDate" />
+
+              <div className={styles.fixedFooter}>
+                 {/* כפתור הוספת ילד - שומר ומנקה את הטופס */}
+                 <button type="button" onClick={handleAddAnother} className={styles.btnPrimary} style={{marginBottom: 10}}>
+                   <BiInline ar="إضافة طفل/طفلة" he="הוספת ילד.ה" />
+                 </button>
+
+                 {/* כפתור סיום - שומר ומעביר לסיכום */}
+                 <button type="button" onClick={handleFinishStep} className={styles.btnPrimary}>
+                   <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
+                 </button>
+
+                 <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
+                   <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+                 </button>
+              </div>
             </div>
-          </div>
-
-          {/* Screen 3: Migration & Actions */}
-          <div style={{ display: screen === 3 ? 'block' : 'none' }}>
-            <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="الهجرة" he="הגירה" /></div></div>
-            <CountrySelect name="childResidenceCountry" labelAr="بلد الميلاد" labelHe="ארץ לידה" />
-            <DateField labelAr="تاريخ الهجرة إلى البلاد" labelHe="תאריך עלייה לארץ" name="childEntryDate" />
-            <DateField labelAr="تاريخ الدخول إلى البلاد" labelHe="תאריך כניסה לארץ" name="childArrivalToIsraelDate" />
-
-            <div className={styles.fixedFooter}>
-               {/* כפתור הוספת ילד - שומר ומנקה את הטופס */}
-               <button type="button" onClick={handleAddAnother} className={styles.btnPrimary} style={{marginBottom: 10, background: '#0b2a4a'}}>
-                 <BiInline ar="إضافة طفل/طفلة" he="הוספת ילד.ה" />
-               </button>
-
-               {/* כפתור סיום - שומר ומעביר לסיכום */}
-               <button type="button" onClick={handleFinishStep} className={styles.btnPrimary}>
-                 <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
-               </button>
-            </div>
-          </div>
-        </form>
+          </form>
+        </>
       )}
 
       {/* --- Screen 4: Summary --- */}
@@ -294,7 +346,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
         <div className={styles.scrollableContent} style={{paddingTop: 0}}>
             <div className={styles.reviewHeader}>
                 <div className={styles.reviewTitle}>
-                    <span>نهاية المرحلة 6</span><span>סוף שלב 6</span>
+                    <span>نهاية المرحلة</span><span>סוף שלב 6</span>
                 </div>
                 <div className={styles.summarySub} style={{ lineHeight: '1.6' }}>
                     <span>يرجى التحقق من صحة التفاصيل وترجمتها</span><br/>
@@ -311,6 +363,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
                         </div>
                     </div>
 
+                    {/* 1. Translated Names */}
                     <div className={styles.fieldGroup}>
                         <div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div>
                         <div className={styles.translationPill}>
@@ -337,14 +390,57 @@ export default function Step6FormClient({ locale, saved }: Props) {
                         </div>
                     </div>
 
-                    <div className={styles.fieldGroup}>
-                        <div className={styles.label}><BiInline ar="تاريخ الميلاد" he="תאריך לידה" /></div>
-                        <input className={styles.readOnlyInput} value={formatDateDisplay(child.birthDate)} readOnly />
-                    </div>
+                    {/* 2. Gender */}
+                    {child.gender && (
+                        <div className={styles.fieldGroup}>
+                           <div className={styles.label}><BiInline ar="النوع" he="מין" /></div>
+                           <input className={styles.readOnlyInput} 
+                              value={child.gender === 'male' ? 'זכר  ذكر' : child.gender === 'female' ? 'נקבה  أنثى' : ''} 
+                              readOnly 
+                           />
+                        </div>
+                    )}
+
+                    {/* 3. Dates & ID */}
+                    {child.birthDate && (
+                        <div className={styles.fieldGroup}>
+                            <div className={styles.label}><BiInline ar="تاريخ الميلاد" he="תאריך לידה" /></div>
+                            <input className={styles.readOnlyInput} value={formatDateDisplay(child.birthDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right'}} />
+                        </div>
+                    )}
+                    {child.nationality && (
+                        <div className={styles.fieldGroup}>
+                            <div className={styles.label}><BiInline ar="الجنسية" he="אזרחות" /></div>
+                            <input className={styles.readOnlyInput} value={child.nationality} readOnly />
+                        </div>
+                    )}
                     {child.israeliId && (
                         <div className={styles.fieldGroup}>
-                            <div className={styles.label}><BiInline ar="رقم الهوية" he="ת.ז ישראלית" /></div>
+                            <div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div>
                             <input className={styles.readOnlyInput} value={child.israeliId} readOnly style={{direction: 'ltr', textAlign: 'right'}} />
+                        </div>
+                    )}
+
+                    {/* 4. Migration */}
+                    <div className={styles.sectionHead} style={{marginTop: 15}}>
+                       <div className={styles.sectionTitle} style={{fontSize: 14}}><BiInline ar="الهجرة" he="הגירה" /></div>
+                    </div>
+                    {child.residenceCountry && (
+                        <div className={styles.fieldGroup}>
+                            <div className={styles.label}><BiInline ar="بلد الميلاد" he="ארץ לידה" /></div>
+                            <input className={styles.readOnlyInput} value={child.residenceCountry} readOnly />
+                        </div>
+                    )}
+                    {child.entryDate && (
+                        <div className={styles.fieldGroup}>
+                            <div className={styles.label}><BiInline ar="تاريخ الهجرة إلى البلاد" he="תאריך עלייה לארץ" /></div>
+                            <input className={styles.readOnlyInput} value={formatDateDisplay(child.entryDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right'}} />
+                        </div>
+                    )}
+                    {child.arrivalToIsraelDate && (
+                        <div className={styles.fieldGroup}>
+                            <div className={styles.label}><BiInline ar="تاريخ الدخول إلى البلاد" he="תאריך כניסה לארץ" /></div>
+                            <input className={styles.readOnlyInput} value={formatDateDisplay(child.arrivalToIsraelDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right'}} />
                         </div>
                     )}
                 </div>
@@ -361,7 +457,7 @@ export default function Step6FormClient({ locale, saved }: Props) {
                     <BiInline ar="موافقة" he="אישור וסיום" />
                 </button>
                 <button type="button" onClick={() => window.location.reload()} className={styles.btnSecondary}>
-                    <BiInline ar="تعديل (إعادة تعيين)" he="עריכה (איפוס)" />
+                    <BiInline ar="تعديل" he="עריכה" />
                 </button>
             </div>
         </div>

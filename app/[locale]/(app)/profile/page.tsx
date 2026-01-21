@@ -35,7 +35,7 @@ export default async function ProfilePage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // ✅ אם ה-guard פעיל ואין משתמש — מציגים הודעה (בפרודקשן/כשאת מפעילה true)
+  // ✅ אם ה-guard פעיל ואין משתמש — מציגים הודעה
   if (!user && guardEnabled) {
     return (
       <div className={styles.profilePage}>
@@ -63,7 +63,6 @@ export default async function ProfilePage({
           {t("notLoggedIn")}
         </p>
 
-        {/* אם יש לך דף התחברות קיים ואת רוצה כפתור כאן, תגידי ואוסיף */}
         <p className="muted" style={{ textAlign: "center", marginTop: 8 }}>
           <Link href={`/${locale}/login`} style={{ textDecoration: "underline" }}>
             {t("goToLogin")}
@@ -73,7 +72,7 @@ export default async function ProfilePage({
     );
   }
 
-  // ✅ אם אין user אבל guard כבוי (פיתוח) — לא מציגים הודעה, פשוט placeholders
+  // ✅ שליפת נתונים
   let data: any = {};
   let dbError: string | null = null;
 
@@ -88,15 +87,37 @@ export default async function ProfilePage({
     data = profileRow?.data ?? {};
   }
 
+  // חילוץ המידע מתוך השלבים
   const step1 = data?.intake?.step1 ?? {};
-  const step2 = data?.intake?.step2 ?? {};
+  // const step2 = data?.intake?.step2 ?? {}; // לא בשימוש כרגע לכתובת
+  const step3 = data?.intake?.step3 ?? {}; // כאן נמצאת הכתובת האמיתית
 
   const fullName = pickFirst(step1?.fullName, step1?.full_name);
   const firstName = getLocalizedText(pickFirst(step1?.firstName, step1?.first_name), locale);
   const lastName = getLocalizedText(pickFirst(step1?.lastName, step1?.last_name), locale);
   const phoneDisplay = pickFirst(step1?.phone, step1?.phoneNumber, step1?.phone_number);
   const email = pickFirst(step1?.email);
-  const address = getLocalizedText(step2?.residenceAddress, locale);
+
+  // --- לוגיקה חדשה לבניית כתובת מלאה מתוך step3 ---
+  const regAddr = step3?.registeredAddress || {};
+  
+  // 1. שם הרחוב (מתורגם)
+  const streetName = getLocalizedText(regAddr.street, locale);
+  // 2. מספר בית
+  const houseNum = regAddr.houseNumber;
+  // 3. עיר (מתורגמת או מחרוזת)
+  const cityName = getLocalizedText(regAddr.city, locale);
+
+  // חיבור החלקים: "רחוב מספר, עיר" (מסנן חלקים ריקים)
+  // למשל: "גדעון בן יואש 55, אשקלון"
+  const addressParts = [];
+  if (streetName) addressParts.push(streetName + (houseNum ? ` ${houseNum}` : ""));
+  else if (houseNum) addressParts.push(houseNum); // אם יש רק מספר בלי רחוב
+  
+  if (cityName) addressParts.push(cityName);
+
+  const address = addressParts.join(", ");
+  // ------------------------------------------------
 
   const contactMethods = data?.contactMethods ?? null;
 
@@ -136,7 +157,12 @@ export default async function ProfilePage({
         <div className={styles.fieldGroup}>
           <div className={styles.fieldLabel}>{t("fields.phone")}</div>
           <div className={`${styles.fieldPill} ${styles.fieldRow}`}>
-            {phoneDisplay || <span className={styles.placeholder}>{t("empty")}</span>}
+            {/* הוספתי כאן תנאי ו-span עם direction: ltr */}
+            {phoneDisplay ? (
+               <span style={{ direction: "ltr", unicodeBidi: "embed" }}>{phoneDisplay}</span>
+            ) : (
+               <span className={styles.placeholder}>{t("empty")}</span>
+            )}
           </div>
         </div>
 

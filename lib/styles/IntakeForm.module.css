@@ -3,7 +3,7 @@
 /* --- משתנים מקומיים --- */
 .pageContainer {
   --c-blue: #011429;
-  --c-orange: #EE7248;
+  --c-orange: #EE8548;
   --c-gray-border: #E5E7EB;
   --c-text: #0B1B2B;
   --c-bg: #FFFFFF;
@@ -46,7 +46,8 @@
 
 /* --- אזור עליון --- */
 .topBar {
-  padding: 60px 24px 10px 24px;
+  /* למעלה 60, צדדים 15, למטה 10 */
+  padding: 60px 15px 10px 15px; 
   background: white;
   z-index: 10;
   flex-shrink: 0;
@@ -81,12 +82,16 @@
   font-weight: 500; 
   display: flex;
   gap: 5px;
-  align-items: center;
+  align-items: flex-start;
 }
 
 /* פרוגרס בר - מתמלא מימין לשמאל */
 .progressBarTrack {
-  width: 100%; height: 6px; 
+  width: 100%; /* רוחב מלא בתוך הקונטיינר */
+  margin: 0;   /* ביטול המרג'ין השלילי שהיה */
+  
+  /* השאר נשאר אותו דבר */
+  height: 6px; 
   background-color: rgba(238, 133, 72, 0.2);
   border-radius: 999px; 
   overflow: hidden; 
@@ -124,7 +129,7 @@
   
   /* === הוספה: מצמיד לימין === */
   display: flex; 
-  gap: 8px; 
+  gap: 4px; 
   justify-content: flex-start; /* ב-RTL זה אומר ימין */
 }
 
@@ -284,17 +289,18 @@
 
 /* --- מסך סיכום (Review) --- */
 .reviewHeader {
-  background-color: var(--c-orange);
+  background-color: #FF8D29;
   border-radius: 0 0 30px 30px;
-  padding: 60px 24px 30px 24px; 
-  text-align: center; color: white;
   
-  /* התיקון לרוחב מלא: מתיחה מחוץ לפאדינג של הקונטיינר */
-  width: calc(100% + 48px); /* 100% ועוד פעמיים ה-Padding של 24px */
-  margin-left: -24px; 
-  margin-right: -24px;
-  margin-top: -24px; /* ביטול רווח עליון אם יש */
+  /* עדכון המרווחים בסיכום שיהיה תואם */
+  padding: 60px 15px 30px 15px; 
+  text-align: right; /* יישור טקסט לימין */
+  color: white;
   
+  width: calc(100% + 30px); /* התאמה לרווח החדש */
+  margin-left: -15px;
+  margin-right: -15px;
+  margin-top: -24px;
   margin-bottom: 24px;
 }
 .reviewTitle {
@@ -303,10 +309,9 @@
   margin-bottom: 8px;
   line-height: 1.2;
   
-  /* === הוספה: מסדר את השפות עם רווח ביניהן === */
   display: flex;
-  justify-content: center; /* שומר על הכותרת באמצע */
-  gap: 12px; /* גודל הרווח בין הערבית לעברית */
+  justify-content: flex-start; /* מצמיד לימין */
+  gap: 12px;
 }
 .reviewSubtitle { font-size: 14px; opacity: 0.9; }
 
@@ -593,14 +598,11 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  justify-content: flex-start;
+  text-align: right;
 }
 
-/* התאמה למסך סיכום: כותרת כתומה לרוחב מלא */
-.reviewHeader {
-  width: calc(100% + 48px);
-  margin-left: -24px;
-  margin-right: -24px;
-}
+
 /* --- תוספות לשלב 7 (העלאת קבצים) --- */
 
 .fileInputLabel {
@@ -654,4 +656,32 @@
 
 .hiddenInput {
   display: none;
+}
+
+.uploadError {
+  color: #EE8548;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 4px 6px 0;
+  display: flex;
+  gap: 6px;
+}
+
+/* --- תיקון גורף ליישור לימין --- */
+
+/* מיישר את כל שדות הקריאה-בלבד (הלבנים/אפורים) לימין */
+.readOnlyInput {
+  text-align: right !important;
+}
+
+/* מיישר את הטקסט המקורי (החלק הלבן בתוך קפסולת התרגום) לימין */
+.transOriginal {
+  justify-content: flex-start !important; /* ב-RTL זה אומר ימין */
+  text-align: right !important;
+  width: 100%;
+}
+
+/* מוודא שגם בתוך ה-input עצמו הטקסט בימין */
+.inputBase {
+  text-align: right;
 }

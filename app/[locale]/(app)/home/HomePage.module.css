@@ -7,8 +7,9 @@
   --illustration-h: 36.226851vh;
   --title-top: 11.921296vh;
 
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100svh;
+  min-height: 100dvh;
+  overflow: visible;
   background: var(--c-surface);
 
   display: grid;
@@ -149,7 +150,7 @@ align-content: start;
   line-height: 1;
   color: #0b1b2b;
   opacity: 0.85;
-  transform: translateY(-1px);
+  transform: translateY(-17px);
 }
 
 .cardText{
@@ -181,9 +182,13 @@ align-content: start;
   max-width: 56%;
 }
 
+.cardOrange .cardDesc{
+  max-width: 95%;
+}
+
 .cardBlue{ background: #9bbcff; }
 .cardGreen{ background: var(--c-mint); }
-.cardOrange{ background: var(--c-orange); }
+.cardOrange{ background: #FF8D29; }
 
 .root :global(.langFab){
   background: #E6F2FF;

@@ -11,9 +11,9 @@ const TOTAL_SCREENS = 4; // מסכי מילוי
 
 // --- Phone Prefixes ---
 const MOBILE_PREFIXES = [
-  { label: "🇮🇱 ישראל (+972)", value: "+972" },
-  { label: "🇵🇸 רשות פלסטינית (+970)", value: "+970" },
-  { label: "🇺🇸 ארה\"ב (+1)", value: "+1" },
+  { label: "ישראל (+972) – إسرائيل", value: "+972" },
+  { label: "רשות פלסטינית (+970) – فلسطين", value: "+970" },
+  { label: "ארה\"ב (+1) – الولايات المتحدة", value: "+1" },
 ];
 
 type Props = {
@@ -59,7 +59,6 @@ function getCountryLabel(value: string) {
 function DateField({ labelHe, labelAr, namePrefix, defaultParts, isoValue }: { 
   labelHe: string; labelAr: string; namePrefix: string; defaultParts: {y:string, m:string, d:string}; isoValue?: string 
 }) {
-  // אם יש isoValue (מהסטייט) נשתמש בו, אחרת נשתמש ב-defaultParts (מהשרת)
   const initialIso = isoValue || partsToIso(defaultParts);
   const [iso, setIso] = useState<string>(initialIso);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -103,7 +102,6 @@ function CountrySelect({ defaultValue, name, labelAr, labelHe }: { defaultValue:
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIso, setSelectedIso] = useState(defaultValue);
 
-  // הוספתי useEffect כדי לעדכן את השדה אם defaultValue משתנה (כשחוזרים אחורה)
   useState(() => {
       if (defaultValue) {
         const found = countriesList.find((c: any) => c.iso2 === defaultValue || c.he === defaultValue);
@@ -125,7 +123,7 @@ function CountrySelect({ defaultValue, name, labelAr, labelHe }: { defaultValue:
         <input 
           type="text" 
           className={styles.inputBase} 
-          placeholder="בחר מדינה... / اختر دولة..." 
+          placeholder="اختر دولة בחר מדינה" 
           value={query} 
           onChange={e => { setQuery(e.target.value); setIsOpen(true); setSelectedIso(e.target.value); }} 
           onFocus={() => setIsOpen(true)} 
@@ -149,7 +147,6 @@ function CountrySelect({ defaultValue, name, labelAr, labelHe }: { defaultValue:
 function PhoneField({ labelAr, labelHe, name, defaultValue, prefixes }: { 
   labelAr: string; labelHe: string; name: string; defaultValue: string; prefixes: {label:string, value:string}[] 
 }) {
-  // חישוב ערכים התחלתיים שיתמכו גם בערך שחוזר אחורה
   const initialPrefix = useMemo(() => {
     if (!defaultValue) return prefixes[0].value;
     const match = prefixes.find(p => defaultValue.startsWith(p.value));
@@ -211,14 +208,16 @@ function PhoneField({ labelAr, labelHe, name, defaultValue, prefixes }: {
 }
 
 // --- Main Component ---
-export default function Step5FormClient({ saved, defaults, saveDraftAction, saveAndNextAction, saveDraftAndBackAction }: Props) {
+export default function Step5FormClient({ locale, saved, defaults, saveDraftAction, saveAndNextAction, saveDraftAndBackAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
   
   const [formDataState, setFormDataState] = useState<any>({});
   const [translations, setTranslations] = useState<any>({});
 
   const formRef = useRef<HTMLFormElement>(null);
+  const draftTimerRef = useRef<number | null>(null);
 
   const progress = useMemo(() => {
     if (screen === 0) return 0;
@@ -241,7 +240,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
     setIsTranslating(true);
 
     try {
-      const translatedResult = await translateStep5Data(formData);
+      const translatedResult = await translateStep5Data(formData, locale);
       setTranslations(translatedResult || {});
       setScreen(TOTAL_SCREENS + 1);
     } catch (error) {
@@ -249,6 +248,25 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
       setScreen(TOTAL_SCREENS + 1);
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!formRef.current) return;
+    const start = Date.now();
+    setShowDraftSaved(true);
+    try {
+      const formData = new FormData(formRef.current);
+      await saveDraftAction(formData);
+    } catch (error) {
+      console.error("Draft save error:", error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (draftTimerRef.current) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => setShowDraftSaved(false), remaining);
     }
   };
 
@@ -262,8 +280,17 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-            <p style={{fontSize: 14, color: '#666'}}>جاري ترجمة البيانات</p>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם נתונים</p>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+            <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
+          </div>
+        </div>
+      )}
+      {showDraftSaved && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>تم حفظ البيانات، ويمكن تعديلها في المنطقة الشخصية في أي وقت</p>
+            <p style={{fontSize: 14, color: '#666'}}>הנתונים נשמרו, ניתן לערוך אותם תמיד באזור האישי</p>
           </div>
         </div>
       )}
@@ -273,8 +300,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
         <div className={styles.stepSplashContainer}>
           <Image src={INTRO_IMAGE} alt="Family" width={280} height={280} className={styles.stepSplashImage} priority />
           <div className={styles.stepSplashContent}>
-            {/* תיקון: צמוד לימין */}
-            <div className={styles.stepNumberTitle}><span>المرحلة 5</span><span>שלב 5</span></div>
+            <div className={styles.stepNumberTitle}><span>المرحلة</span><span>שלב 5</span></div>
             <div className={styles.stepMainTitle}><span>أم/أب أولادي</span><span>הורה נוסף</span></div>
             <div className={styles.stepDescription}>
                 <p dir="rtl">بهالمرحلة لازم تعبي تفاصيل شخصية عن الوالد الثاني للطفل<br/>الوقت المتوقع للتعبئة: 5 دقيقة</p>
@@ -286,112 +312,111 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
         </div>
       )}
 
-      {/* Form Screens */}
+      {/* --- FORM 1: Input Screens (1-4) --- */}
       {screen > 0 && screen <= TOTAL_SCREENS && (
-        <form 
-          ref={formRef} 
-          className={styles.scrollableContent} 
-          onSubmit={(e) => e.preventDefault()}
-        >
+        <>
+          {/* Top Bar (Outside Form) */}
           <div className={styles.topBar}>
-            {/* תיקון: יישור לימין (flex-start) */}
             <div className={styles.topRow} style={{justifyContent: 'flex-start'}}>
                <button type="button" className={styles.backBtn} onClick={goBack}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
-               {/* רווח קטן בין החץ לטקסט */}
                <div className={styles.stepMeta} style={{marginRight: 10}}><span>المرحلة 5 من 7</span> <span>שלב 5 מתוך 7</span></div>
             </div>
             <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
             <div className={styles.titleBlock}>
-                {/* תיקון: הקטנת הפונט כדי שייכנס בשורה אחת */}
                 <h1 className={styles.formTitle} style={{justifyContent:'flex-start', fontSize: '19px'}}><BiInline ar="بيانات الزوج/الزوجة" he="פרטי ההורה הנוסף" /></h1>
                 <p className={styles.formSubtitle}><BiInline ar="كما هو مدون في جواز السفر" he="כפי שרשומים בדרכון" /></p>
             </div>
           </div>
 
-          {/* Screen 1: Names */}
-          <div style={{ display: screen === 1 ? 'block' : 'none' }}>
-            <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input name="lastName" defaultValue={val("lastName")} className={styles.inputBase} /></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div><input name="firstName" defaultValue={val("firstName")} className={styles.inputBase} /></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة السابق" he="שם משפחה קודם" /></div><input name="oldLastName" defaultValue={val("oldLastName")} className={styles.inputBase} /></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي السابق" he="שם פרטי קודם" /></div><input name="oldFirstName" defaultValue={val("oldFirstName")} className={styles.inputBase} /></div>
-            <div className={styles.fixedFooter}>
-                <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
-                <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
-            </div>
-          </div>
-
-          {/* Screen 2: Details */}
-          <div style={{ display: screen === 2 ? 'block' : 'none' }}>
-            <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
-            <div className={styles.fieldGroup}>
-                <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
-                <div className={styles.selectionRow}>
-                    <label className={styles.selectionLabel}>
-                    <input type="radio" name="gender" value="male" defaultChecked={val("gender") === "male"} />
-                    <span className={styles.selectionSpan}><BiInline ar="ذكر" he="זכר" /></span>
-                    </label>
-                    <label className={styles.selectionLabel}>
-                    <input type="radio" name="gender" value="female" defaultChecked={val("gender") === "female"} />
-                    <span className={styles.selectionSpan}><BiInline ar="أنثى" he="נקבה" /></span>
-                    </label>
-                </div>
-            </div>
-            {/* שימוש ב-isoValue כדי לשמור על התאריך בחזרה אחורה */}
-            <DateField labelAr="تاريخ الميلاد" labelHe="תאריך לידה" namePrefix="birthDate" defaultParts={defaults.birthDate} isoValue={formDataState.birthDate} />
-            <CountrySelect defaultValue={val("nationality")} name="nationality" labelAr="الجنسية" labelHe="אזרחות" />
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم الهوية الإسرائيلية" he="מספר תעודת זהות ישראלית" /></div><input name="israeliId" defaultValue={val("israeliId")} className={styles.inputBase} inputMode="numeric" /></div>
-            <div className={styles.fixedFooter}>
-                <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
-                <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
-            </div>
-          </div>
-
-          {/* Screen 3: Passport */}
-          <div style={{ display: screen === 3 ? 'block' : 'none' }}>
-            <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="جواز السفر" he="דרכון" /></div></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم جواز السفر" he="מספר דרכון" /></div><input name="passportNumber" defaultValue={val("passportNumber")} className={styles.inputBase} /></div>
-            <DateField labelAr="تاريخ إصدار جواز السفر" labelHe="תאריך הוצאת דרכון" namePrefix="passportIssueDate" defaultParts={defaults.passportIssueDate} isoValue={formDataState.passportIssueDate} />
-            <DateField labelAr="تاريخ انتهاء جواز السفر" labelHe="תאריך פקיעת דרכון" namePrefix="passportExpiryDate" defaultParts={defaults.passportExpiryDate} isoValue={formDataState.passportExpiryDate} />
-            <CountrySelect defaultValue={val("passportIssueCountry")} name="passportIssueCountry" labelAr="بلد إصدار جواز السفر" labelHe="ארץ הוצאת דרכון" />
-            <div className={styles.fixedFooter}>
-                <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
-                <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
-            </div>
-          </div>
-
-          {/* Screen 4: Contact */}
-          <div style={{ display: screen === 4 ? 'block' : 'none' }}>
-            <div className={styles.titleBlock} style={{textAlign: 'right', marginTop: 0}}>
-                <h2 className={styles.formTitle} style={{fontSize: 20}}><BiInline ar="وسائل الاتصال" he="דרכי התקשרות" /></h2>
+          <form 
+            ref={formRef} 
+            className={styles.scrollableContent} 
+            onSubmit={(e) => e.preventDefault()}
+          >
+            {/* Screen 1: Names */}
+            <div style={{ display: screen === 1 ? 'block' : 'none', paddingTop: '40px' }}>
+              <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
+              <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div><input name="firstName" defaultValue={val("firstName")} className={styles.inputBase} /></div>
+              <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input name="lastName" defaultValue={val("lastName")} className={styles.inputBase} /></div>
+              <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي السابق" he="שם פרטי קודם" /></div><input name="oldFirstName" defaultValue={val("oldFirstName")} className={styles.inputBase} /></div>
+              <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة السابق" he="שם משפחה קודם" /></div><input name="oldLastName" defaultValue={val("oldLastName")} className={styles.inputBase} /></div>
+              <div className={styles.fixedFooter}>
+                  <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
+                  <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
+              </div>
             </div>
 
-            <PhoneField labelAr="هاتف" labelHe="טלפון נייד" name="phone" defaultValue={val("phone")} prefixes={MOBILE_PREFIXES} />
-
-            <div className={styles.fieldGroup}>
-              <div className={styles.label}><BiInline ar="بريد إلكتروني" he="אימייל" /></div>
-              <input name="email" defaultValue={val("email")} className={styles.inputBase} inputMode="email" style={{direction: 'ltr', textAlign: 'left'}} placeholder="example@email.com" />
+            {/* Screen 2: Details */}
+            <div style={{ display: screen === 2 ? 'block' : 'none', paddingTop: '40px' }}>
+              <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
+              <div className={styles.fieldGroup}>
+                  <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
+                  <div className={styles.selectionRow}>
+                      <label className={styles.selectionLabel}>
+                      <input type="radio" name="gender" value="male" defaultChecked={val("gender") === "male"} />
+                      <span className={styles.selectionSpan}><BiInline ar="ذكر" he="זכר" /></span>
+                      </label>
+                      <label className={styles.selectionLabel}>
+                      <input type="radio" name="gender" value="female" defaultChecked={val("gender") === "female"} />
+                      <span className={styles.selectionSpan}><BiInline ar="أنثى" he="נקבה" /></span>
+                      </label>
+                  </div>
+              </div>
+              <DateField labelAr="تاريخ الميلاد" labelHe="תאריך לידה" namePrefix="birthDate" defaultParts={defaults.birthDate} isoValue={formDataState.birthDate} />
+              <CountrySelect defaultValue={val("nationality")} name="nationality" labelAr="الجنسية" labelHe="אזרחות" />
+              <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div><input name="israeliId" defaultValue={val("israeliId")} className={styles.inputBase} inputMode="numeric" /></div>
+              <div className={styles.fixedFooter}>
+                  <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
+                  <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
+              </div>
             </div>
 
-            <div className={styles.fixedFooter}>
-              <button type="button" className={styles.btnPrimary} onClick={handleFinishStep5}>
-                <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
-              </button>
-              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
-                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
-              </button>
+            {/* Screen 3: Passport */}
+            <div style={{ display: screen === 3 ? 'block' : 'none', paddingTop: '40px' }}>
+              <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="جواز السفر" he="דרכון" /></div></div>
+              <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم جواز السفر" he="מספר דרכון" /></div><input name="passportNumber" defaultValue={val("passportNumber")} className={styles.inputBase} /></div>
+              <DateField labelAr="تاريخ إصدار جواز السفر" labelHe="תאריך הוצאת דרכון" namePrefix="passportIssueDate" defaultParts={defaults.passportIssueDate} isoValue={formDataState.passportIssueDate} />
+              <DateField labelAr="تاريخ انتهاء جواز السفر" labelHe="תאריך פקיעת דרכון" namePrefix="passportExpiryDate" defaultParts={defaults.passportExpiryDate} isoValue={formDataState.passportExpiryDate} />
+              <CountrySelect defaultValue={val("passportIssueCountry")} name="passportIssueCountry" labelAr="بلد إصدار جواز السفر" labelHe="ארץ הוצאת דרכון" />
+              <div className={styles.fixedFooter}>
+                  <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
+                  <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
+              </div>
             </div>
-          </div>
-        </form>
+
+            {/* Screen 4: Contact */}
+            <div style={{ display: screen === 4 ? 'block' : 'none', paddingTop: '40px' }}>
+              <div className={styles.titleBlock} style={{textAlign: 'right', marginTop: 0}}>
+                  <h2 className={styles.formTitle} style={{fontSize: 20}}><BiInline ar="وسائل الاتصال" he="דרכי התקשרות" /></h2>
+              </div>
+
+              <PhoneField labelAr="هاتف" labelHe="טלפון נייד" name="phone" defaultValue={val("phone")} prefixes={MOBILE_PREFIXES} />
+
+              <div className={styles.fieldGroup}>
+                <div className={styles.label}><BiInline ar="بريد إلكتروني" he="אימייל" /></div>
+                <input name="email" defaultValue={val("email")} className={styles.inputBase} inputMode="email" style={{direction: 'ltr', textAlign: 'left'}} placeholder="example@email.com" />
+              </div>
+
+              <div className={styles.fixedFooter}>
+                <button type="button" className={styles.btnPrimary} onClick={handleFinishStep5}>
+                  <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
+                </button>
+                <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
+                  <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+                </button>
+              </div>
+            </div>
+          </form>
+        </>
       )}
 
-      {/* --- Screen 5: Summary --- */}
+      {/* --- FORM 2: Screen 5 (Summary) - Allows Submit --- */}
       {screen === 5 && (
         <form className={styles.scrollableContent} action={saveAndNextAction} style={{paddingTop: 0}}>
           
           <div className={styles.reviewHeader}>
             <div className={styles.reviewTitle}>
-               <span>نهاية المرحلة 5</span><span>סוף שלב 5</span>
+               <span>نهاية المرحلة</span><span>סוף שלב 5</span>
             </div>
             <div className={styles.summarySub} style={{ lineHeight: '1.6' }}>
                <span>يرجى التحقق من صحة التفاصيل وترجمتها</span>
@@ -400,7 +425,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
             </div>
           </div>
 
-          {/* Translated Names */}
+          {/* 1. Translated Names */}
           {[
             { key: "firstName", labelAr: "الاسم الشخصي", labelHe: "שם פרטי" },
             { key: "lastName", labelAr: "اسم العائلة", labelHe: "שם משפחה" },
@@ -441,7 +466,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
             );
           })}
 
-          {/* Read Only Details - הוספתי את כל השדות החסרים */}
+          {/* 2. Read Only Details */}
           <div className={styles.sectionHead} style={{marginTop: 30}}>
              <div className={styles.sectionTitle}><BiInline ar="تفاصيل إضافية" he="פרטים נוספים" /></div>
           </div>
@@ -449,7 +474,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
           <div className={styles.fieldGroup}>
              <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
              <input className={styles.readOnlyInput} 
-                value={formDataState.gender === 'male' ? 'זכר / ذكر' : formDataState.gender === 'female' ? 'נקבה / أنثى' : ''} 
+                value={formDataState.gender === 'male' ? 'זכר  ذكر' : formDataState.gender === 'female' ? 'נקבה  أنثى' : ''} 
                 readOnly 
              />
           </div>
@@ -473,12 +498,12 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
 
           {formDataState.israeliId && (
              <div className={styles.fieldGroup}>
-                <div className={styles.label}><BiInline ar="رقم الهوية الإسرائيلية" he="מספר תעודת זהות ישראלית" /></div>
+                <div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div>
                 <input className={styles.readOnlyInput} value={formDataState.israeliId} readOnly style={{direction: 'ltr', textAlign: 'right'}} />
              </div>
           )}
 
-          {/* Passport Details */}
+          {/* 3. Passport Details */}
           {formDataState.passportNumber && (
              <>
                 <div className={styles.sectionHead} style={{marginTop: 30}}>
@@ -503,7 +528,7 @@ export default function Step5FormClient({ saved, defaults, saveDraftAction, save
              </>
           )}
 
-          {/* Contact Details */}
+          {/* 4. Contact Details */}
           <div className={styles.sectionHead} style={{marginTop: 30}}>
              <div className={styles.sectionTitle}><BiInline ar="وسائل الاتصال" he="דרכי התקשרות" /></div>
           </div>

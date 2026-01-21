@@ -73,6 +73,80 @@ function getCountryLabel(value: string) {
 
 // --- Components ---
 
+function CustomSelect({ 
+  options, 
+  defaultValue, 
+  name, 
+  labelAr, 
+  labelHe 
+}: { 
+  options: {value: string, label: string}[], 
+  defaultValue: string, 
+  name: string, 
+  labelAr: string, 
+  labelHe: string 
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedVal, setSelectedVal] = useState(defaultValue);
+
+  const displayLabel = useMemo(() => {
+    const found = options.find(o => o.value === selectedVal);
+    return found ? found.label : "";
+  }, [selectedVal, options]);
+
+  return (
+    <div className={styles.fieldGroup}>
+      <div className={styles.label}><BiInline ar={labelAr} he={labelHe} /></div>
+      <div className={styles.comboboxWrap}>
+        <input
+          type="text"
+          className={styles.inputBase}
+          value={displayLabel}
+          placeholder="اختر  בחר" 
+          readOnly
+          onClick={() => setIsOpen(!isOpen)}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          style={{ cursor: 'pointer', caretColor: 'transparent' }} 
+        />
+        
+        <div style={{
+            position: 'absolute', 
+            left: '20px', 
+            top: '50%', 
+            transform: 'translateY(-50%)', 
+            pointerEvents: 'none',
+            opacity: 0.5
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+
+        <input type="hidden" name={name} value={selectedVal} />
+        
+        {isOpen && (
+          <ul className={styles.comboboxMenu}>
+             <li 
+                className={styles.comboboxItem} 
+                onMouseDown={() => { setSelectedVal(""); setIsOpen(false); }}
+                style={{ color: '#9CA3AF' }}
+             >
+               اختر  בחר
+             </li>
+            {options.map((opt) => (
+              <li 
+                key={opt.value} 
+                className={styles.comboboxItem} 
+                onMouseDown={() => { setSelectedVal(opt.value); setIsOpen(false); }}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function DateField({ labelHe, labelAr, namePrefix, defaultParts, placeholder }: { 
   labelHe?: string; labelAr?: string; namePrefix: string; defaultParts: DateParts; placeholder?: string 
 }) {
@@ -185,14 +259,15 @@ function CountrySelect({ defaultValue, name, labelAr, labelHe }: { defaultValue:
 
 // --- Main Component ---
 
-export default function Step2FormClient({ saved, defaults, saveDraftAction, saveAndNextAction }: Props) {
+export default function Step2FormClient({ locale, saved, defaults, saveDraftAction, saveAndNextAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
   const [formDataState, setFormDataState] = useState<any>({});
   const [translations, setTranslations] = useState<any>({});
   const formRef = useRef<HTMLFormElement>(null);
+  const draftTimerRef = useRef<number | null>(null);
   
-  // Progress Logic: Screen 1=0%, Screen 2=50%, Summary=100%
   const progress = useMemo(() => {
     if (screen === 1) return 0;
     if (screen === 2) return 50;
@@ -237,7 +312,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
     
     setIsTranslating(true);
     try {
-      const translatedResult = await translateStep2Data(formData);
+      const translatedResult = await translateStep2Data(formData, locale);
       setTranslations(translatedResult || {});
       setScreen(3);
     } catch (error) { 
@@ -249,6 +324,25 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
     }
   };
 
+  const handleSaveDraft = async () => {
+    if (!formRef.current) return;
+    const start = Date.now();
+    setShowDraftSaved(true);
+    try {
+      const formData = new FormData(formRef.current);
+      await saveDraftAction(formData);
+    } catch (error) {
+      console.error("Draft save error:", error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (draftTimerRef.current) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => setShowDraftSaved(false), remaining);
+    }
+  };
+
   return (
     <div className={styles.pageContainer} dir="rtl">
       
@@ -256,19 +350,35 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
         <div className={styles.loadingOverlay}>
             <div className={styles.spinner}></div>
             <div className={styles.loadingText} style={{marginTop: 20}}>
-                <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם נתונים...</p>
-                <p style={{fontSize: 14, color: '#666'}}>جاري ترجمة البيانات...</p>
+                <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+                <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
             </div>
+        </div>
+      )}
+      {showDraftSaved && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>تم حفظ البيانات، ويمكن تعديلها في المنطقة الشخصية في أي وقت</p>
+            <p style={{fontSize: 14, color: '#666'}}>הנתונים נשמרו, ניתן לערוך אותם תמיד באזור האישי</p>
+          </div>
         </div>
       )}
       
       {/* Intro Screen */}
       {screen === 0 && (
         <div className={styles.stepSplashContainer}>
-          <Image src={PLANE_IMAGE} alt="Plane" width={320} height={150} className={styles.stepSplashImage} priority />
+          <Image 
+            src={PLANE_IMAGE} 
+            alt="Plane" 
+            width={290} 
+            height={134} 
+            className={styles.stepSplashImage} 
+            priority 
+          />
           <div className={styles.stepSplashContent}>
             <div className={styles.stepNumberTitle}>
-                <span>المرحلة 2</span><span>שלב 2</span>
+                <span>المرحلة </span><span>שלב 2</span>
             </div>
             <div className={styles.stepMainTitle}>
                 <span>الوضع القانوني</span><span>מעמד</span>
@@ -285,124 +395,120 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
 
       {/* Main Form Screens */}
       {screen > 0 && screen < 3 && (
-        <form 
-            ref={formRef} 
-            className={styles.scrollableContent} 
-            onSubmit={(e) => e.preventDefault()} 
-        >
+        <>
+            {/* Top Bar - נמצא מחוץ לטופס כדי להיות מקובע */}
             <div className={styles.topBar}>
-                {/* Header layout adjustment */}
-                <div className={styles.topRow} style={{ justifyContent: 'space-between' }}>
+                <div className={styles.topRow}>
                     <button type="button" className={styles.backBtn} onClick={goBack}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
-                    <div className={styles.stepMeta}><span>المرحلة 2 من 7</span><span> | </span><span>שלב 2 מתוך 7</span></div>
+                    <div className={styles.stepMeta}><span>المرحلة 2 من 7</span> <span>שלב 2 מתוך 7</span></div>
                 </div>
-                <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
+                
+                <div className={styles.progressBarTrack}>
+                    <div className={styles.progressBarFill} style={{ width: `${progress}%` }} />
+                </div>
                 
                 <div className={styles.titleBlock}>
                     <h1 className={styles.formTitle}><BiInline ar="الوضع القانوني" he="מעמד" /></h1>
                 </div>
             </div>
 
-            {/* Screen 1: Migration */}
-            <div style={{ display: screen === 1 ? 'block' : 'none' }}>
-                <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="الهجرة" he="הגירה" /></div></div>
-                
-                <CountrySelect 
-                    labelAr="بلد الميلاد" 
-                    labelHe="ארץ לידה" 
-                    name="residenceCountry" 
-                    defaultValue={defaults.residenceCountry} 
-                />
-                
-                <div className={styles.fieldGroup}>
-                    <div className={styles.label}><BiInline ar="مدينة الميلاد" he="עיר לידה" /></div>
-                    <input 
-                        className={styles.inputBase} 
-                        name="residenceCity" 
-                        defaultValue={defaults.residenceCity} 
-                        placeholder="הזן עיר..." 
-                        onChange={(e) => fetchCities(e.target.value)} 
-                        list="city-suggestions" 
-                    />
-                    <datalist id="city-suggestions">
-                        {cityOptions.map((c, i) => <option key={i} value={c.he || c.originalName}>{c.ar}</option>)}
-                    </datalist>
-                </div>
-                
-                <div className={styles.fieldGroup}>
-                    <div className={styles.label}><BiInline ar="هدف الإقامة في البلاد" he="מטרת שהייה בארץ" /></div>
-                    <input className={styles.inputBase} name="residenceAddress" defaultValue={defaults.residenceAddress} />
-                </div>
-                
-                <div className={styles.fixedFooter}>
-                    <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
-                    <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
-                </div>
-            </div>
-
-            {/* Screen 2: Visa */}
-            <div style={{ display: screen === 2 ? 'block' : 'none' }}>
-                <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="التأشيرة" he="אשרה" /></div></div>
-                
-                {/* Visa Type Select */}
-                <div className={styles.fieldGroup}>
-                    <div className={styles.label}><BiInline ar="نوع التأشيرة" he="סוג אשרה" /></div>
-                    <div className={styles.comboboxWrap}>
-                        <select className={styles.selectInput} name="visaType" defaultValue={defaults.visaType}>
-                            <option value="">اختر / בחר</option>
-                            {VISA_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>{opt.label}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                {/* Visa Dates Range */}
-                <div className={styles.fieldGroup}>
-                    <div className={styles.label}><BiInline ar="توقيف" he="תוקף" /></div>
+            <form 
+                ref={formRef} 
+                className={styles.scrollableContent} 
+                onSubmit={(e) => e.preventDefault()} 
+            >
+                {/* Screen 1: Migration */}
+                <div style={{ display: screen === 1 ? 'block' : 'none', paddingTop: '40px' }}>
+                    <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="الهجرة" he="הגירה" /></div></div>
                     
-                    <div className={styles.dateRangeRow}>
-                        {/* תאריך התחלה */}
-                        <div className={styles.dateRangeItem}>
-                            <DateField namePrefix="visaStartDate" defaultParts={defaults.visaStartDate} placeholder="מ-" />
-                        </div>
-                        
-                        <div className={styles.dateSeparator}>-</div>
-                        
-                        {/* תאריך סיום */}
-                        <div className={styles.dateRangeItem}>
-                            <DateField namePrefix="visaEndDate" defaultParts={defaults.visaEndDate} placeholder="עד" />
-                        </div>
+                    <CountrySelect 
+                        labelAr="بلد الميلاد" 
+                        labelHe="ארץ לידה" 
+                        name="residenceCountry" 
+                        defaultValue={defaults.residenceCountry} 
+                    />
+                    
+                    <div className={styles.fieldGroup}>
+                        <div className={styles.label}><BiInline ar="مدينة الميلاد" he="עיר לידה" /></div>
+                        <input 
+                            className={styles.inputBase} 
+                            name="residenceCity" 
+                            defaultValue={defaults.residenceCity} 
+                            placeholder="أدخل المدينة  הזן עיר " 
+                            onChange={(e) => fetchCities(e.target.value)} 
+                            list="city-suggestions" 
+                        />
+                        <datalist id="city-suggestions">
+                            {cityOptions.map((c, i) => <option key={i} value={c.he || c.originalName}>{c.ar}</option>)}
+                        </datalist>
+                    </div>
+                    
+                    <div className={styles.fieldGroup}>
+                        <div className={styles.label}><BiInline ar="هدف الإقامة في البلاد" he="מטרת שהייה בארץ" /></div>
+                        <input className={styles.inputBase} name="residenceAddress" defaultValue={defaults.residenceAddress} />
+                    </div>
+                    
+                    <div className={styles.fixedFooter}>
+                        <button type="button" className={styles.btnPrimary} onClick={goNext}><BiInline ar="التالي" he="המשך" /></button>
+                        <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}><BiInline ar="حفظ كمسودة" he="שמור כטיוטה" /></button>
                     </div>
                 </div>
 
-                <DateField 
-                    labelAr="تاريخ الدخول إلى البلاد" 
-                    labelHe="תאריך כניסה לארץ" 
-                    namePrefix="entryDate" 
-                    defaultParts={defaults.entryDate} 
-                />
-                
-                <div className={styles.fixedFooter}>
-                    <button type="button" className={styles.btnPrimary} onClick={handleFinishStep2}>
-                        <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
-                    </button>
-                    <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
-                        <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
-                    </button>
+                {/* Screen 2: Visa */}
+                <div style={{ display: screen === 2 ? 'block' : 'none', paddingTop: '40px' }}>
+                    <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="التأشيرة" he="אשרה" /></div></div>
+                    
+                    <CustomSelect 
+                        labelAr="نوع التأشيرة"
+                        labelHe="סוג אשרה"
+                        name="visaType"
+                        defaultValue={defaults.visaType}
+                        options={VISA_OPTIONS}
+                    />
+
+                    {/* Visa Dates Range */}
+                    <div className={styles.fieldGroup}>
+                        <div className={styles.label}><BiInline ar="توقيف" he="תוקף" /></div>
+                        
+                        <div className={styles.dateRangeRow}>
+                            <div className={styles.dateRangeItem}>
+                                <DateField namePrefix="visaStartDate" defaultParts={defaults.visaStartDate} />
+                            </div>
+                            <div className={styles.dateSeparator}>-</div>
+                            <div className={styles.dateRangeItem}>
+                                <DateField namePrefix="visaEndDate" defaultParts={defaults.visaEndDate} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <DateField 
+                        labelAr="تاريخ الدخول إلى البلاد" 
+                        labelHe="תאריך כניסה לארץ" 
+                        namePrefix="entryDate" 
+                        defaultParts={defaults.entryDate} 
+                    />
+                    
+                    <div className={styles.fixedFooter}>
+                        <button type="button" className={styles.btnPrimary} onClick={handleFinishStep2}>
+                            <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
+                        </button>
+                        <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
+                            <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </>
       )}
 
-      {/* Screen 3: Summary */}
+      {/* Screen 3: Summary (מסודר לפי סדר מילוי) */}
       {screen === 3 && (
         <form className={styles.scrollableContent} action={saveAndNextAction} style={{paddingTop: 0}}>
             <div className={styles.reviewHeader}>
                 <div className={styles.reviewTitle}>
-                    <span>نهاية المرحلة 2</span><span>סוף שלב 2</span>
+                    <span>نهاية المرحلة </span><span>סוף שלב 2</span>
                 </div>
                 <div className={styles.summarySub} style={{ lineHeight: '1.6' }}>
                     يرجى التحقق من صحة التفاصيل وترجمتها
@@ -411,51 +517,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
                 </div>
             </div>
 
-            {/* --- Translated Fields (Split) --- */}
-            {[
-              { key: "residenceCity", labelAr: "مدينة الميلاد", labelHe: "עיר לידה" },
-              { key: "residenceAddress", labelAr: "هدف الإقامة", labelHe: "מטרת שהייה" },
-            ].map((field) => {
-                const data = translations[field.key];
-                if (!data || !data.original) return null;
-                
-                const isHeToAr = data.direction === "he-to-ar";
-                const originalName = isHeToAr ? `${field.key}He` : `${field.key}Ar`;
-                const translatedName = isHeToAr ? `${field.key}Ar` : `${field.key}He`;
-
-                return (
-                  // === התיקון: שימוש במבנה של שלב 1 (translationPill) ===
-                  <div className={styles.fieldGroup} key={field.key} style={{marginBottom: 16}}>
-                    <div className={styles.label}><BiInline ar={field.labelAr} he={field.labelHe} /></div>
-                    
-                    <div className={styles.translationPill}>
-                       {/* חלק עליון - מקור */}
-                       <div className={styles.transOriginal}>{data.original}</div>
-                       <input type="hidden" name={originalName} value={data.original} />
-                       
-                       {/* חלק תחתון - תרגום (עם רקע כתום ואינפוט שקוף) */}
-                       <div className={styles.transTranslated}>
-                         <input className={styles.inputBase} 
-                                style={{
-                                    background: 'transparent', 
-                                    border: 'none', 
-                                    fontWeight: 700, 
-                                    padding: 0, 
-                                    height: 'auto', 
-                                    textAlign: 'right'
-                                }} 
-                                defaultValue={data.translated} name={translatedName} 
-                         />
-                       </div>
-                    </div>
-                    <input type="hidden" name={field.key} value={data.original} />
-                  </div>
-                );
-            })}
-
-            {/* --- Read Only Standard Fields --- */}
-            
-            {/* Country */}
+            {/* 1. ארץ לידה (רגיל) */}
             {formDataState.residenceCountry && (
               <div className={styles.fieldGroup}>
                 <div className={styles.label}><BiInline ar="بلد الميلاد" he="ארץ לידה" /></div>
@@ -463,7 +525,53 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
               </div>
             )}
 
-            {/* Visa Type */}
+            {/* 2. עיר לידה (מתורגם - הכתום) */}
+            {translations["residenceCity"] && (
+                <div className={styles.fieldGroup} style={{marginBottom: 16}}>
+                    <div className={styles.label}><BiInline ar="مدينة الميلاد" he="עיר לידה" /></div>
+                    <div className={styles.translationPill}>
+                       <div className={styles.transOriginal} style={{ justifyContent: 'flex-start' }}>
+                           {translations["residenceCity"].original}
+                       </div>
+                       <input type="hidden" name="residenceCityHe" value={translations["residenceCity"].direction === 'he-to-ar' ? translations["residenceCity"].original : translations["residenceCity"].translated} />
+                       <input type="hidden" name="residenceCityAr" value={translations["residenceCity"].direction === 'he-to-ar' ? translations["residenceCity"].translated : translations["residenceCity"].original} />
+                       
+                       <div className={styles.transTranslated}>
+                         <input className={styles.inputBase} 
+                                style={{background: 'transparent', border: 'none', fontWeight: 700, padding: 0, height: 'auto', textAlign: 'right'}} 
+                                defaultValue={translations["residenceCity"].translated} 
+                                name={translations["residenceCity"].direction === 'he-to-ar' ? "residenceCityAr" : "residenceCityHe"} 
+                         />
+                       </div>
+                    </div>
+                    <input type="hidden" name="residenceCity" value={translations["residenceCity"].original} />
+                </div>
+            )}
+
+            {/* 3. מטרת שהייה (מתורגם - הכתום) */}
+            {translations["residenceAddress"] && (
+                <div className={styles.fieldGroup} style={{marginBottom: 16}}>
+                    <div className={styles.label}><BiInline ar="هدف الإقامة" he="מטרת שהייה" /></div>
+                    <div className={styles.translationPill}>
+                       <div className={styles.transOriginal} style={{ justifyContent: 'flex-start' }}>
+                           {translations["residenceAddress"].original}
+                       </div>
+                       <input type="hidden" name="residenceAddressHe" value={translations["residenceAddress"].direction === 'he-to-ar' ? translations["residenceAddress"].original : translations["residenceAddress"].translated} />
+                       <input type="hidden" name="residenceAddressAr" value={translations["residenceAddress"].direction === 'he-to-ar' ? translations["residenceAddress"].translated : translations["residenceAddress"].original} />
+
+                       <div className={styles.transTranslated}>
+                         <input className={styles.inputBase} 
+                                style={{background: 'transparent', border: 'none', fontWeight: 700, padding: 0, height: 'auto', textAlign: 'right'}} 
+                                defaultValue={translations["residenceAddress"].translated} 
+                                name={translations["residenceAddress"].direction === 'he-to-ar' ? "residenceAddressAr" : "residenceAddressHe"}
+                         />
+                       </div>
+                    </div>
+                    <input type="hidden" name="residenceAddress" value={translations["residenceAddress"].original} />
+                </div>
+            )}
+
+            {/* 4. סוג אשרה (רגיל) */}
             {formDataState.visaType && (
               <div className={styles.fieldGroup}>
                 <div className={styles.label}><BiInline ar="نوع التأشيرة" he="סוג אשרה" /></div>
@@ -471,7 +579,7 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
               </div>
             )}
 
-            {/* Visa Dates */}
+            {/* 5. תאריכי אשרה (רגיל) */}
             {(formDataState.visaStartDate || formDataState.visaEndDate) && (
               <div className={styles.fieldGroup}>
                  <div className={styles.label}><BiInline ar="توقيف" he="תוקף אשרה" /></div>
@@ -479,47 +587,32 @@ export default function Step2FormClient({ saved, defaults, saveDraftAction, save
                     <div className={styles.dateRangeItem}>
                         <div className={styles.readOnlyWrapper}>
                             <Image src="/images/calendar.svg" alt="cal" width={24} height={24} className={styles.calendarIcon} style={{ left: '12px' }} />
-                            <input 
-                                className={styles.readOnlyInput} 
-                                defaultValue={formatDateDisplay(formDataState.visaStartDate)} 
-                                readOnly 
-                                style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} 
-                            />
+                            <input className={styles.readOnlyInput} defaultValue={formatDateDisplay(formDataState.visaStartDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} />
                         </div>
                     </div>
                     <span className={styles.dateSeparator}>-</span>
                     <div className={styles.dateRangeItem}>
                         <div className={styles.readOnlyWrapper}>
                             <Image src="/images/calendar.svg" alt="cal" width={24} height={24} className={styles.calendarIcon} style={{ left: '12px' }} />
-                            <input 
-                                className={styles.readOnlyInput} 
-                                defaultValue={formatDateDisplay(formDataState.visaEndDate)} 
-                                readOnly 
-                                style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} 
-                            />
+                            <input className={styles.readOnlyInput} defaultValue={formatDateDisplay(formDataState.visaEndDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} />
                         </div>
                     </div>
                  </div>
               </div>
             )}
 
-            {/* Entry Date */}
+            {/* 6. תאריך כניסה (רגיל) */}
             {formDataState.entryDate && (
                <div className={styles.fieldGroup}>
                  <div className={styles.label}><BiInline ar="تاريخ الدخول" he="תאריך כניסה" /></div>
                  <div className={styles.readOnlyWrapper}>
                     <Image src="/images/calendar.svg" alt="cal" width={24} height={24} className={styles.calendarIcon} style={{ left: '12px' }} />
-                    <input 
-                        className={styles.readOnlyInput} 
-                        defaultValue={formatDateDisplay(formDataState.entryDate)} 
-                        readOnly 
-                        style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} 
-                    />
+                    <input className={styles.readOnlyInput} defaultValue={formatDateDisplay(formDataState.entryDate)} readOnly style={{paddingLeft: 40, direction: 'ltr', textAlign: 'right', fontSize: 15}} />
                  </div>
                </div>
             )}
 
-            {/* Hidden Fields for Submission */}
+            {/* Hidden Inputs */}
             <input type="hidden" name="residenceCountry" value={formDataState.residenceCountry || ""} />
             <input type="hidden" name="visaType" value={formDataState.visaType || ""} />
             <input type="hidden" name="visaStartDate" value={formDataState.visaStartDate || ""} />

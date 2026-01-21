@@ -10,19 +10,18 @@ const HAND_IMAGE = "/images/step1-intro-hand.svg";
 
 // --- Phone Prefixes ---
 const MOBILE_PREFIXES = [
-  { label: "🇮🇱 ישראל (+972)", value: "+972" },
-  { label: "🇵🇸 רשות פלסטינית (+970)", value: "+970" },
-  { label: "🇺🇸 ארה\"ב (+1)", value: "+1" },
-  // ... (שאר הרשימה שלך)
+  { label: "ישראל (+972) – إسرائيل", value: "+972" },
+  { label: "רשות פלסטינית (+970) – فلسطين", value: "+970" },
+  { label: "ארה\"ב (+1) – الولايات المتحدة", value: "+1" },
 ];
 
 const LANDLINE_PREFIXES = [
-  { label: "02 (ירושלים)", value: "02" },
-  { label: "03 (תל אביב)", value: "03" },
-  { label: "04 (חיפה והצפון)", value: "04" },
-  { label: "08 (השפלה והדרום)", value: "08" },
-  { label: "09 (השרון)", value: "09" },
-  { label: "077 (כללי)", value: "077" },
+  { label: "02 (ירושלים) – القدس", value: "02" },
+  { label: "03 (תל אביב) – تل أبيب", value: "03" },
+  { label: "04 (חיפה והצפון) – حيفا والشمال", value: "04" },
+  { label: "08 (השפלה והדרום) – الجنوب والسهل الساحلي", value: "08" },
+  { label: "09 (השרון) – منطقة الشارون", value: "09" },
+  { label: "077 (כללי) – عام", value: "077" },
 ];
 
 type Props = {
@@ -43,6 +42,12 @@ type Props = {
     passportIssueCountry: string;
     phone: string;
     email: string;
+  };
+  nameTranslations?: {
+    lastName?: { he?: string; ar?: string } | null;
+    firstName?: { he?: string; ar?: string } | null;
+    oldLastName?: { he?: string; ar?: string } | null;
+    oldFirstName?: { he?: string; ar?: string } | null;
   };
   saveDraftAction: (formData: FormData) => Promise<void>;
   saveAndNextAction: (formData: FormData) => Promise<void>;
@@ -91,8 +96,6 @@ function DateField({ labelHe, labelAr, namePrefix, defaultParts }: {
     <div className={styles.fieldGroup}>
       <div className={styles.label}><BiInline ar={labelAr} he={labelHe} /></div>
       <div className={styles.dateWrapper} onClick={openPicker}>
-        
-        {/* שימוש באייקון SVG ששמרת */}
         <Image 
           src="/images/calendar.svg" 
           alt="Calendar" 
@@ -101,7 +104,6 @@ function DateField({ labelHe, labelAr, namePrefix, defaultParts }: {
           className={styles.calendarIcon}
           priority
         />
-        
         <input 
           ref={inputRef} 
           className={styles.dateInput} 
@@ -230,22 +232,52 @@ function PhoneField({ labelAr, labelHe, name, defaultValue, prefixes }: {
 }
 
 // --- Main Form ---
-export default function Step1FormClient({ saved, defaults, saveDraftAction, saveAndNextAction }: Props) {
+export default function Step1FormClient({ locale, saved, defaults, nameTranslations, saveDraftAction, saveAndNextAction }: Props) {
   const [screen, setScreen] = useState<number>(0);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
   
   const [formDataState, setFormDataState] = useState<any>({});
   const [translations, setTranslations] = useState<any>({});
 
   const formRef = useRef<HTMLFormElement>(null);
+  const draftTimerRef = useRef<number | null>(null);
 
   const progress = useMemo(() => screen <= 0 ? 0 : Math.min(100, Math.round((screen / 7) * 100)), [screen]);
-  const goNext = () => setScreen(s => Math.min(5, s + 1));
+  const goNext = () => setScreen(s => Math.min(4, s + 1));
   const goBack = () => setScreen(s => Math.max(0, s - 1));
 
-  // כאן שינוי 1: מקבל אירוע כללי ומבטל ברירת מחדל אם קיים
-  const handleFinishStep1 = async (e?: React.BaseSyntheticEvent) => {
-    e?.preventDefault();
+  // --- פונקציה חדשה לבדיקת שדות חובה ---
+  const validateScreen = () => {
+    if (!formRef.current) return true;
+    const formData = new FormData(formRef.current);
+
+    // בדיקה למסך 1 (שמות)
+    if (screen === 1) {
+      const firstName = formData.get("firstName")?.toString().trim();
+      const lastName = formData.get("lastName")?.toString().trim();
+      if (!firstName || !lastName) {
+        alert("נא למלא שדות חובה (שם פרטי, שם משפחה) \n يرجى تعبئة الحقول المطلوبة (الاسم الشخصي، اسم العائلة)");
+        return false;
+      }
+    }
+
+    // בדיקה למסך 4 (טלפון ומייל)
+    if (screen === 4) {
+      const phone = formData.get("phone")?.toString().trim();
+      const email = formData.get("email")?.toString().trim();
+      
+      // הערה: בטלפון לעיתים הקידומת נשלחת לבד, אז בודקים שאורך הטלפון הגיוני (מעל 4 תווים נניח)
+      if (!phone || phone.length < 5 || !email) {
+        alert("נא למלא טלפון ומייל \n يرجى تعبئة رقم الهاتف والبريد الإلكتروني");
+        return false;
+      }
+    }
+
+    return true;
+  };
+  const handleFinishStep1 = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!formRef.current) return;
 
     const formData = new FormData(formRef.current);
@@ -253,18 +285,85 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
     formData.forEach((value, key) => { currentData[key] = value; });
     setFormDataState(currentData);
 
+    const existingResults: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
+    const maybeUseExisting = (key: keyof NonNullable<Props["nameTranslations"]>) => {
+      const current = String(formData.get(key as string) || "").trim();
+      if (!current) return;
+      const existing = nameTranslations?.[key];
+      const he = existing?.he?.trim() || "";
+      const ar = existing?.ar?.trim() || "";
+      if (he && ar && current === he && ar !== he) {
+        existingResults[key as string] = { original: current, translated: ar, direction: "he-to-ar" };
+      } else if (he && ar && current === ar && he !== ar) {
+        existingResults[key as string] = { original: current, translated: he, direction: "ar-to-he" };
+      }
+    };
+    maybeUseExisting("lastName");
+    maybeUseExisting("firstName");
+    maybeUseExisting("oldLastName");
+    maybeUseExisting("oldFirstName");
+
     setIsTranslating(true);
 
     try {
-      const translatedResult = await translateStep1Data(formData);
-      setTranslations(translatedResult);
+      const translatedResult = await translateStep1Data(formData, locale);
+      setTranslations({ ...translatedResult, ...existingResults });
       setScreen(5);
     } catch (error) {
       console.error("Translation error:", error);
+      if (Object.keys(existingResults).length > 0) {
+        setTranslations(existingResults);
+      }
       setScreen(5);
     } finally {
       setIsTranslating(false);
     }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!formRef.current) return;
+    const start = Date.now();
+    setShowDraftSaved(true);
+    try {
+      const formData = new FormData(formRef.current);
+      await saveDraftAction(formData);
+    } catch (error) {
+      console.error("Draft save error:", error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (draftTimerRef.current) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => setShowDraftSaved(false), remaining);
+    }
+  };
+
+  // Helper to render translated field
+  const renderTranslatedField = (key: string, labelAr: string, labelHe: string) => {
+    const data = translations[key];
+    if (!data || !data.original) return null;
+
+    const isHeToAr = data.direction === "he-to-ar";
+    const originalName = isHeToAr ? `${key}He` : `${key}Ar`;
+    const translatedName = isHeToAr ? `${key}Ar` : `${key}He`;
+
+    return (
+      <div className={styles.fieldGroup} key={key} style={{marginBottom: 16}}>
+        <div className={styles.label}><BiInline ar={labelAr} he={labelHe} /></div>
+        <div className={styles.translationPill}>
+            <div className={styles.transOriginal}>{data.original}</div>
+            <input type="hidden" name={originalName} value={data.original} />
+            <div className={styles.transTranslated}>
+                <input className={styles.inputBase} 
+                    style={{background: 'transparent', border: 'none', fontWeight: 700, padding: 0, height: 'auto', textAlign: 'right'}} 
+                    defaultValue={data.translated} name={translatedName} 
+                />
+            </div>
+        </div>
+        <input type="hidden" name={key} value={data.original} />
+      </div>
+    );
   };
 
   // --- Intro Screen ---
@@ -273,7 +372,7 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
       <div className={styles.stepSplashContainer} dir="rtl">
         <Image src={HAND_IMAGE} alt="Hand" width={280} height={280} className={styles.stepSplashImage} priority />
         <div className={styles.stepSplashContent}>
-          <h1 className={styles.stepNumberTitle}><BiInline ar="المرحلة 1" he="שלב 1" /></h1>
+          <h1 className={styles.stepNumberTitle}><BiInline ar="المرحلة " he="שלב 1" /></h1>
           <h2 className={styles.stepMainTitle}><BiInline ar="تفاصيل شخصية" he="פרטים אישיים" /></h2>
           <div className={styles.stepDescription}>
             <p dir="rtl">بهالمرحلة بنطلب منك تدخل معلومات أساسية للتعريف<br/>الوقت المتوقع للتعبئة: 8 دقيقة</p>
@@ -294,8 +393,17 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם את הנתונים...</p>
-             <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات...</p>
+             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+             <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
+          </div>
+        </div>
+      )}
+      {showDraftSaved && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>تم حفظ البيانات، ويمكن تعديلها في المنطقة الشخصية في أي وقت</p>
+            <p style={{fontSize: 14, color: '#666'}}>הנתונים נשמרו, ניתן לערוך אותם תמיד באזור האישי</p>
           </div>
         </div>
       )}
@@ -307,7 +415,7 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
              <button type="button" className={styles.backBtn} onClick={goBack}>
                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
              </button>
-             <div className={styles.stepMeta}><span>المرحلة 1 من 7</span><span> | </span><span>שלב 1 מתוך 7</span></div>
+             <div className={styles.stepMeta}><span>المرحلة 1 من 7</span> <span>שלב 1 מתוך 7</span></div>
           </div>
           <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
           
@@ -323,20 +431,31 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
         <form 
           ref={formRef} 
           className={styles.scrollableContent} 
-          // כאן שינוי 2: חסימה מוחלטת של שליחת טופס אוטומטית ע"י הדפדפן
-          onSubmit={(e) => e.preventDefault()} 
+          onSubmit={(e) => {
+             e.preventDefault();
+             
+             // --- הוספת הבדיקה כאן ---
+             if (!validateScreen()) return; 
+             // -----------------------
+
+             if (screen === 4) {
+                 handleFinishStep1(e);
+             } else {
+                 goNext();
+             }
+          }}
         >
-          {/* Screen 1 */}
-          <div style={{ display: screen === 1 ? 'block' : 'none' }}>
+          {/* Screen 1 - הוספנו padding-top: 40px */}
+          <div style={{ display: screen === 1 ? 'block' : 'none', paddingTop: '40px' }}>
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /></div><input className={styles.inputBase} name="lastName" defaultValue={defaults.lastName} /></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /></div><input className={styles.inputBase} name="firstName" defaultValue={defaults.firstName} /></div>
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة السابق" he="שם משפחה קודם" /></div><input className={styles.inputBase} name="oldLastName" defaultValue={defaults.oldLastName} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي" he="שם פרטי" /> <span>*</span> </div><input className={styles.inputBase} name="firstName" defaultValue={defaults.firstName} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة" he="שם משפחה" /> <span>*</span> </div><input className={styles.inputBase} name="lastName" defaultValue={defaults.lastName} /></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="الاسم الشخصي السابق" he="שם פרטי קודם" /></div><input className={styles.inputBase} name="oldFirstName" defaultValue={defaults.oldFirstName} /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="اسم العائلة السابق" he="שם משפחה קודם" /></div><input className={styles.inputBase} name="oldLastName" defaultValue={defaults.oldLastName} /></div>
           </div>
 
-          {/* Screen 2 */}
-          <div style={{ display: screen === 2 ? 'block' : 'none' }}>
+          {/* Screen 2 - הוספנו padding-top: 40px */}
+          <div style={{ display: screen === 2 ? 'block' : 'none', paddingTop: '40px' }}>
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="عام" he="כללי" /></div></div>
             <div className={styles.fieldGroup}>
               <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
@@ -353,11 +472,11 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
             </div>
             <DateField labelAr="تاريخ الميلاد" labelHe="תאריך לידה" namePrefix="birthDate" defaultParts={defaults.birth} />
             <CountrySelect defaultValue={defaults.nationality} name="nationality" labelAr="الجنسية" labelHe="אזרחות" />
-            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم الهوية الإسرائيلية" he="מספר תעודת זהות ישראלית" /></div><input className={styles.inputBase} name="israeliId" defaultValue={defaults.israeliId} inputMode="numeric" /></div>
+            <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم بطاقة الهوية" he="מספר תעודת זהות" /></div><input className={styles.inputBase} name="israeliId" defaultValue={defaults.israeliId} inputMode="numeric" /></div>
           </div>
 
-          {/* Screen 3 */}
-          <div style={{ display: screen === 3 ? 'block' : 'none' }}>
+          {/* Screen 3 - הוספנו padding-top: 40px */}
+          <div style={{ display: screen === 3 ? 'block' : 'none', paddingTop: '40px' }}>
             <div className={styles.sectionHead}><div className={styles.sectionTitle}><BiInline ar="جواز السفر" he="דרכון" /></div></div>
             <div className={styles.fieldGroup}><div className={styles.label}><BiInline ar="رقم جواز السفر" he="מספר דרכון" /></div><input className={styles.inputBase} name="passportNumber" defaultValue={defaults.passportNumber} /></div>
             <DateField labelAr="تاريخ إصدار جواز السفر" labelHe="תאריך הוצאת דרכון" namePrefix="passportIssueDate" defaultParts={defaults.passIssue} />
@@ -365,33 +484,28 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
             <CountrySelect defaultValue={defaults.passportIssueCountry} name="passportIssueCountry" labelAr="بلد إصدار جواز السفر" labelHe="ארץ הוצאת דרכון" />
           </div>
 
-          {/* Screen 4 */}
-          <div style={{ display: screen === 4 ? 'block' : 'none' }}>
+          {/* Screen 4 - הוספנו padding-top: 40px */}
+          <div style={{ display: screen === 4 ? 'block' : 'none', paddingTop: '40px' }}>
             <div className={styles.titleBlock} style={{textAlign: 'right', marginTop: 0, marginBottom: 16}}>
                 <h2 className={styles.formTitle} style={{fontSize: 20}}><BiInline ar="وسائل الاتصال" he="דרכי התקשרות" /></h2>
                 <p className={styles.formSubtitle}><BiInline ar="المسجّلون في وزارة الداخلية" he="הרשומים במשרד הפנים" /></p>
             </div>
 
-            <PhoneField labelAr="هاتف" labelHe="טלפון נייד" name="phone" defaultValue={defaults.phone} prefixes={MOBILE_PREFIXES} />
+            <PhoneField labelAr="هاتف" labelHe="טלפון נייד  *" name="phone" defaultValue={defaults.phone} prefixes={MOBILE_PREFIXES} />
             <PhoneField labelAr="هاتف أرضي" labelHe="טלפון קווי" name="landline" defaultValue="" prefixes={LANDLINE_PREFIXES} />
 
             <div className={styles.fieldGroup}>
-              <div className={styles.label}><BiInline ar="بريد إلكتروني" he="אימייל" /></div>
-              <input className={styles.inputBase} name="email" defaultValue={defaults.email} inputMode="email" style={{direction: 'ltr', textAlign: 'left'}} placeholder="example@email.com" />
+              <div className={styles.label}><BiInline ar="بريد إلكتروني" he="אימייל" /> <span>*</span> </div>
+              <input className={styles.inputBase} name="email" defaultValue={defaults.email} inputMode="email" style={{direction: 'ltr', textAlign: 'right', pointerEvents: 'none'}} placeholder="example@email.com" />
             </div>
           </div>
           
           {/* כפתורים למסכים 1-4 */}
           <div className={styles.fixedFooter}>
-             {/* כאן שינוי 3: הפרדה מוחלטת של הפונקציונליות */}
-             <button 
-               type="button" 
-               onClick={screen === 4 ? handleFinishStep1 : goNext} 
-               className={styles.btnPrimary}
-             >
+             <button type={screen === 4 ? "submit" : "button"} onClick={screen === 4 ? undefined : goNext} className={styles.btnPrimary}>
                <BiInline ar={screen === 4 ? "إنهاء المرحلة" : "التالي"} he={screen === 4 ? "סיום שלב" : "המשך"} />
              </button>
-             <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
+             <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
              </button>
           </div>
@@ -403,50 +517,30 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
         <form className={styles.scrollableContent} action={saveAndNextAction} style={{paddingTop: 0}}>
           
           <div className={styles.reviewHeader}>
-            <div className={styles.reviewTitle}><BiInline ar="نهاية المرحلة 1" he="סוף שלב 1" /></div>
+            <div className={styles.reviewTitle}><BiInline ar="نهاية المرحلة " he="סוף שלב 1" /></div>
             <div className={styles.summarySub} style={{ lineHeight: '1.6' }}>
-              يرجى التحقق من صحة التفاصيل وترجمتها
-              <br /> {/* ירידת שורה */}
-              אנא וודא/י כי כל הפרטים ותרגומם נכונים
+                يرجى التحقق من صحة التفاصيل وترجمتها
+                <br />
+                אנא וודא/י כי כל הפרטים ותרגומם נכונים
             </div>
           </div>
 
-          {/* חלק 1: שדות שמות (מפוצלים - עברית/ערבית) */}
-          {[
-            { key: "lastName", labelAr: "اسم العائلة", labelHe: "שם משפחה" },
-            { key: "firstName", labelAr: "الاسم الشخصي", labelHe: "שם פרטי" },
-            { key: "oldLastName", labelAr: "اسم العائلة السابق", labelHe: "שם משפחה קודם" },
-            { key: "oldFirstName", labelAr: "الاسم الشخصي السابق", labelHe: "שם פרטי קודם" },
-          ].map((field) => {
-            const data = translations[field.key];
-            if (!data || !data.original) return null;
+          {/* 1. שדות מתורגמים (שמות) - ראשונים */}
+          {renderTranslatedField("firstName", "الاسم الشخصي", "שם פרטי")}
+          {renderTranslatedField("lastName", "اسم العائلة", "שם משפחה")}
+          {renderTranslatedField("oldFirstName", "الاسم الشخصي السابق", "שם פרטי קודם")}
+          {renderTranslatedField("oldLastName", "اسم العائلة السابق", "שם משפחה קודם")}
 
-            const isHeToAr = data.direction === "he-to-ar";
-            const originalName = isHeToAr ? `${field.key}He` : `${field.key}Ar`;
-            const translatedName = isHeToAr ? `${field.key}Ar` : `${field.key}He`;
+          {/* 2. שדות רגילים לפי סדר המילוי */}
 
-            return (
-              <div className={styles.fieldGroup} key={field.key} style={{marginBottom: 16}}>
-                <div className={styles.label}><BiInline ar={field.labelAr} he={field.labelHe} /></div>
-                <div className={styles.translationPill}>
-                   {/* שדה המקור */}
-                   <div className={styles.transOriginal}>{data.original}</div>
-                   <input type="hidden" name={originalName} value={data.original} />
-                   {/* שדה התרגום */}
-                   <div className={styles.transTranslated}>
-                     {/* מאפשר עריכה של התרגום אם צריך, אבל בעיצוב זה נראה קבוע */}
-                     <input className={styles.inputBase} 
-                            style={{background: 'transparent', border: 'none', fontWeight: 700, padding: 0, height: 'auto', textAlign: 'right'}} 
-                            defaultValue={data.translated} name={translatedName} 
-                     />
-                   </div>
-                </div>
-                <input type="hidden" name={field.key} value={data.original} />
-              </div>
-            );
-          })}
+          {/* מגדר */}
+          {formDataState.gender && (
+             <div className={styles.fieldGroup}>
+               <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
+               <input className={styles.inputBase} value={formDataState.gender === 'male' ? 'זכר / ذكر' : formDataState.gender === 'female' ? 'נקבה / أنثى' : formDataState.gender} readOnly style={{pointerEvents: 'none'}} />
+             </div>
+          )}
 
-          {/* חלק 2: שאר השדות (קריאה בלבד) */}
           {/* תאריך לידה */}
           {formDataState.birthDate && (
             <div className={styles.fieldGroup}>
@@ -463,14 +557,6 @@ export default function Step1FormClient({ saved, defaults, saveDraftAction, save
              <div className={styles.fieldGroup}>
                <div className={styles.label}><BiInline ar="الجنسية" he="אזרחות" /></div>
                <input className={styles.inputBase} value={formDataState.nationality} readOnly style={{pointerEvents: 'none'}} />
-             </div>
-          )}
-
-           {/* מין */}
-           {formDataState.gender && (
-             <div className={styles.fieldGroup}>
-               <div className={styles.label}><BiInline ar="الجنس" he="מין" /></div>
-               <input className={styles.inputBase} value={formDataState.gender === 'male' ? 'זכר / ذكر' : formDataState.gender === 'female' ? 'נקבה / أنثى' : formDataState.gender} readOnly style={{pointerEvents: 'none'}} />
              </div>
           )}
 

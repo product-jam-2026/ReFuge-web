@@ -69,11 +69,38 @@ function isHebrew(text: string) {
   return /[\u0590-\u05FF]/.test(text);
 }
 
+function isArabic(text: string) {
+  return /[\u0600-\u06FF]/.test(text);
+}
+
+function resolveSourceLang(text: string, locale?: string): "he" | "ar" {
+  const hasHe = isHebrew(text);
+  const hasAr = isArabic(text);
+  if (hasHe && !hasAr) return "he";
+  if (hasAr && !hasHe) return "ar";
+  return locale === "ar" ? "ar" : "he";
+}
+
+function isFileLike(value: unknown): value is { size: number; name?: string; arrayBuffer: () => Promise<ArrayBuffer> } {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "size" in value &&
+      typeof (value as any).size === "number" &&
+      "arrayBuffer" in value
+  );
+}
+
+function getFileName(file: { name?: string }, fallback: string) {
+  const name = file?.name?.trim();
+  return name ? name : fallback;
+}
+
 // ----------------------------------------------------------------------
 // Step 1 Logic
 // ----------------------------------------------------------------------
 
-export async function translateStep1Data(formData: FormData) {
+export async function translateStep1Data(formData: FormData, locale?: string) {
   "use server";
   const fields = ["firstName", "lastName", "oldFirstName", "oldLastName"];
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
@@ -85,9 +112,9 @@ export async function translateStep1Data(formData: FormData) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-      const sourceIsHebrew = isHebrew(originalValue);
+      const sourceLang = resolveSourceLang(originalValue, locale);
       let translatedValue = "";
-      if (sourceIsHebrew) {
+      if (sourceLang === "he") {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
       } else {
@@ -132,7 +159,7 @@ export async function submitStep1(locale: string, mode: "draft" | "next", formDa
 // Step 2 Logic
 // ----------------------------------------------------------------------
 
-export async function translateStep2Data(formData: FormData) {
+export async function translateStep2Data(formData: FormData, locale?: string) {
   "use server";
   const fields = ["residenceCity", "residenceAddress"]; 
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
@@ -144,9 +171,9 @@ export async function translateStep2Data(formData: FormData) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-      const sourceIsHebrew = isHebrew(originalValue);
+      const sourceLang = resolveSourceLang(originalValue, locale);
       let translatedValue = "";
-      if (sourceIsHebrew) {
+      if (sourceLang === "he") {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
       } else {
@@ -218,9 +245,9 @@ export async function saveSignupStep(params: {
   if (params.goNext) {
     const nextStep = Math.min(params.step + 1, 7);
     redirect(`/${params.locale}/signup/step-${nextStep}`);
-  } else {
-    redirect(`/${params.locale}/signup/step-${params.step}?saved=1`);
   }
+
+  return { saved: true };
 }
 
 export async function saveDraftAndGoToStep(params: {
@@ -243,6 +270,8 @@ export async function saveDraftAndGoToStep(params: {
   redirect(`/${params.locale}/signup/step-${params.goToStep}`);
 }
 
+// בתוך קובץ actions.ts
+
 async function finishRegistration(params: {
   locale: string;
   step: number;
@@ -250,8 +279,18 @@ async function finishRegistration(params: {
 }) {
   const { supabase, user } = await getAuthedSupabase();
   
-  const { data: profile } = await supabase.from("profiles").select("data").eq("id", user.id).single();
-  const existingData = profile?.data || {};
+  // 1. שליפת הסטטוס הנוכחי *לפני* השמירה
+  const { data: currentProfile } = await supabase
+    .from("profiles")
+    .select("data, registration_completed, PrefLang") // מוודאים ששולפים גם את הדגל
+    .eq("id", user.id)
+    .single();
+
+  // בדיקה: האם זו הפעם הראשונה?
+  // אם registration_completed הוא false או null - זו הפעם הראשונה.
+  const isFirstTime = !currentProfile?.registration_completed;
+
+  const existingData = currentProfile?.data || {};
   const existingIntake = existingData.intake || {};
 
   const nextIntake = mergeDeep(existingIntake, {
@@ -259,19 +298,29 @@ async function finishRegistration(params: {
     [`step${params.step}`]: params.patch,
   });
 
+  // 2. שמירת הנתונים ועדכון שההרשמה הושלמה
   await supabase.from("profiles").update({ 
     data: { ...existingData, intake: nextIntake },
     registration_completed: true 
   }).eq("id", user.id);
 
-  redirect(`/${params.locale}/home`);
-}
+  // 3. ניתוב חכם
+  const preferredLocale = currentProfile?.PrefLang ? "ar" : "he";
+  const redirectLocale = params.locale === "ar" || params.locale === "he" ? params.locale : preferredLocale;
 
+  if (isFirstTime) {
+      // פעם ראשונה? לך למסך "שלום מוחמד"
+      redirect(`/${redirectLocale}/signup/success`);
+  } else {
+      // עריכה חוזרת? לך ישר לבית
+      redirect(`/${redirectLocale}/home`);
+  }
+}
 // ----------------------------------------------------------------------
 // Step 3 Logic
 // ----------------------------------------------------------------------
 
-export async function translateStep3Data(formData: FormData) {
+export async function translateStep3Data(formData: FormData, locale?: string) {
   "use server";
   const fields = ["regStreet", "employerName", "businessName", "workAddress"];
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
@@ -283,9 +332,9 @@ export async function translateStep3Data(formData: FormData) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-      const sourceIsHebrew = isHebrew(originalValue);
+      const sourceLang = resolveSourceLang(originalValue, locale);
       let translatedValue = "";
-      if (sourceIsHebrew) {
+      if (sourceLang === "he") {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
       } else {
@@ -311,14 +360,14 @@ function buildOccupationJSON(formData: FormData, buildDualField: (name: string) 
      finalEmployerName = buildDualField("employerName");
   }
 
-  return JSON.stringify({
+  return {
     assets: cleanedAssets,
     occupationText: normalizeText(formData.get("occupationText")),
     employerName: finalEmployerName,
     workAddress: buildDualField("workAddress"),
     workStartDate: normalizeText(formData.get("workStartDate")),
     notWorkingSub: normalizeText(formData.get("notWorkingSub")),
-  });
+  };
 }
 
 export async function submitStep3(locale: string, mode: "draft" | "next" | "back", formData: FormData) {
@@ -401,7 +450,7 @@ export async function submitStep4(locale: string, mode: "draft" | "next" | "back
 // Step 5 Logic
 // ----------------------------------------------------------------------
 
-export async function translateStep5Data(formData: FormData) {
+export async function translateStep5Data(formData: FormData, locale?: string) {
   "use server";
   const fields = ["firstName", "lastName", "oldFirstName", "oldLastName"];
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
@@ -413,9 +462,9 @@ export async function translateStep5Data(formData: FormData) {
         results[key] = { original: "", translated: "", direction: "ar-to-he" };
         return;
       }
-      const sourceIsHebrew = isHebrew(originalValue);
+      const sourceLang = resolveSourceLang(originalValue, locale);
       let translatedValue = "";
-      if (sourceIsHebrew) {
+      if (sourceLang === "he") {
         translatedValue = await translateToArabic(originalValue);
         results[key] = { original: originalValue, translated: translatedValue, direction: "he-to-ar" };
       } else {
@@ -466,7 +515,7 @@ export async function submitStep5(locale: string, mode: "draft" | "next" | "back
 // Step 6 Logic (Children) - מעודכן עם revalidatePath
 // ----------------------------------------------------------------------
 
-export async function translateStep6Data(childrenList: any[]) {
+export async function translateStep6Data(childrenList: any[], locale?: string) {
   "use server";
   const translatedChildren = await Promise.all(
     childrenList.map(async (child) => {
@@ -474,7 +523,8 @@ export async function translateStep6Data(childrenList: any[]) {
       let fNameTrans = "";
       let fDir = "ar-to-he";
       if (fName) {
-         if (isHebrew(fName)) {
+         const sourceLang = resolveSourceLang(fName, locale);
+         if (sourceLang === "he") {
             fNameTrans = await translateToArabic(fName);
             fDir = "he-to-ar";
          } else {
@@ -487,7 +537,8 @@ export async function translateStep6Data(childrenList: any[]) {
       let lNameTrans = "";
       let lDir = "ar-to-he";
       if (lName) {
-         if (isHebrew(lName)) {
+         const sourceLang = resolveSourceLang(lName, locale);
+         if (sourceLang === "he") {
             lNameTrans = await translateToArabic(lName);
             lDir = "he-to-ar";
          } else {
@@ -579,14 +630,172 @@ export async function proceedToStep7(locale: string) {
 // Step 7 Logic
 // ----------------------------------------------------------------------
 
+// --- הוספי את הפונקציה הזו בתחילת הקובץ או לפני submitStep7 ---
+
+async function uploadFile(supabase: any, bucket: string, path: string, file: File) {
+  const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+    upsert: true, // דורס קובץ ישן אם קיים באותו שם
+  });
+  if (error) {
+    console.error("Upload error:", error);
+    return null;
+  }
+  return { path: data.path, fullUrl: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${bucket}/${data.path}` };
+}
+
+// ----------------------------------------------------------------------
+// Step 7 Logic - Updated with File Upload
+// ----------------------------------------------------------------------
+
 export async function submitStep7(locale: string, mode: "draft" | "finish" | "back", formData: FormData) {
   "use server";
-  const patch = { documents: {} }; 
+  
+  const { supabase, user } = await getAuthedSupabase();
+  const userId = user.id;
+  const bucketName = "intake_docs";
+
+  const { data: profile } = await supabase.from("profiles").select("data").eq("id", userId).single();
+  const existingDocs = profile?.data?.intake?.step7?.documents || {};
+
+  const removeIfExists = async (path?: string) => {
+    if (path) {
+      await supabase.storage.from(bucketName).remove([path]);
+    }
+  };
+
+  // אובייקט שיחזיק את כל הקישורים לקבצים
+  const documents: any = {};
+
+  // רשימת השדות הרגילים (בודדים)
+  const singleFileFields = [
+    "passportCopy", 
+    "familyStatusDoc", 
+    "secondParentStatusDoc", 
+    "rentalContract", 
+    "propertyOwnership",
+    "childPassportPhoto" // fallback
+  ];
+
+  // 1. העלאת קבצים בודדים
+  for (const field of singleFileFields) {
+    const file = formData.get(field);
+    if (file && isFileLike(file) && file.size > 0) {
+      const fileName = getFileName(file, `${field}.bin`);
+      // יצירת שם קובץ ייחודי: user_id/field_name/timestamp_filename
+      const filePath = `${userId}/${field}/${Date.now()}_${fileName}`;
+      const uploadResult = await uploadFile(supabase, bucketName, filePath, file as File);
+      if (!uploadResult) {
+        console.error("Step7 upload failed", { field, filePath });
+      }
+      const oldPath = existingDocs?.[field]?.path;
+      if (oldPath) {
+        await removeIfExists(oldPath);
+      }
+      
+      if (uploadResult) {
+        documents[field] = {
+          path: filePath,
+          name: file.name,
+          uploadedAt: new Date().toISOString()
+        };
+      }
+    }
+  }
+
+  // 2. העלאת קבצי ילדים (דינמיים)
+  // אנחנו עוברים על כל המפתחות בטופס ומחפשים child_doc_X
+  for (const key of Array.from(formData.keys())) {
+    if (key.startsWith("child_doc_")) {
+       const file = formData.get(key);
+       if (file && isFileLike(file) && file.size > 0) {
+          const fileName = getFileName(file, `${key}.bin`);
+          const filePath = `${userId}/children/${key}/${Date.now()}_${fileName}`;
+          const uploadResult = await uploadFile(supabase, bucketName, filePath, file as File);
+          if (!uploadResult) {
+            console.error("Step7 child upload failed", { key, filePath });
+          }
+          const oldPath = existingDocs?.[key]?.path;
+          if (oldPath) {
+            await removeIfExists(oldPath);
+          }
+          
+          if (uploadResult) {
+            documents[key] = {
+              path: filePath,
+              name: file.name,
+              uploadedAt: new Date().toISOString()
+            };
+          }
+       }
+    }
+  }
+
+  // 3. העלאת קבצים מרובים (מסמכים נוספים)
+  const otherFiles = formData.getAll("otherDocs");
+  if (otherFiles && otherFiles.length > 0) {
+    const uploadedOthers = [];
+    for (const file of otherFiles) {
+      if (file && isFileLike(file) && file.size > 0) {
+        const fileName = getFileName(file, "other.bin");
+        const filePath = `${userId}/otherDocs/${Date.now()}_${fileName}`;
+        const res = await uploadFile(supabase, bucketName, filePath, file as File);
+        if (!res) {
+          console.error("Step7 otherDoc upload failed", { filePath });
+        }
+        if (res) {
+          uploadedOthers.push({
+             path: filePath,
+             name: file.name,
+             uploadedAt: new Date().toISOString()
+          });
+        }
+      }
+    }
+    if (uploadedOthers.length > 0) {
+      documents["otherDocs"] = uploadedOthers;
+    }
+  }
+
+  // 4. שמירה בדאטה-בייס
+  // אנחנו צריכים למזג את המסמכים החדשים עם הישנים (כדי לא למחוק מה שכבר הועלה)
+  
+  // שליפת המידע הקיים
+  // מיזוג: החדש דורס את הישן, אבל שומר על מה שלא שונה
+  const mergedDocuments = { ...existingDocs, ...documents };
+
+  const patch = { documents: mergedDocuments };
+
   if (mode === "back") {
     await saveDraftAndGoToStep({ locale, step: 7, patch, goToStep: 6 });
   } else if (mode === "finish") {
     await finishRegistration({ locale, step: 7, patch });
   } else {
     await saveSignupStep({ locale, step: 7, patch, goNext: false });
+  }
+}
+
+export async function updateLanguagePreference(selectedLocale: string) {
+  "use server";
+  
+  try {
+    const { supabase, user } = await getAuthedSupabase();
+
+    // המרה לבוליאני לפי ההיגיון: ערבית = true, עברית = false
+    const isArabic = selectedLocale === 'ar';
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ PrefLang: isArabic })
+      .eq("id", user.id);
+
+    if (error) {
+      console.error("Error updating language preference:", error);
+      return { success: false };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Unexpected error updating language:", err);
+    return { success: false };
   }
 }

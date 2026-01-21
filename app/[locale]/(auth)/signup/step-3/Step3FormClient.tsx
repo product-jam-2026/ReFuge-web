@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
-// שימוש ב-CSS המשותף והנכון
 import styles from "@/lib/styles/IntakeForm.module.css";
 import { translateStep3Data } from "@/app/[locale]/(auth)/signup/actions";
 
@@ -47,6 +46,13 @@ function CustomSelect({
         </div>
         {isOpen && (
           <ul className={styles.comboboxMenu} style={{ zIndex: 100 }}>
+             <li 
+                className={styles.comboboxItem} 
+                onClick={() => { onChange(""); setIsOpen(false); }}
+                style={{ color: '#9CA3AF' }}
+              >
+                {placeholder}
+              </li>
             {options.map((opt) => (
               <li 
                 key={opt.value} 
@@ -130,6 +136,7 @@ type Props = {
 };
 
 export default function Step3FormClient({
+  locale,
   saved,
   defaults,
   saveDraftAction,
@@ -138,6 +145,7 @@ export default function Step3FormClient({
 }: Props) {
   const [screen, setScreen] = useState(0);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [showDraftSaved, setShowDraftSaved] = useState(false);
 
   // --- Logic State ---
   const [maritalStatus, setMaritalStatus] = useState(defaults.maritalStatus || "");
@@ -150,8 +158,18 @@ export default function Step3FormClient({
   const [notWorkingSub, setNotWorkingSub] = useState(defaults.notWorkingSub || ""); 
 
   const [assets, setAssets] = useState<string[]>(defaults.assets || []);
+  
   const toggleAsset = (val: string) => {
-    setAssets(prev => prev.includes(val) ? prev.filter(x => x !== val) : [...prev, val]);
+    if (val === 'none') {
+        setAssets(prev => prev.includes('none') ? [] : ['none']);
+    } else {
+        setAssets(prev => {
+            const newAssets = prev.filter(x => x !== 'none');
+            return newAssets.includes(val) 
+                ? newAssets.filter(x => x !== val) 
+                : [...newAssets, val];
+        });
+    }
   };
 
   const [regCityText, setRegCityText] = useState(defaults.regCity || "");
@@ -162,6 +180,7 @@ export default function Step3FormClient({
   const [formDataState, setFormDataState] = useState<any>({});
   const [translations, setTranslations] = useState<any>({});
   const formRef = useRef<HTMLFormElement>(null);
+  const draftTimerRef = useRef<number | null>(null);
 
   // --- Effects ---
   useEffect(() => {
@@ -218,7 +237,7 @@ export default function Step3FormClient({
     setIsTranslating(true);
 
     try {
-      const translatedResult = await translateStep3Data(formData);
+      const translatedResult = await translateStep3Data(formData, locale);
       setTranslations(translatedResult || {});
       setScreen(TOTAL_SCREENS + 1); 
     } catch (error) {
@@ -230,6 +249,52 @@ export default function Step3FormClient({
     }
   };
 
+  const handleSaveDraft = async () => {
+    if (!formRef.current) return;
+    const start = Date.now();
+    setShowDraftSaved(true);
+    try {
+      const formData = new FormData(formRef.current);
+      await saveDraftAction(formData);
+    } catch (error) {
+      console.error("Draft save error:", error);
+    } finally {
+      const elapsed = Date.now() - start;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (draftTimerRef.current) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => setShowDraftSaved(false), remaining);
+    }
+  };
+
+  // Helper to render translated field
+  const renderTranslatedField = (key: string, labelAr: string, labelHe: string) => {
+    const data = translations[key];
+    if (!data || !data.original) return null;
+
+    const isHeToAr = data.direction === "he-to-ar";
+    const originalName = isHeToAr ? `${key}He` : `${key}Ar`;
+    const translatedName = isHeToAr ? `${key}Ar` : `${key}He`;
+
+    return (
+      <div className={styles.fieldGroup} key={key} style={{marginBottom: 16}}>
+        <div className={styles.label}><BiInline ar={labelAr} he={labelHe} /></div>
+        <div className={styles.translationPill}>
+            <div className={styles.transOriginal}>{data.original}</div>
+            <input type="hidden" name={originalName} value={data.original} />
+            <div className={styles.transTranslated}>
+                <input className={styles.inputBase} 
+                    style={{background: 'transparent', border: 'none', fontWeight: 700, padding: 0, height: 'auto', textAlign: 'right'}} 
+                    defaultValue={data.translated} name={translatedName} 
+                />
+            </div>
+        </div>
+        <input type="hidden" name={key} value={data.original} />
+      </div>
+    );
+  };
+
   return (
     <div className={styles.pageContainer} dir="rtl">
       
@@ -237,8 +302,17 @@ export default function Step3FormClient({
         <div className={styles.loadingOverlay}>
           <div className={styles.spinner}></div>
           <div className={styles.loadingText} style={{marginTop: 20}}>
-             <p style={{fontSize: 18, fontWeight: 'bold'}}>מתרגם נתונים...</p>
-             <p style={{fontSize: 14, color: '#666'}}>جاري ترجمة البيانات...</p>
+             <p style={{fontSize: 18, fontWeight: 'bold'}}>מעבד נתונים</p>
+             <p style={{fontSize: 14, color: '#666'}}>جارٍ ترجمة البيانات</p>
+          </div>
+        </div>
+      )}
+      {showDraftSaved && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.spinner}></div>
+          <div className={styles.loadingText} style={{marginTop: 20}}>
+            <p style={{fontSize: 18, fontWeight: 'bold'}}>تم حفظ البيانات، ويمكن تعديلها في المنطقة الشخصية في أي وقت</p>
+            <p style={{fontSize: 14, color: '#666'}}>הנתונים נשמרו, ניתן לערוך אותם תמיד באזור האישי</p>
           </div>
         </div>
       )}
@@ -248,8 +322,8 @@ export default function Step3FormClient({
         <div className={styles.stepSplashContainer}>
           <Image src={FAMILY_IMAGE} alt="Family" width={280} height={200} className={styles.stepSplashImage} priority />
           <div className={styles.stepSplashContent}>
-            <div className={styles.stepNumberTitle}><span>المرحلة 3</span><span>שלב 3</span></div>
-            <div className={styles.stepMainTitle}><span>مركز الحياة</span><span>מרכז חיים</span></div>
+            <div className={styles.stepNumberTitle}><span>المرحلة </span><span>שלב 3</span></div>
+            <div className={styles.stepMainTitle}><span>مركز الحياة</span>  <span>מרכז חיים</span></div>
             <div className={styles.stepDescription}>
                <p dir="rtl">بهالمرحلة بنسأل عن عنوان السكن، الشغل، والحالة العائلية<br/>الوقت المتوقع للتعبئة: 6 دقيقة</p>
                <br/>
@@ -262,19 +336,16 @@ export default function Step3FormClient({
         </div>
       )}
 
-      {/* --- FORM 1: Screens 1-5 (Submit blocked to prevent jumping) --- */}
+      {/* --- FORM 1: Screens 1-5 --- */}
       {screen > 0 && screen <= TOTAL_SCREENS && (
-      <form 
-        ref={formRef} 
-        className={styles.scrollableContent} 
-        onSubmit={(e) => e.preventDefault()} 
-      >
+      <>
+        {/* Top Bar (Outside Form) */}
         <div className={styles.topBar}>
-            <div className={styles.topRow} style={{justifyContent: 'space-between'}}>
+            <div className={styles.topRow}>
                <button type="button" className={styles.backBtn} onClick={goBack}>
                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
                </button>
-               <div className={styles.stepMeta}><span>المرحلة 3 من 7</span><span> | </span><span>שלב 3 מתוך 7</span></div>
+               <div className={styles.stepMeta}><span>المرحلة 3 من 7</span> <span>שלב 3 מתוך 7</span></div>
             </div>
             <div className={styles.progressBarTrack}><div className={styles.progressBarFill} style={{ width: `${progress}%` }} /></div>
             <div className={styles.titleBlock}>
@@ -282,331 +353,336 @@ export default function Step3FormClient({
             </div>
         </div>
 
-        {/* --- Screen 1: Marital Status --- */}
-        <div style={{ display: screen === 1 ? 'block' : 'none' }}>
-           <div className={styles.sectionHead}>
-              <div className={styles.sectionTitle}><BiInline ar="الحالة الاجتماعية" he="מצב משפחתי" /></div>
-           </div>
-           
-           <CustomSelect 
-              labelAr="اختر" labelHe="בחר"
-              value={maritalStatus}
-              onChange={setMaritalStatus}
-              placeholder="בחר / اختر"
-              options={[
-                { value: "single", label: "רווק/ה / أعزب/ة" },
-                { value: "married", label: "נשוי/ה / متزوج/ة" },
-                { value: "divorced", label: "גרוש/ה / مطلق/ة" },
-                { value: "widowed", label: "אלמן/ה / أرمل/ة" }
-              ]}
-           />
-           <input type="hidden" name="maritalStatus" value={maritalStatus} />
-
-           {showDate && (
-              <DateField 
-                labelAr={maritalStatus === "married" ? "تاريخ الزواج" : "تاريخ الطلاق"}
-                labelHe={maritalStatus === "married" ? "תאריך נישואין" : "תאריך גירושין"}
-                name="statusDate"
-                defaultValue={defaults.statusDate}
-              />
-           )}
-
-           <div className={styles.fixedFooter}>
-              <button type="button" className={styles.btnPrimary} onClick={goNext}>
-                <BiInline ar="التالي" he="המשך" />
-              </button>
-              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
-                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
-              </button>
-           </div>
-        </div>
-
-        {/* --- Screen 2: Residence Address --- */}
-        <div style={{ display: screen === 2 ? 'block' : 'none' }}>
+        <form 
+            ref={formRef} 
+            className={styles.scrollableContent} 
+            onSubmit={(e) => e.preventDefault()} 
+        >
+            {/* --- Screen 1: Marital Status --- */}
+            <div style={{ display: screen === 1 ? 'block' : 'none', paddingTop: '40px' }}>
             <div className={styles.sectionHead}>
-               <div className={styles.sectionTitle}><BiInline ar="عنوان السكن" he="כתובת מגורים" /></div>
-               <div className={styles.formSubtitle}><BiInline ar="المسجل في وزارة الداخلية" he="הרשומה במשרד הפנים" /></div>
+                <div className={styles.sectionTitle}><BiInline ar="الحالة الاجتماعية" he="מצב משפחתי" /></div>
             </div>
-
-            <div className={styles.fieldGroup}>
-              <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
-              <div className={styles.comboboxWrap}>
-                <input 
-                    list="regCities" 
-                    name="regCity" 
-                    value={regCityText}
-                    onChange={e => setRegCityText(e.target.value)}
-                    className={styles.inputBase}
-                    placeholder="בחר עיר / اختر مدينة"
-                />
-                <datalist id="regCities">
-                    {regCityOpts.map(c => <option key={c.id} value={c.label} />)}
-                </datalist>
-              </div>
-            </div>
-
-            <div className={styles.fieldGroup}>
-              <div className={styles.label}><BiInline ar="شارع" he="רחוב" /></div>
-              <input name="regStreet" defaultValue={defaults.regStreet} className={styles.inputBase} />
-            </div>
-
-            <div className={styles.fieldGroup}>
-              <div className={styles.addressGrid}>
-                 <div>
-                   <div className={styles.label}><BiInline ar="منزل" he="בית" /></div>
-                   <input name="regHouseNumber" defaultValue={defaults.regHouseNumber} className={styles.inputBase} />
-                 </div>
-                 <div>
-                   <div className={styles.label}><BiInline ar="دخول" he="כניסה" /></div>
-                   <input name="regEntry" defaultValue={defaults.regEntry} className={styles.inputBase} />
-                 </div>
-                 <div>
-                   <div className={styles.label}><BiInline ar="شقة" he="דירה" /></div>
-                   <input name="regApartment" defaultValue={defaults.regApartment} className={styles.inputBase} />
-                 </div>
-              </div>
-            </div>
-
-            <div className={styles.fieldGroup}>
-              <div className={styles.label}><BiInline ar="الرمز البريدي" he="מיקוד" /></div>
-              <input name="regZip" defaultValue={defaults.regZip} className={styles.inputBase} inputMode="numeric" />
-            </div>
-
+            
             <CustomSelect 
-                labelAr="شقة مستأجرة / بملكية" labelHe="דירה שכורה / בבעלות"
-                value={housingType}
-                onChange={setHousingType}
-                placeholder="בחר / اختر"
+                labelAr="اختر" labelHe="בחר"
+                value={maritalStatus}
+                onChange={setMaritalStatus}
+                placeholder="اختر  בחר" 
                 options={[
-                    { value: "rented", label: "דירה שכורה / شقة مستأجرة" },
-                    { value: "owned", label: "דירה בבעלות / شقة بملكية" },
-                    { value: "other", label: "אחר / آخر" },
+                    { value: "single", label: "רווק/ה  أعزب/ة" },
+                    { value: "married", label: "נשוי/ה  متزوج/ة" },
+                    { value: "divorced", label: "גרוש/ה  مطلق/ة" },
+                    { value: "widowed", label: "אלמן/ה  أرمل/ة" }
                 ]}
             />
-            <input type="hidden" name="housingType" value={housingType} />
+            <input type="hidden" name="maritalStatus" value={maritalStatus} />
 
-            <label className={styles.toggleLabel}>
-                <input 
-                  className={styles.checkInput} 
-                  type="checkbox" 
-                  checked={mailingDifferent} 
-                  onChange={(e) => setMailingDifferent(e.target.checked)} 
-                  style={{width: 20, height: 20, accentColor: '#EE7248'}}
+            {showDate && (
+                <DateField 
+                    labelAr={maritalStatus === "married" ? "تاريخ الزواج" : "تاريخ الطلاق"}
+                    labelHe={maritalStatus === "married" ? "תאריך נישואין" : "תאריך גירושין"}
+                    name="statusDate"
+                    defaultValue={defaults.statusDate}
                 />
-                <BiInline ar="عنوان المراسلات مختلف؟" he="כתובת למכתבים שונה?" />
-                <input type="hidden" name="mailingDifferent" value={mailingDifferent ? "true" : "false"} />
-            </label>
+            )}
 
             <div className={styles.fixedFooter}>
-              <button type="button" className={styles.btnPrimary} onClick={goNext}>
-                <BiInline ar="التالي" he="המשך" />
-              </button>
-              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
-                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
-              </button>
-           </div>
-        </div>
-
-        {/* --- Screen 3: Mailing Address --- */}
-        <div style={{ display: screen === 3 ? 'block' : 'none' }}>
-            <div className={styles.sectionHead}>
-               <div className={styles.sectionTitle}><BiInline ar="عنوان المراسلات" he="כתובת למכתבים" /></div>
-            </div>
-            <div className={styles.fieldGroup}>
-              <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
-              <div className={styles.comboboxWrap}>
-                <input 
-                    list="mailCities" 
-                    name="mailCity" 
-                    value={mailCityText}
-                    onChange={e => setMailCityText(e.target.value)}
-                    className={styles.inputBase}
-                />
-                <datalist id="mailCities">
-                    {mailCityOpts.map(c => <option key={c.id} value={c.label} />)}
-                </datalist>
-              </div>
-            </div>
-            <div className={styles.fieldGroup}>
-              <div className={styles.label}><BiInline ar="شارع" he="רחוב" /></div>
-              <input name="mailStreet" defaultValue={defaults.mailingAddress?.street} className={styles.inputBase} />
-            </div>
-            <div className={styles.fieldGroup}>
-              <div className={styles.addressGrid}>
-                 <div>
-                   <div className={styles.label}><BiInline ar="منزل" he="בית" /></div>
-                   <input name="mailHouseNumber" className={styles.inputBase} />
-                 </div>
-                 <div>
-                   <div className={styles.label}><BiInline ar="دخول" he="כניסה" /></div>
-                   <input name="mailEntry" className={styles.inputBase} />
-                 </div>
-                 <div>
-                   <div className={styles.label}><BiInline ar="شقة" he="דירה" /></div>
-                   <input name="mailApartment" className={styles.inputBase} />
-                 </div>
-              </div>
-            </div>
-            <div className={styles.fieldGroup}>
-              <div className={styles.label}><BiInline ar="الرمز البريدي" he="מיקוד" /></div>
-              <input name="mailZip" className={styles.inputBase} inputMode="numeric" />
-            </div>
-            <div className={styles.fixedFooter}>
-              <button type="button" className={styles.btnPrimary} onClick={goNext}>
-                <BiInline ar="التالي" he="המשך" />
-              </button>
-              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
-                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
-              </button>
-           </div>
-        </div>
-
-        {/* --- Screen 4: Employment --- */}
-        <div style={{ display: screen === 4 ? 'block' : 'none' }}>
-             <div className={styles.sectionHead}>
-                 <div className={styles.sectionTitle}><BiInline ar="العمل" he="תעסוקה" /></div>
-                 <div className={styles.formSubtitle}><BiInline ar="مهنة في البلاد" he="עיסוק בארץ" /></div>
-             </div>
-
-             <CustomSelect 
-                labelAr="الوضع" labelHe="סטטוס"
-                value={empStatus}
-                onChange={setEmpStatus}
-                placeholder="בחר / اختر"
-                options={[
-                    { value: "selfEmployed", label: "עצמאי / مستقل" },
-                    { value: "employee", label: "שכיר / موظف" },
-                    { value: "notWorking", label: "לא עובד / غير موظف" },
-                ]}
-             />
-             <input type="hidden" name="employmentStatus" value={empStatus} />
-
-             {/* Not Working - כפתורים אליפטיים (בלי ריבוע V) */}
-             {empStatus === 'notWorking' && (
-               <div className={styles.fieldGroup}>
-                 <div className={styles.label}><BiInline ar="هل لديك دخل؟" he="האם יש הכנסות?" /></div>
-                 <div className={styles.assetsStack}>
-                    <label className={styles.selectionLabel}>
-                       <input 
-                          type="radio" 
-                          name="notWorkingSub" 
-                          value="income" 
-                          checked={notWorkingSub === 'income'} 
-                          onChange={() => setNotWorkingSub('income')}
-                       />
-                       <span className={styles.selectionSpan}>
-                          <BiInline ar="لدي دخل (غير العمل)" he="יש לי הכנסה (שלא מעבודה)" />
-                       </span>
-                    </label>
-
-                    <label className={styles.selectionLabel}>
-                       <input 
-                          type="radio" 
-                          name="notWorkingSub" 
-                          value="no_income" 
-                          checked={notWorkingSub === 'no_income'} 
-                          onChange={() => setNotWorkingSub('no_income')}
-                       />
-                       <span className={styles.selectionSpan}>
-                          <BiInline ar="ليس لدي دخل أين لي (دخل)" he="אין לי הכנסה כלל" />
-                       </span>
-                    </label>
-                 </div>
-               </div>
-             )}
-
-             {/* Employee */}
-             {empStatus === 'employee' && (
-                 <>
-                   <div className={styles.fieldGroup}>
-                     <div className={styles.label}><BiInline ar="اسم صاحب العمل" he="שם המעסיק" /></div>
-                     <input name="employerName" defaultValue={defaults.employerName} className={styles.inputBase} />
-                   </div>
-                   <div className={styles.fieldGroup}>
-                     <div className={styles.label}><BiInline ar="عنوان صاحب العمل" he="כתובת המעסיק" /></div>
-                     <input name="workAddress" defaultValue={defaults.workAddress} className={styles.inputBase} />
-                   </div>
-                   <DateField 
-                      labelAr="تاريخ بدء العمل" 
-                      labelHe="תאריך תחילת העבודה" 
-                      name="workStartDate"
-                      defaultValue={defaults.workStartDate}
-                   />
-                 </>
-             )}
-
-             {/* Self Employed */}
-             {empStatus === 'selfEmployed' && (
-                 <>
-                   <div className={styles.fieldGroup}>
-                      <div className={styles.label}><BiInline ar="اسم صاحب العمل" he="שם המעסיק" /></div>
-                      <input name="businessName" defaultValue={defaults.employerName} className={styles.inputBase} />
-                   </div>
-                   <div className={styles.fieldGroup}>
-                      <div className={styles.label}><BiInline ar="عنوان المصلحة" he="כתובת העסק" /></div>
-                      <input name="workAddress" defaultValue={defaults.workAddress} className={styles.inputBase} />
-                   </div>
-                   <DateField 
-                      labelAr="تاريخ الافتتاح" 
-                      labelHe="תאריך פתיחה" 
-                      name="workStartDate"
-                      defaultValue={defaults.workStartDate}
-                   />
-                 </>
-             )}
-
-             <div className={styles.fixedFooter}>
-              <button type="button" className={styles.btnPrimary} onClick={goNext}>
-                <BiInline ar="التالي" he="המשך" />
-              </button>
-              <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
-                <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
-              </button>
-           </div>
-        </div>
-
-        {/* --- Screen 5: Assets --- */}
-        <div style={{ display: screen === 5 ? 'block' : 'none' }}>
-            <div className={styles.sectionHead}>
-                 <div className={styles.sectionTitle}><BiInline ar="ممتلكات" he="רכוש" /></div>
-                 <div className={styles.formSubtitle}><BiInline ar="إذا كنت تملك أحد ما يلي" he="האם בבעלותך אחד מהבאים" /></div>
-            </div>
-
-            <div className={styles.fieldGroup}>
-                 {/* כפתורים אליפטיים לבחירה מרובה (בלי ריבוע V) */}
-                 <div className={styles.assetsStack}>
-                    {[
-                      { val: 'business', ar: 'عمل', he: 'עסק' },
-                      { val: 'apartment', ar: 'شقة', he: 'דירה' },
-                      { val: 'other', ar: 'ممتلكات أخرى', he: 'רכוש אחר' },
-                    ].map(item => (
-                      <label key={item.val} className={styles.selectionLabel}>
-                         <input 
-                            type="checkbox" 
-                            name="assets" 
-                            value={item.val} 
-                            checked={assets.includes(item.val)} 
-                            onChange={() => toggleAsset(item.val)} 
-                         />
-                         {/* שימוש ב-selectionSpan נותן את המראה האליפטי */}
-                         <span className={styles.selectionSpan} style={{justifyContent: 'center'}}>
-                            <BiInline ar={item.ar} he={item.he} />
-                         </span>
-                      </label>
-                    ))}
-                 </div>
-            </div>
-
-            <div className={styles.fixedFooter}>
-                <button type="button" className={styles.btnPrimary} onClick={handleFinishStep3}>
-                  <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
+                <button type="button" className={styles.btnPrimary} onClick={goNext}>
+                    <BiInline ar="التالي" he="המשך" />
                 </button>
-                <button type="submit" formAction={saveDraftAction} className={styles.btnSecondary}>
-                  <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+                <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
+                    <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
                 </button>
             </div>
-        </div>
-      </form>
+            </div>
+
+            {/* --- Screen 2: Residence Address --- */}
+            <div style={{ display: screen === 2 ? 'block' : 'none', paddingTop: '40px' }}>
+                <div className={styles.sectionHead}>
+                <div className={styles.sectionTitle}><BiInline ar="عنوان السكن" he="כתובת מגורים" /></div>
+                <div className={styles.formSubtitle}><BiInline ar="المسجل في وزارة الداخلية" he="הרשומה במשרד הפנים" /></div>
+                </div>
+
+                <div className={styles.fieldGroup}>
+                <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
+                <div className={styles.comboboxWrap}>
+                    <input 
+                        list="regCities" 
+                        name="regCity" 
+                        value={regCityText}
+                        onChange={e => setRegCityText(e.target.value)}
+                        className={styles.inputBase}
+                        placeholder="اختر مدينة  בחר עיר"
+                    />
+                    <datalist id="regCities">
+                        {regCityOpts.map(c => <option key={c.id} value={c.label} />)}
+                    </datalist>
+                </div>
+                </div>
+
+                <div className={styles.fieldGroup}>
+                <div className={styles.label}><BiInline ar="شارع" he="רחוב" /></div>
+                <input name="regStreet" defaultValue={defaults.regStreet} className={styles.inputBase} />
+                </div>
+
+                <div className={styles.fieldGroup}>
+                <div className={styles.addressGrid}>
+                    <div>
+                    <div className={styles.label}><BiInline ar="منزل" he="בית" /></div>
+                    <input name="regHouseNumber" defaultValue={defaults.regHouseNumber} className={styles.inputBase} />
+                    </div>
+                    <div>
+                    <div className={styles.label}><BiInline ar="دخول" he="כניסה" /></div>
+                    <input name="regEntry" defaultValue={defaults.regEntry} className={styles.inputBase} />
+                    </div>
+                    <div>
+                    <div className={styles.label}><BiInline ar="شقة" he="דירה" /></div>
+                    <input name="regApartment" defaultValue={defaults.regApartment} className={styles.inputBase} />
+                    </div>
+                </div>
+                </div>
+
+                <div className={styles.fieldGroup}>
+                <div className={styles.label}><BiInline ar="الرمز البريدي" he="מיקוד" /></div>
+                <input name="regZip" defaultValue={defaults.regZip} className={styles.inputBase} inputMode="numeric" />
+                </div>
+
+                <CustomSelect 
+                    labelAr="شقة مستأجرة / بملكية" labelHe="דירה שכורה / בבעלות"
+                    value={housingType}
+                    onChange={setHousingType}
+                    placeholder="اختر  בחר"
+                    options={[
+                        { value: "rented", label: "דירה שכורה  شقة مستأجرة" },
+                        { value: "owned", label: "דירה בבעלות  شقة بملكية" },
+                        { value: "other", label: "אחר  آخر" },
+                    ]}
+                />
+                <input type="hidden" name="housingType" value={housingType} />
+
+                <label className={styles.toggleLabel}>
+                    <input 
+                    className={styles.checkInput} 
+                    type="checkbox" 
+                    checked={mailingDifferent} 
+                    onChange={(e) => setMailingDifferent(e.target.checked)} 
+                    style={{width: 20, height: 20, accentColor: '#EE7248'}}
+                    />
+                    <BiInline ar="عنوان المراسلات مختلف؟" he="כתובת למכתבים שונה?" />
+                    <input type="hidden" name="mailingDifferent" value={mailingDifferent ? "true" : "false"} />
+                </label>
+
+                <div className={styles.fixedFooter}>
+                <button type="button" className={styles.btnPrimary} onClick={goNext}>
+                    <BiInline ar="التالي" he="המשך" />
+                </button>
+                <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
+                    <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+                </button>
+            </div>
+            </div>
+
+            {/* --- Screen 3: Mailing Address --- */}
+            <div style={{ display: screen === 3 ? 'block' : 'none', paddingTop: '40px' }}>
+                <div className={styles.sectionHead}>
+                <div className={styles.sectionTitle}><BiInline ar="عنوان المراسلات" he="כתובת למכתבים" /></div>
+                </div>
+                <div className={styles.fieldGroup}>
+                <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
+                <div className={styles.comboboxWrap}>
+                    <input 
+                        list="mailCities" 
+                        name="mailCity" 
+                        value={mailCityText}
+                        onChange={e => setMailCityText(e.target.value)}
+                        className={styles.inputBase}
+                    />
+                    <datalist id="mailCities">
+                        {mailCityOpts.map(c => <option key={c.id} value={c.label} />)}
+                    </datalist>
+                </div>
+                </div>
+                <div className={styles.fieldGroup}>
+                <div className={styles.label}><BiInline ar="شارع" he="רחוב" /></div>
+                <input name="mailStreet" defaultValue={defaults.mailingAddress?.street} className={styles.inputBase} />
+                </div>
+                <div className={styles.fieldGroup}>
+                <div className={styles.addressGrid}>
+                    <div>
+                    <div className={styles.label}><BiInline ar="منزل" he="בית" /></div>
+                    <input name="mailHouseNumber" className={styles.inputBase} />
+                    </div>
+                    <div>
+                    <div className={styles.label}><BiInline ar="دخول" he="כניסה" /></div>
+                    <input name="mailEntry" className={styles.inputBase} />
+                    </div>
+                    <div>
+                    <div className={styles.label}><BiInline ar="شقة" he="דירה" /></div>
+                    <input name="mailApartment" className={styles.inputBase} />
+                    </div>
+                </div>
+                </div>
+                <div className={styles.fieldGroup}>
+                <div className={styles.label}><BiInline ar="الرمز البريدي" he="מיקוד" /></div>
+                <input name="mailZip" className={styles.inputBase} inputMode="numeric" />
+                </div>
+                <div className={styles.fixedFooter}>
+                <button type="button" className={styles.btnPrimary} onClick={goNext}>
+                    <BiInline ar="التالي" he="המשך" />
+                </button>
+                <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
+                    <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+                </button>
+            </div>
+            </div>
+
+            {/* --- Screen 4: Employment --- */}
+            <div style={{ display: screen === 4 ? 'block' : 'none', paddingTop: '40px' }}>
+                <div className={styles.sectionHead}>
+                    <div className={styles.sectionTitle}><BiInline ar="العمل" he="תעסוקה" /></div>
+                    <div className={styles.formSubtitle}><BiInline ar="مهنة في البلاد" he="עיסוק בארץ" /></div>
+                </div>
+
+                <CustomSelect 
+                    labelAr="الوضع" labelHe="סטטוס"
+                    value={empStatus}
+                    onChange={setEmpStatus}
+                    placeholder="اختر  בחר" 
+                    options={[
+                        { value: "selfEmployed", label: "עצמאי  مستقل" },
+                        { value: "employee", label: "שכיר  موظف" },
+                        { value: "notWorking", label: "לא עובד  غير موظف" },
+                    ]}
+                />
+                <input type="hidden" name="employmentStatus" value={empStatus} />
+
+                {/* Not Working - כפתורים אליפטיים (בלי ריבוע V) */}
+                {empStatus === 'notWorking' && (
+                <div className={styles.fieldGroup}>
+                    <div className={styles.label}><BiInline ar="هل لديك دخل؟" he="האם יש הכנסות?" /></div>
+                    <div className={styles.assetsStack}>
+                        <label className={styles.selectionLabel}>
+                        <input 
+                            type="radio" 
+                            name="notWorkingSub" 
+                            value="income" 
+                            checked={notWorkingSub === 'income'} 
+                            onChange={() => setNotWorkingSub('income')}
+                        />
+                        <span className={styles.selectionSpan}>
+                            <BiInline ar="لدي دخل (غير العمل)" he="יש לי הכנסה (שלא מעבודה)" />
+                        </span>
+                        </label>
+
+                        <label className={styles.selectionLabel}>
+                        <input 
+                            type="radio" 
+                            name="notWorkingSub" 
+                            value="no_income" 
+                            checked={notWorkingSub === 'no_income'} 
+                            onChange={() => setNotWorkingSub('no_income')}
+                        />
+                        <span className={styles.selectionSpan}>
+                            <BiInline ar="ليس لدي دخل أين لي (دخل)" he="אין לי הכנסה כלל" />
+                        </span>
+                        </label>
+                    </div>
+                </div>
+                )}
+
+                {/* Employee */}
+                {empStatus === 'employee' && (
+                    <>
+                    <div className={styles.fieldGroup}>
+                        <div className={styles.label}><BiInline ar="اسم صاحب العمل" he="שם המעסיק" /></div>
+                        <input name="employerName" defaultValue={defaults.employerName} className={styles.inputBase} />
+                    </div>
+                    <div className={styles.fieldGroup}>
+                        <div className={styles.label}><BiInline ar="عنوان صاحب العمل" he="כתובת המעסיק" /></div>
+                        <input name="workAddress" defaultValue={defaults.workAddress} className={styles.inputBase} />
+                    </div>
+                    <DateField 
+                        labelAr="تاريخ بدء العمل" 
+                        labelHe="תאריך תחילת העבודה" 
+                        name="workStartDate"
+                        defaultValue={defaults.workStartDate}
+                    />
+                    </>
+                )}
+
+                {/* Self Employed */}
+                {empStatus === 'selfEmployed' && (
+                    <>
+                    <div className={styles.fieldGroup}>
+                        <div className={styles.label}><BiInline ar="اسم صاحب العمل" he="שם המעסיק" /></div>
+                        <input name="businessName" defaultValue={defaults.employerName} className={styles.inputBase} />
+                    </div>
+                    <div className={styles.fieldGroup}>
+                        <div className={styles.label}><BiInline ar="عنوان المصلحة" he="כתובת העסק" /></div>
+                        <input name="workAddress" defaultValue={defaults.workAddress} className={styles.inputBase} />
+                    </div>
+                    <DateField 
+                        labelAr="تاريخ الافتتاح" 
+                        labelHe="תאריך פתיחה" 
+                        name="workStartDate"
+                        defaultValue={defaults.workStartDate}
+                    />
+                    </>
+                )}
+
+                <div className={styles.fixedFooter}>
+                <button type="button" className={styles.btnPrimary} onClick={goNext}>
+                    <BiInline ar="التالي" he="המשך" />
+                </button>
+                <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
+                    <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+                </button>
+            </div>
+            </div>
+
+            {/* --- Screen 5: Assets --- */}
+            <div style={{ display: screen === 5 ? 'block' : 'none', paddingTop: '40px' }}>
+                <div className={styles.sectionHead}>
+                    <div className={styles.sectionTitle}><BiInline ar="ممتلكات" he="רכוש" /></div>
+                    <div className={styles.formSubtitle}><BiInline ar="إذا كنت تملك أحد ما يلي" he="האם בבעלותך אחד מהבאים" /></div>
+                </div>
+
+                <div className={styles.fieldGroup}>
+                    <div className={styles.assetsStack}>
+                        {[
+                        { val: 'business', ar: 'عمل', he: 'עסק' },
+                        { val: 'apartment', ar: 'شقة', he: 'דירה' },
+                        { val: 'other', ar: 'ممتلكات أخرى', he: 'רכוש אחר' },
+                        { val: 'none', ar: 'ليس لدي ممتلكات', he: 'אין לי רכוש' },
+                        ].map(item => (
+                        <label key={item.val} className={styles.selectionLabel}>
+                            <input 
+                                type="checkbox" 
+                                name="assets" 
+                                value={item.val} 
+                                checked={assets.includes(item.val)} 
+                                onChange={() => toggleAsset(item.val)} 
+                            />
+                            <span className={styles.selectionSpan} style={{justifyContent: 'right'}}>
+                                <BiInline ar={item.ar} he={item.he} />
+                            </span>
+                        </label>
+                        ))}
+                    </div>
+                </div>
+
+                <div className={styles.fixedFooter}>
+                    <button type="button" className={styles.btnPrimary} onClick={handleFinishStep3}>
+                    <BiInline ar="إنهاء المرحلة" he="סיום שלב" />
+                    </button>
+                    <button type="button" onClick={handleSaveDraft} className={styles.btnSecondary}>
+                    <BiInline ar="حفظ كمسودة" he="שמור כטיוטה" />
+                    </button>
+                </div>
+            </div>
+        </form>
+      </>
       )}
 
       {/* --- FORM 2: Screen 6 (Summary) - Allows Submit --- */}
@@ -614,7 +690,7 @@ export default function Step3FormClient({
         <form className={styles.scrollableContent} action={saveAndNextAction} style={{paddingTop: 0}}>
               <div className={styles.reviewHeader}>
                 <div className={styles.reviewTitle}>
-                  <span>نهاية المرحلة 3</span><span>סוף שלב 3</span>
+                  <span>نهاية المرحلة </span><span>סוף שלב 3</span>
                 </div>
                 <div className={styles.summarySub} style={{ lineHeight: '1.6' }}>
                    <span>يرجى التحقق من صحة التفاصيل وترجمتها</span>
@@ -623,56 +699,15 @@ export default function Step3FormClient({
                 </div>
               </div>
 
-              {/* --- 1. שדות מתורגמים (שימוש ב-translationPill כמו בשלב 1 ו-2) --- */}
-              {[
-                  { key: "regStreet", labelAr: "الشارع (السكن)", labelHe: "רחוב (מגורים)" },
-                  { key: "employerName", labelAr: "اسم صاحب العمل", labelHe: "שם המעסיק" },
-                  { key: "businessName", labelAr: "اسم المصلحة", labelHe: "שם העסק" },
-                  { key: "workAddress", labelAr: "عنوان العمل", labelHe: "כתובת העבודה" },
-              ].map(field => {
-                  const data = translations[field.key];
-                  if (!data || !data.original) return null;
-                  
-                  const isHeToAr = data.direction === "he-to-ar";
-                  const originalName = isHeToAr ? `${field.key}He` : `${field.key}Ar`;
-                  const translatedName = isHeToAr ? `${field.key}Ar` : `${field.key}He`;
-                  
-                  return (
-                    <div className={styles.fieldGroup} key={field.key} style={{marginBottom: 16}}>
-                        <div className={styles.label}><BiInline ar={field.labelAr} he={field.labelHe} /></div>
-                        
-                        <div className={styles.translationPill}>
-                           <div className={styles.transOriginal}>{data.original}</div>
-                           <input type="hidden" name={originalName} value={data.original} />
-                           
-                           <div className={styles.transTranslated}>
-                             <input className={styles.inputBase} 
-                                    style={{
-                                        background: 'transparent', 
-                                        border: 'none', 
-                                        fontWeight: 700, 
-                                        padding: 0, 
-                                        height: 'auto', 
-                                        textAlign: 'right'
-                                    }} 
-                                    defaultValue={data.translated} name={translatedName} 
-                             />
-                           </div>
-                        </div>
-                        <input type="hidden" name={field.key} value={data.original} />
-                    </div>
-                  );
-              })}
-
-              {/* --- 2. שדות לקריאה בלבד --- */}
+              {/* 1. Marital Status */}
               <div className={styles.fieldGroup}>
                  <div className={styles.label}><BiInline ar="الحالة الاجتماعية" he="מצב משפחתי" /></div>
                  <input className={styles.readOnlyInput} 
                     value={
-                      formDataState.maritalStatus === 'single' ? 'רווק/ה / أعزب/ة' :
-                      formDataState.maritalStatus === 'married' ? 'נשוי/ה / متزوج/ة' :
-                      formDataState.maritalStatus === 'divorced' ? 'גרוש/ה / مطلق/ة' :
-                      formDataState.maritalStatus === 'widowed' ? 'אלמן/ה / أرمل/ة' : ''
+                      formDataState.maritalStatus === 'single' ? 'רווק/ה  أعزب/ة' :
+                      formDataState.maritalStatus === 'married' ? 'נשוי/ה  متزوج/ة' :
+                      formDataState.maritalStatus === 'divorced' ? 'גרוש/ה  مطلق/ة' :
+                      formDataState.maritalStatus === 'widowed' ? 'אלמן/ה  أرمل/ة' : ''
                     } 
                     readOnly 
                  />
@@ -690,14 +725,19 @@ export default function Step3FormClient({
                 </div>
               )}
 
+              {/* 2. Residence Address */}
               <div className={styles.sectionHead} style={{marginTop: 20}}>
                  <div className={styles.sectionTitle}><BiInline ar="عنوان السكن" he="כתובת מגורים" /></div>
               </div>
 
+              {/* עיר - שדה רגיל (כי הוא מרשימה) */}
               <div className={styles.fieldGroup}>
                  <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
                  <input className={styles.readOnlyInput} value={formDataState.regCity} readOnly />
               </div>
+
+              {/* רחוב - שדה מתורגם כתום */}
+              {renderTranslatedField("regStreet", "شارع", "רחוב")}
 
               <div className={styles.addressGrid} style={{marginBottom: 20}}>
                  <div>
@@ -723,15 +763,15 @@ export default function Step3FormClient({
                  <div className={styles.label}><BiInline ar="شقة مستأجرة / بملكية" he="דירה שכורה / בבעלות" /></div>
                  <input className={styles.readOnlyInput} 
                     value={
-                       formDataState.housingType === 'rented' ? 'דירה שכורה / شقة مستأجرة' :
-                       formDataState.housingType === 'owned' ? 'דירה בבעלות / شقة بملكية' :
-                       formDataState.housingType === 'other' ? 'אחר / آخر' : ''
+                       formDataState.housingType === 'rented' ? 'דירה שכורה  شقة مستأجرة' :
+                       formDataState.housingType === 'owned' ? 'דירה בבעלות  شقة بملكية' :
+                       formDataState.housingType === 'other' ? 'אחר  آخر' : ''
                     }
                     readOnly
                  />
               </div>
 
-              {/* Mailing Address Summary */}
+              {/* 3. Mailing Address (If different) */}
               {formDataState.mailingDifferent === "true" && (
                 <>
                   <div className={styles.sectionHead} style={{marginTop: 20}}>
@@ -742,10 +782,13 @@ export default function Step3FormClient({
                      <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
                      <input className={styles.readOnlyInput} value={formDataState.mailCity} readOnly />
                   </div>
+                  
+                  {/* לרחוב דואר אין תרגום ב-Action שלך כרגע, אז נציג כרגיל */}
                   <div className={styles.fieldGroup}>
                      <div className={styles.label}><BiInline ar="شارع" he="רחוב" /></div>
                      <input className={styles.readOnlyInput} value={formDataState.mailStreet} readOnly />
                   </div>
+
                   <div className={styles.addressGrid} style={{marginBottom: 20}}>
                      <div>
                        <div className={styles.label}><BiInline ar="منزل" he="בית" /></div>
@@ -767,7 +810,7 @@ export default function Step3FormClient({
                 </>
               )}
 
-              {/* Employment Summary */}
+              {/* 4. Employment */}
               <div className={styles.sectionHead} style={{marginTop: 20}}>
                  <div className={styles.sectionTitle}><BiInline ar="العمل" he="תעסוקה" /></div>
               </div>
@@ -775,18 +818,23 @@ export default function Step3FormClient({
               <div className={styles.fieldGroup}>
                  <input className={styles.readOnlyInput} 
                     value={
-                       formDataState.employmentStatus === 'employee' ? 'שכיר / موظف' :
-                       formDataState.employmentStatus === 'selfEmployed' ? 'עצמאי / مستقل' :
-                       formDataState.employmentStatus === 'notWorking' ? 'לא עובד / لا يعمل' : ''
+                       formDataState.employmentStatus === 'employee' ? 'שכיר  موظف' :
+                       formDataState.employmentStatus === 'selfEmployed' ? 'עצמאי  مستقل' :
+                       formDataState.employmentStatus === 'notWorking' ? 'לא עובד  لا يعمل' : ''
                     }
                     readOnly 
                  />
               </div>
               
+              {/* שדות מתורגמים לתעסוקה */}
+              {renderTranslatedField("employerName", "اسم صاحب العمل", "שם המעסיק")}
+              {renderTranslatedField("businessName", "اسم المصلحة", "שם העסק")}
+              {renderTranslatedField("workAddress", "عنوان العمل", "כתובת העבודה")}
+
               {formDataState.employmentStatus === 'notWorking' && formDataState.notWorkingSub && (
                   <div className={styles.fieldGroup}>
                         <input className={styles.readOnlyInput} 
-                          value={formDataState.notWorkingSub === 'income' ? 'יש לי הכנסה / لدي دخل' : 'אין לי הכנסה / ليس لدي دخل'}
+                          value={formDataState.notWorkingSub === 'income' ? 'יש לי הכנסה  لدي دخل' : 'אין לי הכנסה  ليس لدي دخل'}
                           readOnly
                         />
                   </div>
@@ -804,7 +852,7 @@ export default function Step3FormClient({
                 </div>
               )}
 
-              {/* Assets Summary */}
+              {/* 5. Assets Summary */}
               {assets.length > 0 && (
                  <>
                    <div className={styles.sectionHead} style={{marginTop: 20}}>
@@ -813,9 +861,10 @@ export default function Step3FormClient({
                    <div className={styles.fieldGroup}>
                          <input className={styles.readOnlyInput} 
                            value={assets.map(a => 
-                             a === 'business' ? 'עסק / عمل' : 
-                             a === 'apartment' ? 'דירה / شقة' : 
-                             'רכוש אחר / ممتلكات أخرى'
+                             a === 'business' ? 'עסק  عمل' : 
+                             a === 'apartment' ? 'דירה  شقة' : 
+                             a === 'none' ? 'אין לי רכוש  ليس لدي ممتلكات' :
+                             'רכוש אחר  ممتلكات أخرى'
                            ).join(', ')} 
                            readOnly
                          />

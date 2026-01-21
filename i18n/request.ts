@@ -1,7 +1,7 @@
 import {notFound} from 'next/navigation';
 import {getRequestConfig} from 'next-intl/server';
 
-const locales = ['en', 'he', 'ar'];
+const locales = ['he', 'ar'];
 
 export default getRequestConfig(async (params: any) => {
   // קבלת השפה (תומך בכל הגרסאות)
