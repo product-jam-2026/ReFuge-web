@@ -58,6 +58,7 @@ export default async function Step3Page({
     mailingAddress: {
        city: mail.city || "",
        street: getStringVal(mail.street),
+       poBox: mail.poBox || "", // <--- הוספי את השורה הזו
     },
 
     employmentStatus: step3.employmentStatus || "",

@@ -371,7 +371,7 @@ export default function Step3FormClient({
                 placeholder="اختر  בחר" 
                 options={[
                     { value: "single", label: "רווק/ה  أعزب/ة" },
-                    { value: "married", label: "נשוי/ה  متزوج/ة" },
+                    { value: "married", label: "נשוי/אה  متزوج/ة" },
                     { value: "divorced", label: "גרוש/ה  مطلق/ة" },
                     { value: "widowed", label: "אלמן/ה  أرمل/ة" }
                 ]}
@@ -447,6 +447,16 @@ export default function Step3FormClient({
                 <div className={styles.label}><BiInline ar="الرمز البريدي" he="מיקוד" /></div>
                 <input name="regZip" defaultValue={defaults.regZip} className={styles.inputBase} inputMode="numeric" />
                 </div>
+                {/* --- תוספת: תא דואר --- */}
+<div className={styles.fieldGroup}>
+  <div className={styles.label}><BiInline ar="صندوق بريد" he="תא דואר" /></div>
+  <input 
+      name="mailPOBox" 
+      className={styles.inputBase} 
+      inputMode="numeric"
+      defaultValue={defaults.mailingAddress?.poBox}
+  />
+</div>
 
                 <CustomSelect 
                     labelAr="شقة مستأجرة / بملكية" labelHe="דירה שכורה / בבעלות"
@@ -705,7 +715,7 @@ export default function Step3FormClient({
                  <input className={styles.readOnlyInput} 
                     value={
                       formDataState.maritalStatus === 'single' ? 'רווק/ה  أعزب/ة' :
-                      formDataState.maritalStatus === 'married' ? 'נשוי/ה  متزوج/ة' :
+                      formDataState.maritalStatus === 'married' ? 'נשוי/אה  متزوج/ة' :
                       formDataState.maritalStatus === 'divorced' ? 'גרוש/ה  مطلق/ة' :
                       formDataState.maritalStatus === 'widowed' ? 'אלמן/ה  أرمل/ة' : ''
                     } 
@@ -872,6 +882,7 @@ export default function Step3FormClient({
               <input type="hidden" name="regEntry" value={formDataState.regEntry || ""} />
               <input type="hidden" name="regApartment" value={formDataState.regApartment || ""} />
               <input type="hidden" name="regZip" value={formDataState.regZip || ""} />
+              <input type="hidden" name="mailPOBox" value={formDataState.mailPOBox || ""} />
               <input type="hidden" name="housingType" value={formDataState.housingType || ""} />
               <input type="hidden" name="mailingDifferent" value={formDataState.mailingDifferent || "false"} />
               {formDataState.mailingDifferent === "true" && (

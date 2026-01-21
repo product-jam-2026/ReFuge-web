@@ -402,6 +402,7 @@ export async function submitStep3(locale: string, mode: "draft" | "next" | "back
       entry: mailingDiff ? normalizeText(formData.get("mailEntry")) : "",
       apartment: mailingDiff ? normalizeDigits(formData.get("mailApartment")) : "",
       zip: mailingDiff ? normalizeDigits(formData.get("mailZip")) : "",
+      poBox: mailingDiff ? normalizeDigits(formData.get("mailPOBox")) : "",
     },
     employmentStatus: normalizeText(formData.get("employmentStatus")),
     occupation: buildOccupationJSON(formData, buildDualField),
