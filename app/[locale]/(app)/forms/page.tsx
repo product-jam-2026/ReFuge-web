@@ -61,17 +61,6 @@ export default function FormsPage() {
           </h3>
         </Link>
 
-        <Link
-          href="/forms/person-registration-request"
-          className={styles.formCard}
-        >
-          <h2 className={styles.formTitle}>
-            {t("forms.personRegistrationRequest.title")}
-          </h2>
-          <h3 className={styles.formSubtitle}>
-            {t("forms.personRegistrationRequest.subtitle")}
-          </h3>
-        </Link>
       </div>
     </main>
   );
