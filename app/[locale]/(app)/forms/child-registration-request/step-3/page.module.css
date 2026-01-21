@@ -43,6 +43,11 @@
 .input[type="date"] {
   max-width: 100%;
   display: block;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 10px 12px;
+  line-height: 1.2;
 }
 
 .input:focus {
