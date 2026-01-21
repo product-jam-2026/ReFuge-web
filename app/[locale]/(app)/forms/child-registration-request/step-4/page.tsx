@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useWizard } from "../WizardProvider";
 import { fieldMap } from "../fieldMap";
 import { intakeToPdfFields } from "../intakeToPdfFields";
@@ -40,7 +41,14 @@ function safeFileName(title: string) {
 
 export default function Step4() {
   const router = useRouter();
-  const { draft, extras, setExtras, instanceId } = useWizard();
+  const params = useParams();
+  const locale = params.locale as string;
+  const { draft, extras, setExtras, instanceId, saveNow, saveStatus } =
+    useWizard();
+
+  useEffect(() => {
+    setExtras((p) => ({ ...p, currentStep: 4 }));
+  }, [setExtras]);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -153,8 +161,8 @@ export default function Step4() {
 
   async function uploadPdf(
     outBytes: Uint8Array,
-    instanceId: string,
     pdfTitle: string,
+    instanceId?: string,
   ) {
     const supabase = createClient();
 
@@ -265,8 +273,8 @@ export default function Step4() {
       { fontBytes, autoDetectRtl: true, defaultRtlAlignRight: true },
     );
 
-    const savedInstanceId = await saveDraft(instanceId ?? undefined);
-    await uploadPdf(outBytes, savedInstanceId, pdfTitle);
+    // const savedInstanceId = await saveDraft(instanceId ?? undefined);
+    await uploadPdf(outBytes, pdfTitle);
   }
 
   return (
@@ -317,20 +325,49 @@ export default function Step4() {
             className={styles.canvas}
           />
         </div>
-
       </div>
 
-      <div className={styles.footerRow}>
+      <span className={styles.deleteSignature}
+        role="button"
+        tabIndex={0}
+        onClick={clearSignature}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") clearSignature();
+        }}
+        style={{
+          cursor: (extras as any)?.applicantSignatureDataUrl
+            ? "pointer"
+            : "default",
+          // textDecoration: "underline",
+          // opacity: (extras as any)?.applicantSignatureDataUrl ? 1 : 0.5,
+          userSelect: "none",
+        }}
+        aria-disabled={!(extras as any)?.applicantSignatureDataUrl}
+        title="מחק חתימה"
+      >
+        איפוס חתימה
+      </span>
+      <div className={styles.footer}>
         <button
+          className={styles.primaryButton}
           type="button"
           onClick={async () => {
             await onGenerate();
             router.push("./review");
           }}
-          className={styles.primaryButton}
         >
           סיום
         </button>
+        <button
+          className={styles.secondaryButton}
+          // disabled={saveStatus === "saving"}
+          onClick={async () => {
+            const id = await saveNow();
+            if (id) router.push(`/${locale}/forms/child-registration-request`);
+          }}
+        >
+          שמור כטיוטה
+        </button>{" "}
       </div>
     </main>
   );

@@ -239,6 +239,8 @@ export default function Step4() {
       return;
     }
 
+
+
     const pdfTitle =
       (extras as any).formTitle?.trim() ||
       `${draft.intake?.step1?.firstName ?? ""} ${draft.intake?.step1?.lastName ?? ""}`.trim() ||
@@ -251,6 +253,8 @@ export default function Step4() {
     // });
 
     const fields = intakeToPdfFields(draft as any, extras as any);
+
+    
 
     const [tplRes, fontRes] = await Promise.all([
       fetch("/forms/person-registration.pdf"),

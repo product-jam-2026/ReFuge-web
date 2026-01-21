@@ -1,17 +1,28 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
+
 import { useWizard } from "../WizardProvider";
 import styles from "./page.module.css";
 
 export default function Step1() {
   const router = useRouter();
-  const { draft, update } = useWizard();
+  const { draft, update, setExtras, saveNow } = useWizard();
+    const params = useParams();
+    const locale = params.locale as string;
+  
 
   const kids = draft?.intake?.step6?.children ?? [];
+  const sp = useSearchParams();
+  const instanceId = sp.get("instanceId");
+  const nextUrl = instanceId ? `./step-2?instanceId=${instanceId}` : "./step-2";
 
   const [selected, setSelected] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    setExtras((p) => ({ ...p, currentStep: 1 }));
+  }, [setExtras]);
 
   useEffect(() => {
     setSelected(new Set(kids.map((_, i) => i)));
@@ -113,16 +124,28 @@ export default function Step1() {
           </fieldset>
         )}
 
-        <div className={styles.footerRow}>
+        <div className={styles.footer}>
           <button
             type="button"
-            onClick={onNext}
+            // onClick={onNext}
+            onClick={() => router.push(nextUrl)}
             className={styles.primaryButton}
             disabled={disableNext}
             title={disableNext ? "בחר לפחות ילד אחד" : undefined}
           >
             המשך
           </button>
+          <button
+            className={styles.secondaryButton}
+            // disabled={saveStatus === "saving"}
+            onClick={async () => {
+              const id = await saveNow();
+              if (id)
+                router.push(`/${locale}/forms/child-registration-request`);
+            }}
+          >
+            שמור כטיוטה
+          </button>{" "}
         </div>
       </div>
     </main>

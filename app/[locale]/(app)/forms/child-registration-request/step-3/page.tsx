@@ -1,7 +1,7 @@
 "use client";
+import React, { useEffect, useMemo, useState } from "react";
 
-import React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useWizard } from "../WizardProvider";
 import styles from "./page.module.css";
 
@@ -36,8 +36,16 @@ export default function Step3() {
   const router = useRouter();
   const sp = useSearchParams();
   const instanceId = sp.get("instanceId");
+    const params = useParams();
+    const locale = params.locale as string;
+  
 
-  const { draft, extras, setExtras, update } = useWizard();
+  const { draft, extras, setExtras, update, saveNow } = useWizard();
+
+      useEffect(() => {
+      setExtras((p) => ({ ...p, currentStep: 3 }));
+    }, [setExtras]);
+  
 
   if (!draft) {
     return <main className={styles.page}>Loading…</main>;
@@ -213,7 +221,7 @@ export default function Step3() {
         ))}
       </div>
 
-      <div className={styles.footerRow}>
+      <div className={styles.footer}>
         {/* <button
           type="button"
           className={styles.navBtn}
@@ -228,6 +236,17 @@ export default function Step3() {
         >
           לחתימה ואישור 
         </button>
+                <button
+          className={styles.secondaryButton}
+          // disabled={saveStatus === "saving"}
+          onClick={async () => {
+            const id = await saveNow();
+            if (id) router.push(`/${locale}/forms/child-registration-request`);
+          }}
+        >
+          שמור כטיוטה
+        </button>{" "}
+
       </div>
     </main>
   );

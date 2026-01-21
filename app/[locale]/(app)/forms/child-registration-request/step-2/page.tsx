@@ -1,12 +1,23 @@
 "use client";
+import React, { useEffect, useMemo, useState } from "react";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useWizard } from "../WizardProvider";
 import styles from "./page.module.css";
 
 export default function Step2() {
   const router = useRouter();
-  const { draft, extras, setExtras, update } = useWizard();
+  const { draft, extras, setExtras, update, saveNow } = useWizard();
+  useEffect(() => {
+    setExtras((p) => ({ ...p, currentStep: 2 }));
+  }, [setExtras]);
+
+  const sp = useSearchParams();
+  const instanceId = sp.get("instanceId");
+  const params = useParams();
+  const locale = params.locale as string;
+
+  const nextUrl = instanceId ? `./step-3?instanceId=${instanceId}` : "./step-3";
 
   return (
     <main className={styles.page}>
@@ -37,14 +48,25 @@ export default function Step2() {
         </div>
       </div>
 
-      <div className={styles.footerRow}>
+      <div className={styles.footer}>
         <button
           type="button"
           className={styles.primaryButton}
-          onClick={() => router.push("./step-3")}
+          // onClick={() => router.push("./step-3")}
+          onClick={() => router.push(nextUrl)}
         >
           המשך
         </button>
+        <button
+          className={styles.secondaryButton}
+          // disabled={saveStatus === "saving"}
+          onClick={async () => {
+            const id = await saveNow();
+            if (id) router.push(`/${locale}/forms/child-registration-request`);
+          }}
+        >
+          שמור כטיוטה
+        </button>{" "}
       </div>
     </main>
   );

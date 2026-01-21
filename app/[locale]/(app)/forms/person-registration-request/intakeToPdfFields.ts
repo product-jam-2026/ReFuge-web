@@ -592,6 +592,7 @@ export function intakeToPdfFields(
     poBox: extras?.poBox ?? "",
 
     // If your PDF engine expects the signature as a field value (dataURL)
-    applicantSignature: (extras as any)?.applicantSignature ?? "",
+    // applicantSignature: (extras as any)?.applicantSignature ?? "",
+    applicantSignature: extras?.applicantSignatureDataUrl ?? ""
   };
 }
