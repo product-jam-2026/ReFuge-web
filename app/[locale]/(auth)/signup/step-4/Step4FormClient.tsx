@@ -323,8 +323,7 @@ export default function Step4FormClient({
                 {/* שדה סניף */}
                 <div className={styles.fieldGroup}>
                     <div className={styles.label}><BiInline ar="اسم ورقم الفرع" he="שם ומספר סניף" /></div>
-                    <input name="branch" defaultValue={defaults.branch} className={styles.inputBase} inputMode="numeric" />
-                </div>
+                    <input name="branch" defaultValue={defaults.branch} className={styles.inputBase} />                </div>
 
                 {/* שדה חשבון */}
                 <div className={styles.fieldGroup}>

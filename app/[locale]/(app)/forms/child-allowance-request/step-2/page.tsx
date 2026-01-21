@@ -17,6 +17,13 @@ export default function Step2() {
     setExtras((p: any) => ({ ...p, currentStep: 2 }));
   }, [setExtras]);
 
+  useEffect(() => {
+    document.body.classList.add("fullBleedBlue");
+    return () => {
+      document.body.classList.remove("fullBleedBlue");
+    };
+  }, []);
+
   return (
     <main className={styles.page}>
       <div className={styles.imageContainer}>
