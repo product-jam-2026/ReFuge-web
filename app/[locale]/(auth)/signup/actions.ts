@@ -322,7 +322,8 @@ async function finishRegistration(params: {
 
 export async function translateStep3Data(formData: FormData, locale?: string) {
   "use server";
-  const fields = ["regStreet", "employerName", "businessName", "workAddress"];
+  const fields = ["regStreet", "employerName", "businessName", "workAddress", "regCity", "mailCity",
+    "mailStreet"];
   const results: Record<string, { original: string; translated: string; direction: "he-to-ar" | "ar-to-he" }> = {};
 
   await Promise.all(

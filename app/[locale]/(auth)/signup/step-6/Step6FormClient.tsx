@@ -359,7 +359,7 @@ export default function Step6FormClient({ locale, saved, saveDraftAction }: Prop
                 <div key={index} style={{marginBottom: 40, borderBottom: '1px solid #eee', paddingBottom: 20}}>
                     <div className={styles.sectionHead}>
                         <div className={styles.sectionTitle} style={{color: '#EE7248'}}>
-                            <BiInline ar={`الطفل ${index + 1}`} he={`ילד.ה ${index + 1}`} />
+                            <BiInline ar={`الطفل `} he={`ילד.ה ${index + 1}`} />
                         </div>
                     </div>
 

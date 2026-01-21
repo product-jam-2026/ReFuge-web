@@ -730,11 +730,8 @@ export default function Step3FormClient({
                  <div className={styles.sectionTitle}><BiInline ar="عنوان السكن" he="כתובת מגורים" /></div>
               </div>
 
-              {/* עיר - שדה רגיל (כי הוא מרשימה) */}
-              <div className={styles.fieldGroup}>
-                 <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
-                 <input className={styles.readOnlyInput} value={formDataState.regCity} readOnly />
-              </div>
+              {/* עיר - עכשיו מתורגם כמו רחוב */}
+              {renderTranslatedField("regCity", "مدينة", "עיר")}
 
               {/* רחוב - שדה מתורגם כתום */}
               {renderTranslatedField("regStreet", "شارع", "רחוב")}
@@ -772,22 +769,17 @@ export default function Step3FormClient({
               </div>
 
               {/* 3. Mailing Address (If different) */}
-              {formDataState.mailingDifferent === "true" && (
-                <>
-                  <div className={styles.sectionHead} style={{marginTop: 20}}>
-                     <div className={styles.sectionTitle}><BiInline ar="عنوان المراسلات" he="כתובת למכתבים" /></div>
-                  </div>
-                  
-                  <div className={styles.fieldGroup}>
-                     <div className={styles.label}><BiInline ar="مدينة" he="עיר" /></div>
-                     <input className={styles.readOnlyInput} value={formDataState.mailCity} readOnly />
-                  </div>
-                  
-                  {/* לרחוב דואר אין תרגום ב-Action שלך כרגע, אז נציג כרגיל */}
-                  <div className={styles.fieldGroup}>
-                     <div className={styles.label}><BiInline ar="شارع" he="רחוב" /></div>
-                     <input className={styles.readOnlyInput} value={formDataState.mailStreet} readOnly />
-                  </div>
+{formDataState.mailingDifferent === "true" && (
+  <>
+    <div className={styles.sectionHead} style={{marginTop: 20}}>
+        <div className={styles.sectionTitle}><BiInline ar="عنوان المراسلات" he="כתובת למכתבים" /></div>
+    </div>
+    
+    {/* 👇 שינוי 1: עיר מתורגמת */}
+    {renderTranslatedField("mailCity", "مدينة", "עיר")}
+    
+    {/* 👇 שינוי 2: רחוב מתורגם */}
+    {renderTranslatedField("mailStreet", "شارع", "רחוב")}
 
                   <div className={styles.addressGrid} style={{marginBottom: 20}}>
                      <div>
