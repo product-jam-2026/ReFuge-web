@@ -119,17 +119,7 @@ export default function Step1() {
           >
             {nextLabel}
           </button>
-          <button
-            className={styles.secondaryButton}
-            // disabled={saveStatus === "saving"}
-            onClick={async () => {
-              const id = await saveNow();
-              if (id)
-                router.push(`/${locale}/forms/child-registration-request`);
-            }}
-          >
-            {saveDraftLabel}
-          </button>{" "}
+
         </div>
       </div>
     </main>

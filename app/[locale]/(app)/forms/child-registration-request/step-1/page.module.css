@@ -80,7 +80,7 @@
   font-size: 20px;
   font-style: normal;
   font-weight: 700;
-  line-height: 25px; /* 125% */
+  line-height: 20px; /* 125% */
 }
 
 .title {
@@ -99,10 +99,6 @@
 .container {
   display: grid;
   gap: 10px;
-}
-
-.emptyText {
-  /* optional */
 }
 
 .fieldset {
@@ -127,6 +123,7 @@
   display: grid;
   gap: 15px;
   margin-top: 8px;
+  width: 100%;
 }
 
 /* button look */
@@ -137,7 +134,7 @@
 
   padding: 12px 14px;
   border-radius: 30px;
-  border: 2px solid rgba(1, 20, 41, 0.7);
+  border: 2px solid rgba(156, 161, 167, 0.7);
   background: #fff;
 
   cursor: pointer;

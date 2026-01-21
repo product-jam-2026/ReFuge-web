@@ -93,7 +93,7 @@ export default function Review() {
   const isArabic = locale === "ar";
   const downloadLabel = isArabic ? "تنزيل PDF" : "הורדה כ-PDF";
   const homeLabel = isArabic ? "العودة إلى الشاشة الرئيسية" : "חזרה למסך הבית";
-  const kickerText = isArabic ? "طلب تسجيل طفل" : "שאלון לרישום ילד";
+  const kickerText = isArabic ? " " : " ";
   const titleText = isArabic
     ? "تم ملء نموذجك بنجاح! وهو موجود في منطقة قاعدة النماذج"
     : "הטופס שלך מולא בהצלחה! ונמצא באיזור מאגר הטפסים";

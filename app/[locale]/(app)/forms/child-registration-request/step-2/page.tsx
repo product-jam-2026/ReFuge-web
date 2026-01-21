@@ -9,6 +9,17 @@ export default function Step2() {
   const router = useRouter();
   const { draft, extras, setExtras, update, saveNow } = useWizard();
   useEffect(() => {
+    const shell = document.querySelector(".appShell");
+    const frame = document.querySelector(".appFrame");
+    if (shell) shell.classList.add(styles.fullBleedShell);
+    if (frame) frame.classList.add(styles.fullBleedFrame);
+
+    return () => {
+      if (shell) shell.classList.remove(styles.fullBleedShell);
+      if (frame) frame.classList.remove(styles.fullBleedFrame);
+    };
+  }, []);
+  useEffect(() => {
     setExtras((p) => ({ ...p, currentStep: 2 }));
   }, [setExtras]);
 
@@ -30,13 +41,8 @@ export default function Step2() {
     <main className={styles.page}>
       <div className={styles.imageContainer}>
         <img
-          className={styles.imageRight}
-          src="/images/child-registration-step2-right.svg"
-          alt=""
-        />
-        <img
-          className={styles.imageLeft}
-          src="/images/child-registration-step2-left.svg"
+          className={styles.imageMain}
+          src="/images/children-forms.svg"
           alt=""
         />
       </div>

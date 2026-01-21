@@ -2,7 +2,7 @@
 
 // Covers Arabic + Arabic Supplement + Arabic Extended-A + Arabic Presentation Forms
 const ARABIC_SCRIPT_RE =
-  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\u1EE00-\u1EEFF]/gu;
+  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]|(?:\uD83A[\uDE00-\uDEFF])/g;
 
 export function stripArabicLetters(input: string): string {
   // Remove Arabic script chars, then normalize whitespace

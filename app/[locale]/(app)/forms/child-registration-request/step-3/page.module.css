@@ -29,6 +29,17 @@
   font-weight: 600;
 }
 
+.biText {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.biLine {
+  display: block;
+}
+
 .input {
   width: 100%;
   padding: 10px 12px;
