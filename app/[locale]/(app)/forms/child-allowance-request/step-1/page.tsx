@@ -126,7 +126,7 @@ export default function Step1() {
           </fieldset>
         )}
 
-        <div className={styles.footerRow}>
+        <div className={styles.footer}>
           <button
             type="button"
             onClick={onNext}

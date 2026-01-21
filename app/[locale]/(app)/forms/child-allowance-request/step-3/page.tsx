@@ -1102,7 +1102,7 @@ export default function ChildAllowanceStep3() {
         ))}
       </div>
 
-      <div className={styles.footerRow}>
+      <div className={styles.footer}>
         <button
           type="button"
           className={styles.primaryButton}

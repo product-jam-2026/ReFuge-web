@@ -23,7 +23,9 @@ async function downloadPdfFromStorage(
   bucket: string,
   path: string,
 ) {
-  const { data: blob, error } = await supabase.storage.from(bucket).download(path);
+  const { data: blob, error } = await supabase.storage
+    .from(bucket)
+    .download(path);
   if (error) throw error;
 
   const url = URL.createObjectURL(blob);
@@ -148,13 +150,15 @@ export default function ChildAllowanceHomePage() {
         </div>
 
         {/* TODO: Replace titles with your child-allowance copy */}
-        <div className={styles.bigTitles}>בקשה לקצבת ילדים</div>
+        <div className={styles.bigTitles}>תביעה לקצבת ילדים</div>
         <img className={styles.readButton} src="/images/readButton.svg" />
       </div>
 
       {/* TODO: Replace description copy */}
       <div className={styles.subTextSection}>
-        מילוי בקשה לקבלת קצבת ילדים. בסיום ניתן להוריד את המסמך כ-PDF.
+        בקשה לתשלום חודשי לסיוע בהוצאות גידול ילדים עד גיל 18. הטופס מיועד
+        למבוטחים שאינם מקבלים קצבת ילדים וכן במקרים בהם ילד/ים עוברים מהורה
+        להורה או מהורה לאפוטרופוס/ ממונה.
       </div>
 
       <div className={styles.buttonRow}>
@@ -182,7 +186,8 @@ export default function ChildAllowanceHomePage() {
       ) : (
         <div className={styles.tileGrid}>
           {pdfRows.map((p) => {
-            const title = (p.pdf_title ?? "").trim() || fileNameFromPath(p.path);
+            const title =
+              (p.pdf_title ?? "").trim() || fileNameFromPath(p.path);
 
             return (
               <button
